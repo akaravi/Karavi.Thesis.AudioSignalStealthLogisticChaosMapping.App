@@ -1,0 +1,178 @@
+# =============================================================================
+# Audio Steg Cross-Platform App — root .gitignore
+# Covers: Flutter (Windows/Linux/Android), MATLAB, IDE caches, OS junk, secrets.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Flutter / Dart / Pub
+# -----------------------------------------------------------------------------
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/.fvm/
+**/.fvmrc
+**/build/
+**/.symbols/
+**/coverage/
+**/lcov.info
+**/doc/api/
+**/generated_plugin_registrant.*
+**/.last_build_id
+**/pubspec.lock.bak
+
+# Generated localization files (regenerated on build)
+**/lib/generated_plugin_registrant.dart
+**/lib/l10n/*.g.dart
+**/lib/**/*.freezed.dart
+**/lib/**/*.g.dart
+**/lib/**/*.gr.dart
+
+# Symbolication / Obfuscation
+app.*.symbols
+app.*.map.json
+
+# -----------------------------------------------------------------------------
+# Application runtime artifacts (logs, recordings, temp files)
+# -----------------------------------------------------------------------------
+**/logs/
+**/*.log
+*.pid
+
+# Audio captures and stego outputs that may contain sensitive content
+**/recordings/
+**/*.recording.wav
+**/stego_*.wav
+!**/test/**/fixtures/**/*.wav
+
+# -----------------------------------------------------------------------------
+# Android
+# -----------------------------------------------------------------------------
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+**/android/app/release/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/.cxx/
+**/android/.idea/
+*.jks
+*.keystore
+*.aab
+*.apk
+
+# -----------------------------------------------------------------------------
+# Windows
+# -----------------------------------------------------------------------------
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+**/windows/flutter/ephemeral/
+**/windows/runner/Debug/
+**/windows/runner/Release/
+*.exe
+*.pdb
+
+# -----------------------------------------------------------------------------
+# Linux
+# -----------------------------------------------------------------------------
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+**/linux/flutter/ephemeral/
+
+# -----------------------------------------------------------------------------
+# iOS / macOS (kept for future targets)
+# -----------------------------------------------------------------------------
+**/ios/Pods/
+**/ios/.symbols/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# -----------------------------------------------------------------------------
+# IDEs & editors
+# -----------------------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+*.code-workspace
+.atom/
+.history/
+.swiftpm/
+.cursorignore
+.cursor-tutor/
+
+# -----------------------------------------------------------------------------
+# OS noise
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# -----------------------------------------------------------------------------
+# MATLAB
+# -----------------------------------------------------------------------------
+*.asv
+*.mex*
+*.mat
+*.fig
+*.slx.autosave
+slprj/
+sccprj/
+codegen/
+*.autosave
+octave-workspace
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+*~
+
+# -----------------------------------------------------------------------------
+# Secrets — NEVER commit
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.p12
+*.mobileprovision
+android/key.properties
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
