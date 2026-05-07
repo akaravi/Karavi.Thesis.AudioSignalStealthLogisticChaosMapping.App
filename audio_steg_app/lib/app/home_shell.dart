@@ -27,7 +27,20 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       _Dest(Icons.settings_outlined, Icons.settings, s.settingsTab),
     ];
 
-    final body = IndexedStack(index: _index, children: pages);
+    // Stack of Offstage pages keeps each tab's state alive while removing
+    // hidden ones from layout, hit-testing, AND the semantics tree. This
+    // sidesteps the noisy `accessibility_bridge.cc` AXTree warning that
+    // IndexedStack triggers on Flutter Windows.
+    final body = Stack(
+      fit: StackFit.expand,
+      children: [
+        for (var i = 0; i < pages.length; i++)
+          Offstage(
+            offstage: i != _index,
+            child: TickerMode(enabled: i == _index, child: pages[i]),
+          ),
+      ],
+    );
     final scaffold = Scaffold(
       appBar: AppBar(
         title: Text(s.appTitle),

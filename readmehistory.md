@@ -44,3 +44,7 @@
 | 2026-05-07 | 15:37 | 11 | افزودن تست `reports bitsEmbedded, capacityBits, and SNR metrics` (SNR>40dB روی سینوس) | `test/core/stego_engine_test.dart` |
 | 2026-05-07 | 15:38 | 11 | مقاوم‌سازی `restart_all.ps1` با parser-safe formatting و cleanup پروسس‌های یتیم | `scripts/restart_all.ps1` |
 | 2026-05-07 | 15:40 | 11 | بیلد و restart پس از Part 11 — pid=57372 responding=True، analyze=۰، تست ۳۰/۳۰ سبز | `build/windows/x64/runner/Release/audio_steg_app.exe` |
+| 2026-05-07 | 15:18 | run-all | اجرای کامل دستور `run all` طبق قانون کاربر (debug→build→run→list→health→logs)؛ analyze=۰، تست ۳۰/۳۰، بیلد ۳۹s، pid=43900 alive | `logs/{analyze,test,build,app.std*}.log` |
+| 2026-05-07 | 15:22 | run-all | جایگزینی `IndexedStack` با `Stack(Offstage+TickerMode)` در `home_shell.dart` برای حذف warning AXTree و حفظ state تب‌ها | `lib/app/home_shell.dart` |
+| 2026-05-07 | 15:24 | run-all | تأیید با web search: warning `AXTree error 19` یک باگ شناخته‌شده upstream Flutter engine (issue #98099, #98778, #103808) از Tooltip overlay است — benign، فقط یک‌بار در startup، رفتار اپ تأثیر نمی‌پذیرد | اسناد |
+| 2026-05-07 | 15:25 | run-all | بیلد و restart نهایی — pid=52176 responding=True، stderr فقط ۱ خط (warning upstream)، CPU idle (1.05s/16s)، حافظه ثابت ۸۹.۵MB | `build/windows/x64/runner/Release/audio_steg_app.exe` |
