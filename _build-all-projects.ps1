@@ -14,7 +14,8 @@ param(
     [switch]$OpenDeveloperSettings,
     [switch]$SkipTests,
     [switch]$SkipFlutterAnalyze,
-    [switch]$SkipDevServers
+    [switch]$SkipDevServers,
+    [string]$WebBaseHref = "/"
 )
 
 $ErrorActionPreference = "Stop"
@@ -444,8 +445,20 @@ if (-not $SkipPackage) {
         Stop-RunningProjectProcess -ProcessName "audio_steg_app"
     }
 
-    Write-Host "Building Flutter web ($flutterAppPath, release) ..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("build", "web", "--release")
+    $normalizedWebBaseHref = $WebBaseHref.Trim()
+    if ([string]::IsNullOrWhiteSpace($normalizedWebBaseHref)) {
+        $normalizedWebBaseHref = "/"
+    }
+    if (-not $normalizedWebBaseHref.EndsWith("/")) {
+        $normalizedWebBaseHref = "$normalizedWebBaseHref/"
+    }
+    if (-not $normalizedWebBaseHref.StartsWith("/")) {
+        $normalizedWebBaseHref = "/$normalizedWebBaseHref"
+    }
+    Write-Host "Building Flutter web ($flutterAppPath, release, base-href=$normalizedWebBaseHref) ..." -ForegroundColor Cyan
+    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
+        "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
+    )
 
     Write-Host "Building Flutter Windows ($flutterAppPath, release) ..." -ForegroundColor Cyan
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("build", "windows", "--release")

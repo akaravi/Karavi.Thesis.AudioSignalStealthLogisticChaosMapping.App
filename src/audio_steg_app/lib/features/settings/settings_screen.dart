@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/app_strings.dart';
 import '../../app/settings_controller.dart';
+import '../shared/tab_scroll_body.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -12,8 +13,7 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final ctrl = ref.read(settingsProvider.notifier);
     final s = AppStrings.of(context);
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return TabScrollBody(
       children: [
         _section(context, s.themeMode, [
           SegmentedButton<ThemeMode>(
@@ -51,32 +51,33 @@ class SettingsScreen extends ConsumerWidget {
         _section(context, s.colorSeed, [
           Wrap(
             spacing: 12,
-            children: const [
-              Color(0xFF6750A4),
-              Color(0xFF1B73E8),
-              Color(0xFF2E7D32),
-              Color(0xFFE65100),
-              Color(0xFFC62828),
-              Color(0xFF455A64),
-            ].map((c) {
-              return GestureDetector(
-                onTap: () => ctrl.setSeedColor(c),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: c,
-                    shape: BoxShape.circle,
-                    border: settings.seedColor.toARGB32() == c.toARGB32()
-                        ? Border.all(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            width: 3,
-                          )
-                        : null,
-                  ),
-                ),
-              );
-            }).toList(),
+            children:
+                const [
+                  Color(0xFF6750A4),
+                  Color(0xFF1B73E8),
+                  Color(0xFF2E7D32),
+                  Color(0xFFE65100),
+                  Color(0xFFC62828),
+                  Color(0xFF455A64),
+                ].map((c) {
+                  return GestureDetector(
+                    onTap: () => ctrl.setSeedColor(c),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: c,
+                        shape: BoxShape.circle,
+                        border: settings.seedColor.toARGB32() == c.toARGB32()
+                            ? Border.all(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                width: 3,
+                              )
+                            : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
         ]),
         _section(context, s.logisticParams, [

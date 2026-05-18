@@ -382,3 +382,40 @@
 - ✅ `_build-all-projects.ps1` در ریشه مخزن با پارامترهای قابل تنظیم؛ مسیر ZIP با `Read-Host` پرسیده می‌شود مگر `-ZipOutputDirectory` داده شود
 - ✅ pipeline شامل `flutter build web --release` و پوشه `audio_steg_app_web` در ZIP استقرار
 - ✅ `-SkipPackage` فقط restore وابستگی‌ها؛ `-PackageOnly` پایان پیش از باز کردن ترمینال‌ها؛ `-SkipDevServers` بدون spawn کردن `dotnet run` / `flutter run`
+
+---
+
+## Part 19 — UI پنل منبع صدا (ضبط / بارگذاری)
+
+### دستور
+بهبود UI بخش ضبط و بارگذاری فایل در Embed — تعادل بصری، جذابیت، تم روشن/تاریک.
+
+### JSON Prompt (خلاصه)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "assembledPrompt": "Flutter Embed: CircleActionButton (76px, gradient, glow, theme ColorScheme); AudioSourceActionsPanel with or divider; RecordButton delegates to CircleActionButton with pulse when recording; remove tiny IconButton load control."
+}
+```
+
+### Result 19
+- ✅ `circle_action_button.dart` + `AudioSourceActionsPanel`
+- ✅ `record_button.dart` بازنویسی روی ویجت مشترک
+- ✅ `embed_screen.dart`: حذف `_LoadAudioFileButton`
+- ✅ `audioSourceOr` در `app_strings.dart`
+- ✅ `flutter analyze` بدون خطا
+
+---
+
+## Part 20 — اسکرول موبایل Flutter
+
+### دستور
+رفع مشکل اسکرول در حالت موبایل (عرض کم / وب موبایل).
+
+### Result 20
+- ✅ `TabScrollBody`: LayoutBuilder + AlwaysScrollable + Bouncing + padding کیبورد
+- ✅ `home_shell.dart`: `Positioned.fill` برای تب‌های داخل Stack
+- ✅ Embed/Extract/Settings از اسکرول مشترک؛ TextField بدون اسکرول داخلی
+- ✅ `web/index.html`: `overflow: hidden` و `overscroll-behavior` برای وب موبایل

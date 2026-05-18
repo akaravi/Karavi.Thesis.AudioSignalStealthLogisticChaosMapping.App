@@ -1046,11 +1046,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\tests\\AudioSteg.Core.Tests\\AudioSteg.Core.Tests.csproj",
+      "projectUniqueName": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\tests\\AudioSteg.Core.Tests\\AudioSteg.Core.Tests.csproj",
       "projectName": "AudioSteg.Core.Tests",
-      "projectPath": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\tests\\AudioSteg.Core.Tests\\AudioSteg.Core.Tests.csproj",
+      "projectPath": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\tests\\AudioSteg.Core.Tests\\AudioSteg.Core.Tests.csproj",
       "packagesPath": "C:\\Users\\karavi\\.nuget\\packages\\",
-      "outputPath": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\tests\\AudioSteg.Core.Tests\\obj\\",
+      "outputPath": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\tests\\AudioSteg.Core.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1072,8 +1072,8 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj": {
-              "projectPath": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj"
+            "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj": {
+              "projectPath": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj"
             }
           }
         }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AudioSteg.Desktop")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24bd48e094a63737506904d145b6e2b35787134d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+40e2f199c56a11f8d7d84654c5f4ab86ef787b22")]
 [assembly: System.Reflection.AssemblyProductAttribute("AudioSteg.Desktop")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AudioSteg.Desktop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

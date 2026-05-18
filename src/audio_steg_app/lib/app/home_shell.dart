@@ -35,11 +35,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       fit: StackFit.expand,
       children: [
         for (var i = 0; i < pages.length; i++)
-          Offstage(
-            offstage: i != _index,
-            child: ExcludeSemantics(
-              excluding: i != _index,
-              child: TickerMode(enabled: i == _index, child: pages[i]),
+          Positioned.fill(
+            child: Offstage(
+              offstage: i != _index,
+              child: ExcludeSemantics(
+                excluding: i != _index,
+                child: TickerMode(enabled: i == _index, child: pages[i]),
+              ),
             ),
           ),
       ],

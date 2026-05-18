@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/app_strings.dart';
 import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
+import '../../core/io/native_file.dart';
 import '../../core/stego/stego.dart';
+import '../shared/tab_scroll_body.dart';
 
 class ExtractScreen extends ConsumerStatefulWidget {
   const ExtractScreen({super.key});
@@ -87,8 +88,8 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     try {
       if (file.bytes != null) {
         audioBytes = file.bytes!;
-      } else if (file.path != null) {
-        audioBytes = await File(file.path!).readAsBytes();
+      } else if (!kIsWeb && file.path != null) {
+        audioBytes = await nativeReadBytes(file.path!);
       } else {
         throw StateError('No bytes/path available');
       }
@@ -155,65 +156,63 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Icon(
-                    Icons.audio_file_outlined,
-                    size: 56,
-                    color: Theme.of(context).colorScheme.primary,
+    return TabScrollBody(
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  Icons.audio_file_outlined,
+                  size: 56,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  s.pickFile,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _bitLenCtrl,
+                  keyboardType: TextInputType.number,
+                  scrollPhysics: const NeverScrollableScrollPhysics(),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  enabled: !_processing,
+                  onChanged: (_) {
+                    if (_bitLengthError != null) {
+                      setState(() => _bitLengthError = null);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: s.msgBitLengthHint,
+                    helperText: s.msgBitLengthHelper,
+                    errorText: _bitLengthError,
+                    prefixIcon: const Icon(Icons.format_list_numbered),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    s.pickFile,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _bitLenCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    enabled: !_processing,
-                    onChanged: (_) {
-                      if (_bitLengthError != null) {
-                        setState(() => _bitLengthError = null);
-                      }
-                    },
-                    decoration: InputDecoration(
-                      labelText: s.msgBitLengthHint,
-                      helperText: s.msgBitLengthHelper,
-                      errorText: _bitLengthError,
-                      prefixIcon: const Icon(Icons.format_list_numbered),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: _processing ? null : _pickAndExtract,
-                    icon: _processing
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.folder_open),
-                    label: Text(s.pickFile),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _processing ? null : _pickAndExtract,
+                  icon: _processing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.folder_open),
+                  label: Text(s.pickFile),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          _resultCard(s),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        _resultCard(s),
+      ],
     );
   }
 

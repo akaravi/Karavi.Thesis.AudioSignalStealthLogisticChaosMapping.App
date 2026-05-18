@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj": {}
+    "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj": {}
   },
   "projects": {
-    "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj": {
+    "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj",
+        "projectUniqueName": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj",
         "projectName": "AudioSteg.Core",
-        "projectPath": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj",
+        "projectPath": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\AudioSteg.Core.csproj",
         "packagesPath": "C:\\Users\\karavi\\.nuget\\packages\\",
-        "outputPath": "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\obj\\",
+        "outputPath": "d:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -347,11 +347,6 @@
             "System.Xml.XPath": "(,4.3.32767]",
             "System.Xml.XPath.XDocument": "(,5.0.32767]"
           }
-        }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
         }
       }
     }

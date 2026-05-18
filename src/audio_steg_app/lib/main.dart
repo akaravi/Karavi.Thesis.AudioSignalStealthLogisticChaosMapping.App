@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -9,6 +8,7 @@ import 'app/app_theme.dart';
 import 'app/home_shell.dart';
 import 'app/session_log.dart';
 import 'app/settings_controller.dart';
+import 'core/platform/platform.dart';
 
 void main() {
   FlutterError.onError = (details) {
@@ -60,7 +60,7 @@ class AudioStegApp extends ConsumerWidget {
         );
         // Win32 embedder: rapid semantics updates (RTL nav + live waveform) can
         // corrupt AXTree and terminate the process (accessibility_bridge.cc).
-        if (Platform.isWindows) {
+        if (isNativeWindows) {
           tree = ExcludeSemantics(child: tree);
         }
         return tree;

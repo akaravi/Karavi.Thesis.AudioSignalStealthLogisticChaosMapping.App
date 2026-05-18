@@ -17,6 +17,14 @@ public sealed class AppStrings
     public string StopRecording => T("پایان ضبط", "Stop Recording");
     public string SaveStego => T("ذخیره فایل نهان‌نگاری شده", "Save stego file");
     public string SuccessSaved => T("فایل ذخیره شد", "File saved");
+    public string EmbedCompleteTitle => T("نهان‌نگاری انجام شد", "Embedding complete");
+    public string EmbedRecoveryMessage => T(
+        "برای بازیابی پیام در بخش رمزگشایی، طول پیام (بیت) را ذخیره کنید:",
+        "To recover your message in Extract, save this message length (bits):");
+    public string EmbedRecoveryCopied => T("عدد در حافظه کپی شد.", "Value copied to clipboard.");
+    public string EmbedRecoveryOk => T("متوجه شدم", "Got it");
+    public string EmbedRecoveryCapacityHint(int capacityBits) =>
+        T($"ظرفیت کل فایل صوتی: {capacityBits} بیت", $"Total audio capacity: {capacityBits} bits");
     public string ColorSeed => T("رنگ تم", "Theme color");
     public string LoadAudioFile => T("بارگذاری فایل صوتی", "Load audio file");
     public string PickFile => T("انتخاب فایل صوتی (WAV/MP3)", "Pick audio file (WAV/MP3)");
@@ -38,6 +46,8 @@ public sealed class AppStrings
     public string X0Param => T("مقدار اولیه x0", "x0 initial");
     public string Reset => T("بازنشانی", "Reset");
     public string Play => T("پخش", "Play");
+    public string Pause => T("مکث", "Pause");
+    public string StopPlayback => T("توقف پخش", "Stop");
     public string Verify => T("تأیید فوری", "Verify roundtrip");
     public string Verifying => T("در حال تأیید…", "Verifying…");
     public string Processing => T("در حال پردازش…", "Processing…");

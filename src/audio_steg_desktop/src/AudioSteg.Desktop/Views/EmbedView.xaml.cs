@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using AudioSteg.Core.Audio;
 using AudioSteg.Core.Stego;
+using AudioSteg.Desktop.Dialogs;
 using AudioSteg.Desktop.Models;
 using AudioSteg.Desktop.Services;
 using Microsoft.Win32;
@@ -25,6 +26,7 @@ public partial class EmbedView : UserControl
         InitializeComponent();
         _capture.SpectrumBands += OnSpectrumBands;
         _playback.SpectrumBands += OnSpectrumBands;
+        _playback.PlaybackStateChanged += UpdatePlaybackButtons;
         RecordBtn.Click += (_, _) => RecordBtn_Click(this, new RoutedEventArgs());
         LoadFileBtn.Click += LoadFileBtn_Click;
         Loaded += (_, _) => ApplyStrings();
@@ -40,6 +42,8 @@ public partial class EmbedView : UserControl
         RecordBtn.RefreshVisual();
         LoadFileLabel.Text = s.LoadAudioFile;
         PlayLabel.Text = s.Play;
+        PauseLabel.Text = s.Pause;
+        StopPlaybackLabel.Text = s.StopPlayback;
         SaveLabel.Text = s.SaveStego;
         VerifyLabel.Text = s.Verify;
     }
@@ -53,7 +57,21 @@ public partial class EmbedView : UserControl
         }
         _eqBands = bands;
         Equalizer.SetBands(bands);
-        Equalizer.IsActive = _capture.IsRecording || _playback.IsPlaying;
+        Equalizer.IsActive = _capture.IsRecording || _playback.HasSource;
+    }
+
+    private void UpdatePlaybackButtons()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(UpdatePlaybackButtons);
+            return;
+        }
+        var playing = _playback.IsPlaying;
+        var hasSource = _playback.HasSource;
+        PlayButton.IsEnabled = !playing;
+        PauseButton.IsEnabled = playing;
+        StopPlaybackButton.IsEnabled = hasSource;
     }
 
     private async void RecordBtn_Click(object sender, RoutedEventArgs e)
@@ -270,12 +288,41 @@ public partial class EmbedView : UserControl
         MetricsItems.ItemsSource = chips;
 
         VerifyBanner.Visibility = Visibility.Collapsed;
+        UpdatePlaybackButtons();
+        ShowRecoveryBitsDialog(outcome.BitsEmbedded, outcome.CapacityBits);
+    }
+
+    private void ShowRecoveryBitsDialog(int msgBitLength, int capacityBits)
+    {
+        var owner = Window.GetWindow(this);
+        var dlg = new RecoveryBitsDialog(msgBitLength, capacityBits);
+        if (owner is not null)
+            dlg.Owner = owner;
+        dlg.ShowDialog();
     }
 
     private void PlayButton_Click(object sender, RoutedEventArgs e)
     {
         if (_stego is null) return;
-        try { _playback.Play(_stego); }
+        try
+        {
+            if (_playback.IsPaused)
+                _playback.Resume();
+            else
+                _playback.Play(_stego);
+        }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void PauseButton_Click(object sender, RoutedEventArgs e)
+    {
+        try { _playback.Pause(); }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void StopPlaybackButton_Click(object sender, RoutedEventArgs e)
+    {
+        try { _playback.Stop(); }
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 

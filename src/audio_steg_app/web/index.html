@@ -2,45 +2,77 @@
 <html>
 <head>
   <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
+    If the app is served from a subfolder (e.g. https://host/ThesisAudioSteg/),
+    build with: flutter build web --release --base-href=/ThesisAudioSteg/
   -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Audio steganography — LSB + logistic chaos (thesis)">
 
-  <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="audio_steg_app">
+  <meta name="apple-mobile-web-app-title" content="Audio Steganography">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>audio_steg_app</title>
+  <title>Audio Steganography</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      background: #1a1a1a;
+      color: #e8e8e8;
+      font-family: system-ui, sans-serif;
+    }
+    flt-glass-pane, flutter-view {
+      touch-action: manipulation;
+    }
+    #boot-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1rem;
+    }
+    #boot-error {
+      display: none;
+      max-width: 32rem;
+      padding: 1rem;
+      text-align: center;
+      color: #ffb4ab;
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <div id="boot-loading" aria-live="polite">
+    <p>در حال بارگذاری… / Loading…</p>
+  </div>
+  <div id="boot-error" role="alert"></div>
+  <script>
+    window.addEventListener('error', function (e) {
+      var el = document.getElementById('boot-error');
+      var loading = document.getElementById('boot-loading');
+      if (el && loading) {
+        loading.style.display = 'none';
+        el.style.display = 'block';
+        el.textContent = 'Startup error: ' + (e.message || e);
+      }
+    });
+    window.addEventListener('flutter-first-frame', function () {
+      var loading = document.getElementById('boot-loading');
+      if (loading) loading.remove();
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

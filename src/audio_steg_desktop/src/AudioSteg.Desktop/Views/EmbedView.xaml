@@ -60,6 +60,20 @@
                 <TextBlock x:Name="PlayLabel" />
               </StackPanel>
             </Button>
+            <Button x:Name="PauseButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
+                    Click="PauseButton_Click" IsEnabled="False">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" Margin="0,0,8,0" />
+                <TextBlock x:Name="PauseLabel" />
+              </StackPanel>
+            </Button>
+            <Button x:Name="StopPlaybackButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
+                    Click="StopPlaybackButton_Click" IsEnabled="False">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" Margin="0,0,8,0" />
+                <TextBlock x:Name="StopPlaybackLabel" />
+              </StackPanel>
+            </Button>
             <Button x:Name="SaveButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
                     Click="SaveButton_Click">
               <StackPanel Orientation="Horizontal">

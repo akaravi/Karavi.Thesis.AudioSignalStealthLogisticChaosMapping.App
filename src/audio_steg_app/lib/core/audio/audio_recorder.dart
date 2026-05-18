@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -8,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart' as rec;
 
 import '../../app/session_log.dart';
+import '../platform/platform.dart';
 import 'spectrum_analyzer.dart';
 import 'wav_io.dart';
 
@@ -83,7 +83,7 @@ class AudioRecorderService {
   Stream<List<double>> get spectrumStream => _spectrumController.stream;
 
   Future<bool> ensurePermission() async {
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (isMobilePlatform) {
       final status = await Permission.microphone.request();
       if (!status.isGranted) return false;
     }

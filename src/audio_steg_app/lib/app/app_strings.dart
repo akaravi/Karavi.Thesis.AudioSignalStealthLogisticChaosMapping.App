@@ -29,6 +29,7 @@ class AppStrings {
   String get saveStego => _('ذخیره فایل نهان‌نگاری شده', 'Save stego file');
   String get fromFile => _('از فایل', 'From file');
   String get loadAudioFile => _('بارگذاری فایل صوتی', 'Load audio file');
+  String get audioSourceOr => _('یا', 'or');
   String get pickFile =>
       _('انتخاب فایل صوتی (WAV/MP3)', 'Pick audio file (WAV/MP3)');
   String audioFileLoaded(String name) => locale == AppLocale.fa
@@ -59,6 +60,18 @@ class AppStrings {
     'Text too long for the recorded audio.',
   );
   String get successSaved => _('فایل ذخیره شد', 'File saved');
+  String get embedCompleteTitle =>
+      _('نهان‌نگاری انجام شد', 'Embedding complete');
+  String get embedRecoveryMessage => _(
+    'برای بازیابی پیام در بخش رمزگشایی، طول پیام (بیت) را ذخیره کنید:',
+    'To recover your message in Extract, save this message length (bits):',
+  );
+  String embedRecoveryCapacityHint(int capacityBits) => locale == AppLocale.fa
+      ? 'ظرفیت کل فایل صوتی: $capacityBits بیت'
+      : 'Total audio capacity: $capacityBits bits';
+  String get embedRecoveryCopied =>
+      _('عدد در حافظه کپی شد.', 'Value copied to clipboard.');
+  String get embedRecoveryOk => _('متوجه شدم', 'Got it');
   String get duration => _('مدت زمان', 'Duration');
   String get capacity => _('ظرفیت', 'Capacity');
   String get bitsEmbedded => _('بیت جاسازی شده', 'Bits embedded');
@@ -82,6 +95,8 @@ class AppStrings {
   );
   String get reset => _('بازنشانی', 'Reset');
   String get play => _('پخش', 'Play');
+  String get pause => _('مکث', 'Pause');
+  String get stopPlayback => _('توقف پخش', 'Stop');
   String get share => _('اشتراک‌گذاری', 'Share');
   String get readyToRecord => _('آماده ضبط…', 'Ready to record…');
   String get recording => _('در حال ضبط…', 'Recording…');

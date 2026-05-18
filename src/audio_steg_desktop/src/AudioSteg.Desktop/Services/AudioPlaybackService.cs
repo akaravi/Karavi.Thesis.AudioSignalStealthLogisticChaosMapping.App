@@ -11,9 +11,15 @@ public sealed class AudioPlaybackService : IDisposable
     private List<double[]>? _spectrumFrames;
     private System.Timers.Timer? _spectrumTimer;
 
+    public bool HasSource => _player is not null;
+
     public bool IsPlaying => _player?.PlaybackState == PlaybackState.Playing;
 
+    public bool IsPaused => _player?.PlaybackState == PlaybackState.Paused;
+
     public event Action<double[]>? SpectrumBands;
+
+    public event Action? PlaybackStateChanged;
 
     public void Play(WavFile wav)
     {
@@ -24,12 +30,64 @@ public sealed class AudioPlaybackService : IDisposable
         _reader = new AudioFileReader(tempPath);
         _player = new WaveOutEvent();
         _player.Init(_reader);
-        _player.PlaybackStopped += (_, _) =>
-        {
-            SpectrumBands?.Invoke(new double[SpectrumAnalyzer.BandCount]);
-        };
+        _player.PlaybackStopped += OnPlaybackStopped;
         _player.Play();
+        StartSpectrumTimer();
+        NotifyStateChanged();
+    }
 
+    public void Pause()
+    {
+        if (_player is null || _player.PlaybackState != PlaybackState.Playing)
+            return;
+        _player.Pause();
+        _spectrumTimer?.Stop();
+        SpectrumBands?.Invoke(new double[SpectrumAnalyzer.BandCount]);
+        NotifyStateChanged();
+    }
+
+    public void Resume()
+    {
+        if (_player is null || _player.PlaybackState != PlaybackState.Paused)
+            return;
+        _player.Play();
+        StartSpectrumTimer();
+        NotifyStateChanged();
+    }
+
+    public void Stop()
+    {
+        _spectrumTimer?.Stop();
+        _spectrumTimer?.Dispose();
+        _spectrumTimer = null;
+        _spectrumFrames = null;
+
+        if (_player is not null)
+        {
+            _player.PlaybackStopped -= OnPlaybackStopped;
+            _player.Stop();
+            _player.Dispose();
+            _player = null;
+        }
+
+        _reader?.Dispose();
+        _reader = null;
+
+        SpectrumBands?.Invoke(new double[SpectrumAnalyzer.BandCount]);
+        NotifyStateChanged();
+    }
+
+    private void OnPlaybackStopped(object? sender, StoppedEventArgs e)
+    {
+        if (_player is null)
+            return;
+        Stop();
+    }
+
+    private void StartSpectrumTimer()
+    {
+        _spectrumTimer?.Stop();
+        _spectrumTimer?.Dispose();
         _spectrumTimer = new System.Timers.Timer(50);
         _spectrumTimer.Elapsed += (_, _) => EmitSpectrumFrame();
         _spectrumTimer.AutoReset = true;
@@ -48,25 +106,7 @@ public sealed class AudioPlaybackService : IDisposable
         SpectrumBands?.Invoke(_spectrumFrames[idx]);
     }
 
-    public void Stop()
-    {
-        _spectrumTimer?.Stop();
-        _spectrumTimer?.Dispose();
-        _spectrumTimer = null;
-        _spectrumFrames = null;
-
-        if (_player is not null)
-        {
-            _player.Stop();
-            _player.Dispose();
-            _player = null;
-        }
-
-        _reader?.Dispose();
-        _reader = null;
-
-        SpectrumBands?.Invoke(new double[SpectrumAnalyzer.BandCount]);
-    }
+    private void NotifyStateChanged() => PlaybackStateChanged?.Invoke();
 
     public void Dispose() => Stop();
 }

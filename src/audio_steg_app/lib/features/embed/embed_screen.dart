@@ -1,14 +1,16 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_strings.dart';
+import '../../core/io/native_file.dart';
 import '../../app/session_log.dart';
 import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
@@ -21,7 +23,9 @@ import '../../core/audio/waveform_display.dart';
 import '../../core/stego/stego.dart';
 import '../shared/audio_equalizer_view.dart';
 import '../shared/dual_waveform_chart.dart';
+import '../shared/circle_action_button.dart';
 import '../shared/record_button.dart';
+import '../shared/tab_scroll_body.dart';
 
 class EmbedScreen extends ConsumerStatefulWidget {
   const EmbedScreen({super.key});
@@ -46,6 +50,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   bool? _verifyOk;
   List<double> _eqBands = List<double>.filled(kSpectrumBandCount, 0);
   bool _isPlaying = false;
+  bool _playbackLoaded = false;
   StreamSubscription<List<double>>? _spectrumSub;
   StreamSubscription<PlayerState>? _playStateSub;
   StreamSubscription<RecorderState>? _stateSub;
@@ -82,7 +87,11 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     _playStateSub?.cancel();
     _playStateSub = _player.stateStream.listen((st) {
       if (!mounted) return;
-      setState(() => _isPlaying = st.playing);
+      final completed = st.processingState == ProcessingState.completed;
+      setState(() {
+        _isPlaying = st.playing;
+        _playbackLoaded = _player.hasSource && !completed;
+      });
       if (!st.playing) {
         setState(() => _eqBands = List<double>.filled(kSpectrumBandCount, 0));
       }
@@ -214,8 +223,8 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     try {
       if (file.bytes != null) {
         bytes = file.bytes!;
-      } else if (file.path != null) {
-        bytes = await File(file.path!).readAsBytes();
+      } else if (!kIsWeb && file.path != null) {
+        bytes = await nativeReadBytes(file.path!);
       } else {
         throw StateError('No bytes/path available');
       }
@@ -309,6 +318,81 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _verifyStatus = null;
       _verifyOk = null;
     });
+    if (produced != null && error == null) {
+      await _showRecoveryBitsDialog(produced);
+    }
+  }
+
+  Future<void> _showRecoveryBitsDialog(EmbedRunResult result) async {
+    if (!mounted) return;
+    final s = AppStrings.of(context);
+    final bits = result.msgBitLength;
+    final theme = Theme.of(context);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: Text(s.embedCompleteTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(s.embedRecoveryMessage),
+              const SizedBox(height: 16),
+              Text(s.msgBitLength, style: theme.textTheme.labelMedium),
+              const SizedBox(height: 8),
+              Material(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$bits',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        tooltip: s.copy,
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: '$bits'));
+                          if (!dialogCtx.mounted) return;
+                          ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                            SnackBar(content: Text(s.embedRecoveryCopied)),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_outlined),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                s.embedRecoveryCapacityHint(result.capacityBits),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(s.embedRecoveryOk),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _verifyRoundtrip() async {
@@ -376,17 +460,28 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         bytes: bytes,
       );
     } on UnimplementedError {
+      if (kIsWeb) rethrow;
       final dir = await getApplicationDocumentsDirectory();
-      targetPath = '${dir.path}${Platform.pathSeparator}$defaultName';
-      await File(targetPath).writeAsBytes(bytes);
+      targetPath = p.join(dir.path, defaultName);
+      await nativeWriteBytes(targetPath, bytes);
     }
-    if (targetPath == null) return;
-    if (!File(targetPath).existsSync()) {
-      await File(targetPath).writeAsBytes(bytes);
+    if (targetPath == null) {
+      if (kIsWeb) {
+        if (!mounted) return;
+        messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+      }
+      return;
+    }
+    if (!kIsWeb && !nativeFileExists(targetPath)) {
+      await nativeWriteBytes(targetPath, bytes);
     }
     if (!mounted) return;
     messenger.showSnackBar(
-      SnackBar(content: Text('${s.successSaved}: $targetPath')),
+      SnackBar(
+        content: Text(
+          kIsWeb ? s.successSaved : '${s.successSaved}: $targetPath',
+        ),
+      ),
     );
   }
 
@@ -395,7 +490,35 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     if (stego == null) return;
     try {
       _attachPlaybackSpectrum();
-      await _player.playWav(stego);
+      if (_playbackLoaded && !_isPlaying) {
+        await _player.resume();
+      } else {
+        await _player.playWav(stego);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _pauseStego() async {
+    try {
+      await _player.pause();
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _stopStego() async {
+    try {
+      await _player.stop();
+      if (!mounted) return;
+      setState(() {
+        _isPlaying = false;
+        _playbackLoaded = false;
+        _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+      });
     } catch (e) {
       if (!mounted) return;
       _showStatus(e.toString());
@@ -406,87 +529,77 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isRecording = _recorder.isRecording;
-    final eqActive = isRecording || _isPlaying;
+    final eqActive = isRecording || _isPlaying || _playbackLoaded;
     final canPickFile = !isRecording && !_processing && !_busy;
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _textCtrl,
-              maxLines: 4,
-              minLines: 3,
-              enabled: !isRecording && !_processing,
-              decoration: InputDecoration(
-                labelText: s.textHint,
-                prefixIcon: const Icon(Icons.message_outlined),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 12,
-                ),
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        s.audioEqualizer,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    AudioEqualizerView(bands: _eqBands, active: eqActive),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.start,
-                      spacing: 20,
-                      runSpacing: 12,
-                      children: [
-                        RecordButton(
-                          isActive: isRecording,
-                          onPressed: _processing ? () {} : _toggleRecord,
-                          labelIdle: s.startRecording,
-                          labelActive: s.stopRecording,
-                        ),
-                        _LoadAudioFileButton(
-                          label: s.loadAudioFile,
-                          enabled: canPickFile,
-                          onPressed: _loadAndEmbed,
-                        ),
-                      ],
-                    ),
-                    if (_processing) ...[
-                      const SizedBox(height: 12),
-                      const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      ),
-                    ],
-                    if (_statusMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _statusMessage!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_stego != null) _buildResultCard(s),
-          ],
+    return TabScrollBody(
+      children: [
+        TextField(
+          controller: _textCtrl,
+          maxLines: 4,
+          minLines: 3,
+          scrollPhysics: const NeverScrollableScrollPhysics(),
+          enabled: !isRecording && !_processing,
+          decoration: InputDecoration(
+            labelText: s.textHint,
+            prefixIcon: const Icon(Icons.message_outlined),
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            child: Column(
+              children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    s.audioEqualizer,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                AudioEqualizerView(bands: _eqBands, active: eqActive),
+                const SizedBox(height: 16),
+                AudioSourceActionsPanel(
+                  orLabel: s.audioSourceOr,
+                  loadAction: CircleActionButton(
+                    icon: Icons.audio_file_rounded,
+                    label: s.loadAudioFile,
+                    enabled: canPickFile,
+                    onPressed: _loadAndEmbed,
+                    accent: CircleActionAccent.secondary,
+                  ),
+                  recordAction: RecordButton(
+                    isActive: isRecording,
+                    enabled: !_processing && (isRecording || !_busy),
+                    onPressed: _toggleRecord,
+                    labelIdle: s.startRecording,
+                    labelActive: s.stopRecording,
+                  ),
+                ),
+                if (_processing) ...[
+                  const SizedBox(height: 12),
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                ],
+                if (_statusMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _statusMessage!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_stego != null) _buildResultCard(s),
+      ],
     );
   }
 
@@ -521,9 +634,19 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
               runSpacing: 8,
               children: [
                 FilledButton.icon(
-                  onPressed: _verifying ? null : _playStego,
+                  onPressed: _verifying || _isPlaying ? null : _playStego,
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: Text(s.play),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: _verifying || !_isPlaying ? null : _pauseStego,
+                  icon: const Icon(Icons.pause_rounded),
+                  label: Text(s.pause),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: _verifying || !_playbackLoaded ? null : _stopStego,
+                  icon: const Icon(Icons.stop_rounded),
+                  label: Text(s.stopPlayback),
                 ),
                 FilledButton.tonalIcon(
                   onPressed: _verifying ? null : _saveStego,
@@ -754,61 +877,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _LoadAudioFileButton extends StatelessWidget {
-  final String label;
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  const _LoadAudioFileButton({
-    required this.label,
-    required this.enabled,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          color: enabled
-              ? scheme.secondaryContainer
-              : scheme.surfaceContainerHighest,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: IconButton(
-            onPressed: enabled ? onPressed : null,
-            iconSize: 36,
-            tooltip: label,
-            icon: Icon(
-              Icons.audio_file_outlined,
-              color: enabled
-                  ? scheme.onSecondaryContainer
-                  : scheme.onSurface.withValues(alpha: 0.38),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 110,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: enabled
-                  ? null
-                  : Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.38),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
