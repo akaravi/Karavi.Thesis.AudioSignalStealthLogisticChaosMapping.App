@@ -5,16 +5,23 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_strings.dart';
+import '../../app/session_log.dart';
 import '../../app/settings_controller.dart';
+import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/audio_recorder.dart';
+import '../../core/audio/stego_file_naming.dart';
 import '../../core/audio/wav_io.dart';
+import '../../core/audio/spectrum_analyzer.dart';
+import '../../core/audio/waveform_display.dart';
 import '../../core/stego/stego.dart';
+import '../shared/audio_equalizer_view.dart';
+import '../shared/dual_waveform_chart.dart';
 import '../shared/record_button.dart';
-import '../shared/waveform_view.dart';
 
 class EmbedScreen extends ConsumerStatefulWidget {
   const EmbedScreen({super.key});
@@ -31,13 +38,16 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   bool _busy = false;
   bool _processing = false;
   bool _verifying = false;
+  WavFile? _cover;
   WavFile? _stego;
   EmbedRunResult? _result;
   String? _statusMessage;
   String? _verifyStatus;
   bool? _verifyOk;
-  final List<double> _amps = [];
-  StreamSubscription<double>? _ampSub;
+  List<double> _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+  bool _isPlaying = false;
+  StreamSubscription<List<double>>? _spectrumSub;
+  StreamSubscription<PlayerState>? _playStateSub;
   StreamSubscription<RecorderState>? _stateSub;
 
   @override
@@ -52,17 +62,36 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   @override
   void dispose() {
     _stateSub?.cancel();
-    _cancelAmp();
+    _cancelSpectrum();
     unawaited(_recorder.dispose());
     unawaited(_player.dispose());
     _textCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _cancelAmp() async {
-    final sub = _ampSub;
-    _ampSub = null;
+  Future<void> _cancelSpectrum() async {
+    final sub = _spectrumSub;
+    _spectrumSub = null;
     if (sub != null) await sub.cancel();
+    final playSub = _playStateSub;
+    _playStateSub = null;
+    if (playSub != null) await playSub.cancel();
+  }
+
+  void _attachPlaybackSpectrum() {
+    _playStateSub?.cancel();
+    _playStateSub = _player.stateStream.listen((st) {
+      if (!mounted) return;
+      setState(() => _isPlaying = st.playing);
+      if (!st.playing) {
+        setState(() => _eqBands = List<double>.filled(kSpectrumBandCount, 0));
+      }
+    });
+    _spectrumSub?.cancel();
+    _spectrumSub = _player.spectrumStream.listen((bands) {
+      if (!mounted) return;
+      setState(() => _eqBands = List<double>.from(bands));
+    });
   }
 
   Future<void> _toggleRecord() async {
@@ -87,23 +116,23 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     }
     try {
+      SessionLog.write('Embed: record start');
       await _recorder.start(sampleRate: 44100);
-    } catch (e) {
+    } catch (e, st) {
+      SessionLog.write('Embed: record start failed', error: e, stack: st);
       if (!mounted) return;
       _showStatus(e.toString());
       return;
     }
     if (!mounted) return;
-    _amps.clear();
-    final sub = _recorder.amplitudeStream().listen((db) {
+    _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+    final sub = _recorder.spectrumStream.listen((bands) {
       if (!mounted) return;
-      setState(() {
-        _amps.add(db);
-        if (_amps.length > 200) _amps.removeAt(0);
-      });
+      setState(() => _eqBands = List<double>.from(bands));
     });
-    _ampSub = sub;
+    _spectrumSub = sub;
     setState(() {
+      _cover = null;
       _stego = null;
       _result = null;
       _verifyStatus = null;
@@ -120,12 +149,14 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _statusMessage = s.processing;
       });
     }
-    await _cancelAmp();
+    await _cancelSpectrum();
 
     WavFile? cover;
     try {
+      SessionLog.write('Embed: record stop');
       cover = await _recorder.stopAndRead();
-    } catch (e) {
+    } catch (e, st) {
+      SessionLog.write('Embed: record stop failed', error: e, stack: st);
       if (!mounted) return;
       setState(() {
         _processing = false;
@@ -141,9 +172,101 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       });
       return;
     }
+    await _embedWithCover(cover);
+  }
 
-    final settings = ref.read(settingsProvider);
+  Future<void> _loadAndEmbed() async {
+    if (_busy || _processing || _recorder.isRecording) return;
+    final s = AppStrings.of(context);
     final text = _textCtrl.text.trim();
+    if (text.isEmpty) {
+      _showStatus(s.errorEmpty);
+      return;
+    }
+
+    FilePickerResult? picked;
+    try {
+      picked = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: AudioInputLoader.audioPickerExtensions,
+        withData: true,
+      );
+    } catch (e) {
+      _showStatus(e.toString());
+      return;
+    }
+    if (!mounted || picked == null || picked.files.isEmpty) return;
+
+    final file = picked.files.first;
+    final name = file.name;
+    if (name.isEmpty) {
+      _showStatus(s.pickFile);
+      return;
+    }
+
+    _busy = true;
+    setState(() {
+      _processing = true;
+      _statusMessage = s.processing;
+    });
+
+    late final Uint8List bytes;
+    try {
+      if (file.bytes != null) {
+        bytes = file.bytes!;
+      } else if (file.path != null) {
+        bytes = await File(file.path!).readAsBytes();
+      } else {
+        throw StateError('No bytes/path available');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _processing = false;
+        _statusMessage = e.toString();
+      });
+      return;
+    }
+
+    WavFile cover;
+    try {
+      cover = await AudioInputLoader.loadFromBytes(bytes, name);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _processing = false;
+        _statusMessage = e.toString();
+      });
+      return;
+    }
+
+    if (!mounted) return;
+    final preview = SpectrumAnalyzer.timelineFromWav(cover);
+    setState(() {
+      _eqBands = preview.isNotEmpty
+          ? preview.first
+          : List<double>.filled(kSpectrumBandCount, 0);
+    });
+
+    await _embedWithCover(cover, loadedName: name);
+    if (mounted) {
+      setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _embedWithCover(WavFile cover, {String? loadedName}) async {
+    final s = AppStrings.of(context);
+    final text = _textCtrl.text.trim();
+    if (text.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _processing = false;
+        _statusMessage = s.errorEmpty;
+      });
+      return;
+    }
 
     final required = MessageBits.bitLengthForText(text);
     final available = cover.toMono().samples.length;
@@ -157,6 +280,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     }
 
+    final settings = ref.read(settingsProvider);
     EmbedRunResult? produced;
     String? error;
     try {
@@ -172,9 +296,16 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     if (!mounted) return;
     setState(() {
       _processing = false;
+      _cover = cover;
       _result = produced;
       _stego = produced?.stego;
-      _statusMessage = error;
+      if (error != null) {
+        _statusMessage = error;
+      } else if (loadedName != null) {
+        _statusMessage = s.audioFileLoaded(loadedName);
+      } else {
+        _statusMessage = null;
+      }
       _verifyStatus = null;
       _verifyOk = null;
     });
@@ -229,24 +360,24 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
 
   Future<void> _saveStego() async {
     final stego = _stego;
-    if (stego == null) return;
+    final result = _result;
+    if (stego == null || result == null) return;
     final s = AppStrings.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final bytes = stego.encode();
+    final defaultName = stegoWavFileName(result.msgBitLength);
     String? targetPath;
     try {
       targetPath = await FilePicker.saveFile(
         dialogTitle: s.saveStego,
-        fileName: 'stego_${DateTime.now().millisecondsSinceEpoch}.wav',
+        fileName: defaultName,
         type: FileType.custom,
         allowedExtensions: ['wav'],
         bytes: bytes,
       );
     } on UnimplementedError {
       final dir = await getApplicationDocumentsDirectory();
-      targetPath =
-          '${dir.path}${Platform.pathSeparator}'
-          'stego_${DateTime.now().millisecondsSinceEpoch}.wav';
+      targetPath = '${dir.path}${Platform.pathSeparator}$defaultName';
       await File(targetPath).writeAsBytes(bytes);
     }
     if (targetPath == null) return;
@@ -263,6 +394,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final stego = _stego;
     if (stego == null) return;
     try {
+      _attachPlaybackSpectrum();
       await _player.playWav(stego);
     } catch (e) {
       if (!mounted) return;
@@ -274,6 +406,8 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isRecording = _recorder.isRecording;
+    final eqActive = isRecording || _isPlaying;
+    final canPickFile = !isRecording && !_processing && !_busy;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
@@ -299,13 +433,34 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                 ),
                 child: Column(
                   children: [
-                    WaveformView(samples: _amps, active: isRecording),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        s.audioEqualizer,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    AudioEqualizerView(bands: _eqBands, active: eqActive),
                     const SizedBox(height: 16),
-                    RecordButton(
-                      isActive: isRecording,
-                      onPressed: _processing ? () {} : _toggleRecord,
-                      labelIdle: s.startRecording,
-                      labelActive: s.stopRecording,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      spacing: 20,
+                      runSpacing: 12,
+                      children: [
+                        RecordButton(
+                          isActive: isRecording,
+                          onPressed: _processing ? () {} : _toggleRecord,
+                          labelIdle: s.startRecording,
+                          labelActive: s.stopRecording,
+                        ),
+                        _LoadAudioFileButton(
+                          label: s.loadAudioFile,
+                          enabled: canPickFile,
+                          onPressed: _loadAndEmbed,
+                        ),
+                      ],
                     ),
                     if (_processing) ...[
                       const SizedBox(height: 12),
@@ -355,8 +510,11 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            if (result != null)
+            if (_cover != null) _buildCompareChart(s, theme),
+            if (result != null) ...[
+              const SizedBox(height: 12),
               _buildMetricsBlock(s, theme, result, durationSec),
+            ],
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -408,6 +566,29 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCompareChart(AppStrings s, ThemeData theme) {
+    final cover = _cover!;
+    final stego = _stego!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          s.compareWaveformTitle,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DualWaveformChart(
+          coverEnvelope: waveformEnvelopeFromWav(cover),
+          stegoEnvelope: waveformEnvelopeFromWav(stego),
+          coverLabel: s.coverWaveLegend,
+          stegoLabel: s.stegoWaveLegend,
+        ),
+      ],
     );
   }
 
@@ -573,6 +754,61 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LoadAudioFileButton extends StatelessWidget {
+  final String label;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  const _LoadAudioFileButton({
+    required this.label,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Material(
+          color: enabled
+              ? scheme.secondaryContainer
+              : scheme.surfaceContainerHighest,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: IconButton(
+            onPressed: enabled ? onPressed : null,
+            iconSize: 36,
+            tooltip: label,
+            icon: Icon(
+              Icons.audio_file_outlined,
+              color: enabled
+                  ? scheme.onSecondaryContainer
+                  : scheme.onSurface.withValues(alpha: 0.38),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: enabled
+                  ? null
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.38),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

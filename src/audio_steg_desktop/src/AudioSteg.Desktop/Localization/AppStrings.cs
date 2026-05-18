@@ -18,7 +18,10 @@ public sealed class AppStrings
     public string SaveStego => T("ذخیره فایل نهان‌نگاری شده", "Save stego file");
     public string SuccessSaved => T("فایل ذخیره شد", "File saved");
     public string ColorSeed => T("رنگ تم", "Theme color");
+    public string LoadAudioFile => T("بارگذاری فایل صوتی", "Load audio file");
     public string PickFile => T("انتخاب فایل صوتی (WAV/MP3)", "Pick audio file (WAV/MP3)");
+    public string AudioFileLoaded(string name) =>
+        T($"فایل بارگذاری شد: {name}", $"Audio loaded: {name}");
     public string ExtractedText => T("متن استخراج شده", "Extracted text");
     public string NoText => T("چیزی استخراج نشد", "Nothing extracted");
     public string Copy => T("کپی", "Copy");
@@ -44,6 +47,10 @@ public sealed class AppStrings
     public string ErrorTooLong => T("متن طولانی‌تر از ظرفیت صدای ضبط شده است.", "Text too long for the recorded audio.");
     public string KeyMismatch => T("کلید/پارامترها صحیح نیستند یا داده‌ای پیدا نشد.", "Wrong key/params or no payload found.");
     public string QualityMetrics => T("متریک‌های کیفیت", "Quality metrics");
+    public string AudioEqualizer => T("اکولایزر صدا", "Audio equalizer");
+    public string CompareWaveformTitle => T("مقایسه سیگنال صوتی", "Audio signal comparison");
+    public string CoverWaveLegend => T("صدای اصلی (پوشش)", "Original audio (cover)");
+    public string StegoWaveLegend => T("صدای نهان‌نگاری‌شده", "Watermarked audio (stego)");
     public string Duration => T("مدت زمان", "Duration");
     public string Capacity => T("ظرفیت", "Capacity");
     public string BitsEmbedded => T("بیت جاسازی شده", "Bits embedded");

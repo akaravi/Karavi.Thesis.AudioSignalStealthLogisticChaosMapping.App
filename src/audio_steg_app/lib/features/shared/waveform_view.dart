@@ -17,14 +17,16 @@ class WaveformView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: CustomPaint(
-        painter: _WavePainter(
-          samples: samples,
-          color: active
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outlineVariant,
+    return ExcludeSemantics(
+      child: SizedBox(
+        height: height,
+        child: CustomPaint(
+          painter: _WavePainter(
+            samples: samples,
+            color: active
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
       ),
     );

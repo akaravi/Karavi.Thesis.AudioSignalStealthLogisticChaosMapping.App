@@ -14,7 +14,8 @@ public partial class EmbedView : UserControl
 {
     private readonly AudioCaptureService _capture = new();
     private readonly AudioPlaybackService _playback = new();
-    private readonly List<double> _amps = [];
+    private double[] _eqBands = new double[SpectrumAnalyzer.BandCount];
+    private WavFile? _cover;
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
     private bool _busy;
@@ -22,8 +23,10 @@ public partial class EmbedView : UserControl
     public EmbedView()
     {
         InitializeComponent();
-        _capture.AmplitudeDb += OnAmplitudeDb;
+        _capture.SpectrumBands += OnSpectrumBands;
+        _playback.SpectrumBands += OnSpectrumBands;
         RecordBtn.Click += (_, _) => RecordBtn_Click(this, new RoutedEventArgs());
+        LoadFileBtn.Click += LoadFileBtn_Click;
         Loaded += (_, _) => ApplyStrings();
     }
 
@@ -31,25 +34,26 @@ public partial class EmbedView : UserControl
     {
         var s = ThemeManager.Strings;
         MessageTextBox.SetValue(ToolTipService.ToolTipProperty, s.TextHint);
+        EqualizerTitle.Text = s.AudioEqualizer;
         RecordBtn.LabelIdle = s.StartRecording;
         RecordBtn.LabelActive = s.StopRecording;
         RecordBtn.RefreshVisual();
+        LoadFileLabel.Text = s.LoadAudioFile;
         PlayLabel.Text = s.Play;
         SaveLabel.Text = s.SaveStego;
         VerifyLabel.Text = s.Verify;
     }
 
-    private void OnAmplitudeDb(double db)
+    private void OnSpectrumBands(double[] bands)
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.BeginInvoke(() => OnAmplitudeDb(db));
+            Dispatcher.BeginInvoke(() => OnSpectrumBands(bands));
             return;
         }
-        _amps.Add(db);
-        if (_amps.Count > 200) _amps.RemoveAt(0);
-        Waveform.IsActive = _capture.IsRecording;
-        Waveform.SetSamples(_amps);
+        _eqBands = bands;
+        Equalizer.SetBands(bands);
+        Equalizer.IsActive = _capture.IsRecording || _playback.IsPlaying;
     }
 
     private async void RecordBtn_Click(object sender, RoutedEventArgs e)
@@ -66,39 +70,24 @@ public partial class EmbedView : UserControl
 
             var messageText = MessageTextBox.Text.Trim();
             string? errorMessage = null;
-            WatermarkOutcome? outcome = null;
+            WavFile? coverWav = null;
 
             try
             {
                 await Task.Run(() =>
                 {
-                    var cover = _capture.StopAndRead();
-                    if (cover is null)
+                    coverWav = _capture.StopAndRead();
+                    if (coverWav is null)
                     {
                         errorMessage = s.ErrorNoRecording;
                         return;
                     }
-
-                    if (string.IsNullOrEmpty(messageText))
-                    {
-                        errorMessage = s.ErrorEmpty;
-                        return;
-                    }
-
-                    var required = MessageBits.BitLengthForText(messageText);
-                    if (required > cover.ToMono().Samples.Length)
-                    {
-                        errorMessage = $"{s.ErrorTooLong} ({required} bits)";
-                        return;
-                    }
-
-                    outcome = AppState.Watermarking.Embed(messageText, cover);
                 });
 
                 if (errorMessage is not null)
                     StatusText.Text = errorMessage;
-                else if (outcome is not null)
-                    ShowResult(outcome);
+                else if (coverWav is not null)
+                    await RunEmbedAsync(coverWav, messageText);
             }
             catch (Exception ex)
             {
@@ -108,8 +97,10 @@ public partial class EmbedView : UserControl
             {
                 BusyBar.Visibility = Visibility.Collapsed;
                 RecordBtn.IsEnabled = true;
+                LoadFileBtn.IsEnabled = true;
                 RecordBtn.IsRecording = false;
-                Waveform.IsActive = false;
+                Equalizer.IsActive = false;
+                Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
                 _busy = false;
             }
 
@@ -124,16 +115,17 @@ public partial class EmbedView : UserControl
 
         try
         {
-            _amps.Clear();
-            Waveform.SetSamples(_amps);
+            Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
             _capture.Start();
+            _cover = null;
             _stego = null;
             _outcome = null;
             ResultPanel.Visibility = Visibility.Collapsed;
             VerifyBanner.Visibility = Visibility.Collapsed;
             StatusText.Text = s.Recording;
             RecordBtn.IsRecording = true;
-            Waveform.IsActive = true;
+            LoadFileBtn.IsEnabled = false;
+            Equalizer.IsActive = true;
             MessageTextBox.IsEnabled = false;
         }
         catch (Exception ex)
@@ -143,16 +135,119 @@ public partial class EmbedView : UserControl
         }
     }
 
-    private void ShowResult(WatermarkOutcome outcome)
+    private async void LoadFileBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || _capture.IsRecording) return;
+        var s = ThemeManager.Strings;
+        var messageText = MessageTextBox.Text.Trim();
+        if (string.IsNullOrEmpty(messageText))
+        {
+            StatusText.Text = s.ErrorEmpty;
+            return;
+        }
+
+        var dlg = new OpenFileDialog { Filter = AudioInputLoader.OpenDialogFilter };
+        if (dlg.ShowDialog() != true) return;
+
+        _busy = true;
+        BusyBar.Visibility = Visibility.Visible;
+        StatusText.Text = s.Processing;
+        LoadFileBtn.IsEnabled = false;
+        RecordBtn.IsEnabled = false;
+
+        WavFile? cover = null;
+        string? error = null;
+        await Task.Run(() =>
+        {
+            try
+            {
+                cover = AudioInputLoader.LoadFromPath(dlg.FileName);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+        });
+
+        if (error is not null)
+        {
+            StatusText.Text = error;
+        }
+        else if (cover is not null)
+        {
+            var preview = SpectrumAnalyzer.TimelineFromWav(cover);
+            if (preview.Count > 0)
+            {
+                _eqBands = preview[0];
+                Equalizer.SetBands(preview[0]);
+            }
+            await RunEmbedAsync(cover, messageText, Path.GetFileName(dlg.FileName));
+        }
+
+        BusyBar.Visibility = Visibility.Collapsed;
+        LoadFileBtn.IsEnabled = true;
+        RecordBtn.IsEnabled = true;
+        _busy = false;
+    }
+
+    private async Task RunEmbedAsync(WavFile cover, string messageText, string? loadedFileName = null)
+    {
+        var s = ThemeManager.Strings;
+        if (string.IsNullOrEmpty(messageText))
+        {
+            StatusText.Text = s.ErrorEmpty;
+            return;
+        }
+
+        var required = MessageBits.BitLengthForText(messageText);
+        if (required > cover.ToMono().Samples.Length)
+        {
+            StatusText.Text = $"{s.ErrorTooLong} ({required} bits)";
+            return;
+        }
+
+        WatermarkOutcome? outcome = null;
+        string? error = null;
+        await Task.Run(() =>
+        {
+            try
+            {
+                outcome = AppState.Watermarking.Embed(messageText, cover);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+        });
+
+        if (error is not null)
+            StatusText.Text = error;
+        else if (outcome is not null)
+        {
+            ShowResult(outcome, cover);
+            if (loadedFileName is not null)
+                StatusText.Text = s.AudioFileLoaded(loadedFileName);
+        }
+    }
+
+    private void ShowResult(WatermarkOutcome outcome, WavFile? cover)
     {
         var s = ThemeManager.Strings;
         _outcome = outcome;
+        _cover = cover;
         _stego = outcome.Stego;
         StatusText.Text = string.Empty;
         MessageTextBox.IsEnabled = true;
 
         ResultPanel.Visibility = Visibility.Visible;
         ResultTitle.Text = s.SuccessSaved;
+        CompareChartTitle.Text = s.CompareWaveformTitle;
+        CompareChart.SetLegends(s.CoverWaveLegend, s.StegoWaveLegend);
+        if (cover is not null)
+        {
+            CompareChart.CoverEnvelope = WaveformDisplay.EnvelopeFromWav(cover);
+            CompareChart.StegoEnvelope = WaveformDisplay.EnvelopeFromWav(outcome.Stego);
+        }
         MetricsTitle.Text = s.QualityMetrics;
 
         var m = outcome.Metrics;
@@ -189,8 +284,8 @@ public partial class EmbedView : UserControl
         if (_stego is null) return;
         var dlg = new SaveFileDialog
         {
-            Filter = Core.Audio.AudioInputLoader.OpenDialogFilter,
-            FileName = $"stego_{DateTime.Now:yyyyMMdd_HHmmss}.wav",
+            Filter = "WAV (*.wav)|*.wav",
+            FileName = StegoFileNaming.Build(_outcome!.BitsEmbedded),
         };
         if (dlg.ShowDialog() != true) return;
         File.WriteAllBytes(dlg.FileName, _stego.Encode());

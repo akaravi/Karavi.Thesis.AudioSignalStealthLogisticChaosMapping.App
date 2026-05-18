@@ -37,7 +37,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         for (var i = 0; i < pages.length; i++)
           Offstage(
             offstage: i != _index,
-            child: TickerMode(enabled: i == _index, child: pages[i]),
+            child: ExcludeSemantics(
+              excluding: i != _index,
+              child: TickerMode(enabled: i == _index, child: pages[i]),
+            ),
           ),
       ],
     );

@@ -1,7 +1,70 @@
 # =============================================================================
 # Audio Steg Cross-Platform App — root .gitignore
-# Covers: Flutter (Windows/Linux/Android), MATLAB, IDE caches, OS junk, secrets.
+# Covers: .NET/C# (WPF Desktop), Flutter (Windows/Linux/Android),
+#         MATLAB, IDE caches, OS junk, secrets.
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# .NET / C# / WPF Desktop
+# -----------------------------------------------------------------------------
+**/bin/
+**/obj/
+**/publish/
+publish/
+**/out/
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+**/[Dd]ebug/
+**/[Rr]elease/
+**/x64/
+**/x86/
+**/[Aa]rm/
+**/bld/
+**/[Ll]og/
+**/[Ll]ogs/
+
+# NuGet
+**/packages/
+*.nupkg
+**/project.lock.json
+**/project.fragment.lock.json
+*artifacts/
+
+# Rider / ReSharper
+**/_ReSharper*/
+**/[Dd]ata/
+*.DotSettings.user
+**/.idea/
+**/*.sln.iml
+
+# WPF temp files
+*_wpftmp.csproj*
+*_wpftmp_*
+
+# User-specific files
+*.rsuser
+*.pidb
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+
+# Publish profiles
+**/Properties/PublishProfiles/
+
+# Build results
+*.[Cc]ache
+ClientBin/
+~$*
+StyleCopReport.xml
+
+# .NET code coverage
+*.coverage
+*.coveragexml
 
 # -----------------------------------------------------------------------------
 # Flutter / Dart / Pub

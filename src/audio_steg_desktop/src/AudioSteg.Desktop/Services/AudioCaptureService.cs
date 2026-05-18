@@ -14,6 +14,9 @@ public sealed class AudioCaptureService : IDisposable
     public bool IsRecording => _recording;
 
     public event Action<double>? AmplitudeDb;
+    public event Action<double[]>? SpectrumBands;
+
+    private DateTime _lastSpectrumUtc = DateTime.MinValue;
 
     public void Start(int sampleRate = 44100)
     {
@@ -65,6 +68,31 @@ public sealed class AudioCaptureService : IDisposable
             var db = 20 * Math.Log10(Math.Max(Math.Abs(norm), 1e-9));
             AmplitudeDb?.Invoke(db);
         }
+
+        EmitSpectrum();
+    }
+
+    private void EmitSpectrum()
+    {
+        var now = DateTime.UtcNow;
+        if ((now - _lastSpectrumUtc).TotalMilliseconds < 50) return;
+
+        short[] snapshot;
+        lock (_lock)
+        {
+            if (_buffer.Count < 512) return;
+            const int take = 2048;
+            var start = _buffer.Count > take ? _buffer.Count - take : 0;
+            var len = _buffer.Count - start;
+            var count = len / 2;
+            if (count < 256) return;
+            snapshot = new short[count];
+            for (var i = 0; i < count; i++)
+                snapshot[i] = BitConverter.ToInt16(_buffer.ToArray(), start + i * 2);
+        }
+
+        _lastSpectrumUtc = now;
+        SpectrumBands?.Invoke(SpectrumAnalyzer.BandsFromPcm(snapshot));
     }
 
     public void Dispose() => Stop();

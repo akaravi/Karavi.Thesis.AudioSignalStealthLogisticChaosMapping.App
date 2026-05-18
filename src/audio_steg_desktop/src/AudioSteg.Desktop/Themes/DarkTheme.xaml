@@ -16,6 +16,7 @@
   <Color x:Key="ErrorContainerColor">#FF8C1D18</Color>
   <Color x:Key="SuccessColor">#FF81C784</Color>
   <Color x:Key="NavIndicatorColor">#FF4A4458</Color>
+  <Color x:Key="ChartStegoColor">#FF80CBC4</Color>
 
   <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
   <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
@@ -33,4 +34,5 @@
   <SolidColorBrush x:Key="OnErrorContainerBrush" Color="{StaticResource OnErrorContainerColor}" />
   <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
   <SolidColorBrush x:Key="NavIndicatorBrush" Color="{StaticResource NavIndicatorColor}" />
+  <SolidColorBrush x:Key="ChartStegoBrush" Color="{StaticResource ChartStegoColor}" />
 </ResourceDictionary>

@@ -28,7 +28,12 @@ class AppStrings {
   String get cancelRecording => _('لغو', 'Cancel');
   String get saveStego => _('ذخیره فایل نهان‌نگاری شده', 'Save stego file');
   String get fromFile => _('از فایل', 'From file');
-  String get pickFile => _('انتخاب فایل WAV', 'Pick a WAV file');
+  String get loadAudioFile => _('بارگذاری فایل صوتی', 'Load audio file');
+  String get pickFile =>
+      _('انتخاب فایل صوتی (WAV/MP3)', 'Pick audio file (WAV/MP3)');
+  String audioFileLoaded(String name) => locale == AppLocale.fa
+      ? 'فایل بارگذاری شد: $name'
+      : 'Audio loaded: $name';
   String get extractedText => _('متن استخراج شده', 'Extracted text');
   String get noText => _('چیزی استخراج نشد', 'Nothing extracted');
   String get copy => _('کپی', 'Copy');
@@ -88,6 +93,13 @@ class AppStrings {
 
   // ─── Quality metrics & verify (Part 11) ─────────────────────────────
   String get qualityMetrics => _('متریک‌های کیفیت', 'Quality metrics');
+  String get audioEqualizer => _('اکولایزر صدا', 'Audio equalizer');
+
+  String get compareWaveformTitle =>
+      _('مقایسه سیگنال صوتی', 'Audio signal comparison');
+  String get coverWaveLegend => _('صدای اصلی (پوشش)', 'Original audio (cover)');
+  String get stegoWaveLegend =>
+      _('صدای نهان‌نگاری‌شده', 'Watermarked audio (stego)');
   String get utilization => _('بهره‌وری ظرفیت', 'Capacity utilisation');
   String get verify => _('تأیید فوری', 'Verify roundtrip');
   String get verifying => _('در حال تأیید…', 'Verifying…');

@@ -85,3 +85,7 @@ D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Themes\SharedStyles.baml
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Controls\RecordButtonControl.g.cs
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Controls\WaveformControl.g.cs
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Controls\DualWaveformControl.baml
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Controls\DualWaveformControl.g.cs
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Controls\EqualizerControl.baml
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\Controls\EqualizerControl.g.cs

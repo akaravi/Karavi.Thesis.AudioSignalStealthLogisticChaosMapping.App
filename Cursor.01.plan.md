@@ -332,3 +332,53 @@
 ### Result 16
 - ✅ ساختار استاندارد: کد و پروژه‌ها فقط زیر `src/`
 - ✅ مستندات ریشه و README دسکتاپ به‌روز شد
+
+---
+
+## Part 17 — بارگذاری فایل صوتی کنار ضبط (Embed)
+
+### دستور
+در Flutter و WPF، کنار دکمه ضبط، دکمه بارگذاری WAV/MP3 برای کاور (موسیقی یا ضبط قبلی) و سپس embed همانند پایان ضبط.
+
+### Result 17
+- ✅ Flutter: `_loadAndEmbed`, `_embedWithCover`, `_LoadAudioFileButton` در `embed_screen.dart`
+- ✅ WPF: `LoadFileBtn` + `RunEmbedAsync` در `EmbedView`
+- ✅ رشته‌ها: `loadAudioFile`, `audioFileLoaded(name)`
+- ✅ `dotnet build` و `flutter analyze` بدون خطا
+
+---
+
+## Part 18 — اسکریپت `_build-all-projects.ps1`
+
+### دستور
+ایجاد اسکریپت PowerShell ریشه مخزن مشابه الگوی `Ntk.Hyper.Milad.Tools/_build-all-projects.ps1` برای بیلد و بسته‌بندی این thesis repo.
+
+### JSON Prompt (خلاصهٔ پیکربندی)
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "metadata": {
+    "title": "Thesis repo unified build script",
+    "updatedAt": "2026-05-18"
+  },
+  "assembledPrompt": "Root script _build-all-projects.ps1: paths src/audio_steg_desktop/AudioSteg.sln and src/audio_steg_app; default release pipeline restores dotnet + flutter pub get (mirror retry optional), dotnet build/test, dotnet publish win-x64 self-contained false to publish/dotnet/win-x64/AudioSteg.Desktop, flutter analyze/test, flutter build web --release then flutter build windows --release; if ZipOutputDirectory empty prompts user via Read-Host (Persian message) then ZIP KaraviThesis_AudioSteg_Build_yyyyMMdd_HHmmss.zip staging dotnet publish + audio_steg_app_web (build/web) + audio_steg_app_windows_release; switches SkipRestore SkipPackage SkipTests SkipFlutterAnalyze SkipDevServers PackageOnly OfflinePubGet UseFlutterIoCnMirror PubHostedUrl FlutterStorageBaseUrl DisableAutoMirrorRetry OpenDeveloperSettings ZipOutputDirectory Configuration Debug|Release.",
+  "paths": {
+    "solution": "src/audio_steg_desktop/AudioSteg.sln",
+    "desktopProject": "src/audio_steg_desktop/src/AudioSteg.Desktop/AudioSteg.Desktop.csproj",
+    "flutterApp": "src/audio_steg_app",
+    "dotnetPublishOut": "publish/dotnet/win-x64/AudioSteg.Desktop",
+    "zipOutput": "Read-Host when -ZipOutputDirectory omitted; required for packaging",
+    "flutterReleaseExe": "build/windows/x64/runner/Release/audio_steg_app.exe",
+    "flutterWebRelease": "build/web/index.html",
+    "zipStagingWebFolder": "audio_steg_app_web"
+  }
+}
+```
+
+### Result 18
+- ✅ `_build-all-projects.ps1` در ریشه مخزن با پارامترهای قابل تنظیم؛ مسیر ZIP با `Read-Host` پرسیده می‌شود مگر `-ZipOutputDirectory` داده شود
+- ✅ pipeline شامل `flutter build web --release` و پوشه `audio_steg_app_web` در ZIP استقرار
+- ✅ `-SkipPackage` فقط restore وابستگی‌ها؛ `-PackageOnly` پایان پیش از باز کردن ترمینال‌ها؛ `-SkipDevServers` بدون spawn کردن `dotnet run` / `flutter run`

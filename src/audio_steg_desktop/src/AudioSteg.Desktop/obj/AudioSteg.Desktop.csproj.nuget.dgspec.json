@@ -348,6 +348,11 @@
             "System.Xml.XPath.XDocument": "(,5.0.32767]"
           }
         }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
+        }
       }
     },
     "D:\\SourceKaravi\\GitHub\\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\\src\\audio_steg_desktop\\src\\AudioSteg.Desktop\\AudioSteg.Desktop.csproj": {
@@ -716,6 +721,11 @@
             "System.Xml.XPath": "(,4.3.32767]",
             "System.Xml.XPath.XDocument": "(,5.0.32767]"
           }
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }

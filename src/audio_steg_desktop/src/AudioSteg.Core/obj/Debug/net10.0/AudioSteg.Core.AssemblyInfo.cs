@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("LSB + Logistic-Chaos audio watermarking (MATLAB port)")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b48911809eba79e7872356de5370d5992a85958c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24bd48e094a63737506904d145b6e2b35787134d")]
 [assembly: System.Reflection.AssemblyProductAttribute("AudioSteg.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AudioSteg.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

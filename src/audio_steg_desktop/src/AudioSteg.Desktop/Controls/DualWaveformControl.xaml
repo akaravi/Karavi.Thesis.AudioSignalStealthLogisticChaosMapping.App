@@ -1,0 +1,19 @@
+<UserControl x:Class="AudioSteg.Desktop.Controls.DualWaveformControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinHeight="140">
+  <StackPanel>
+    <Border x:Name="ChartHost" Height="120" CornerRadius="12"
+            Background="{DynamicResource SurfaceVariantBrush}" Opacity="0.35" />
+    <WrapPanel Margin="0,8,0,0">
+      <StackPanel Orientation="Horizontal" Margin="0,0,16,4">
+        <Ellipse Width="12" Height="12" Fill="{DynamicResource ChartCoverBrush}" VerticalAlignment="Center" />
+        <TextBlock x:Name="CoverLegend" Margin="6,0,0,0" Style="{StaticResource BodySmall}" VerticalAlignment="Center" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+        <Ellipse Width="12" Height="12" Fill="{DynamicResource ChartStegoBrush}" VerticalAlignment="Center" />
+        <TextBlock x:Name="StegoLegend" Margin="6,0,0,0" Style="{StaticResource BodySmall}" VerticalAlignment="Center" />
+      </StackPanel>
+    </WrapPanel>
+  </StackPanel>
+</UserControl>

@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NET10_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\App.xaml
-9-1435538174
+111168377837
 
-14242961950
+16-1185410384
 2211873992195
-Controls\RecordButtonControl.xaml;Controls\WaveformControl.xaml;MainWindow.xaml;Themes\DarkTheme.xaml;Themes\LightTheme.xaml;Themes\SharedStyles.xaml;Views\EmbedView.xaml;Views\ExtractView.xaml;Views\SettingsView.xaml;
+Controls\DualWaveformControl.xaml;Controls\EqualizerControl.xaml;Controls\RecordButtonControl.xaml;Controls\WaveformControl.xaml;MainWindow.xaml;Themes\DarkTheme.xaml;Themes\LightTheme.xaml;Themes\SharedStyles.xaml;Views\EmbedView.xaml;Views\ExtractView.xaml;Views\SettingsView.xaml;
 
 False
 

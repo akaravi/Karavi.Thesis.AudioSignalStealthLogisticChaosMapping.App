@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/app_strings.dart';
 import '../../app/settings_controller.dart';
-import '../../core/audio/wav_io.dart';
+import '../../core/audio/audio_input_loader.dart';
 import '../../core/stego/stego.dart';
 
 class ExtractScreen extends ConsumerStatefulWidget {
@@ -20,8 +20,10 @@ class ExtractScreen extends ConsumerStatefulWidget {
 class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   final _bitLenCtrl = TextEditingController();
   bool _processing = false;
+  bool _extractionAttempted = false;
   String? _result;
   String? _statusMessage;
+  String? _bitLengthError;
 
   @override
   void dispose() {
@@ -32,14 +34,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   int? _parseBitLength(AppStrings s) {
     final raw = _bitLenCtrl.text.trim();
     if (raw.isEmpty) {
-      setState(() => _statusMessage = s.errorBitLengthEmpty);
+      setState(() => _bitLengthError = s.errorBitLengthEmpty);
       return null;
     }
     final n = int.tryParse(raw);
     if (n == null || n <= 0) {
-      setState(() => _statusMessage = s.errorBitLengthInvalid);
+      setState(() => _bitLengthError = s.errorBitLengthInvalid);
       return null;
     }
+    setState(() => _bitLengthError = null);
     return n;
   }
 
@@ -49,23 +52,19 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     final msgBitLength = _parseBitLength(s);
     if (msgBitLength == null) return;
 
-    setState(() {
-      _processing = true;
-      _statusMessage = s.processing;
-      _result = null;
-    });
-
     FilePickerResult? picked;
     try {
       picked = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['wav'],
+        allowedExtensions: AudioInputLoader.audioPickerExtensions,
         withData: true,
       );
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _processing = false;
+        _extractionAttempted = true;
+        _result = null;
         _statusMessage = e.toString();
       });
       return;
@@ -73,20 +72,23 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
     if (!mounted) return;
     if (picked == null || picked.files.isEmpty) {
-      setState(() {
-        _processing = false;
-        _statusMessage = null;
-      });
       return;
     }
 
+    setState(() {
+      _processing = true;
+      _result = null;
+      _statusMessage = s.processing;
+      _extractionAttempted = false;
+    });
+
     final file = picked.files.first;
-    Uint8List? bytes;
+    late final Uint8List audioBytes;
     try {
       if (file.bytes != null) {
-        bytes = file.bytes!;
+        audioBytes = file.bytes!;
       } else if (file.path != null) {
-        bytes = await File(file.path!).readAsBytes();
+        audioBytes = await File(file.path!).readAsBytes();
       } else {
         throw StateError('No bytes/path available');
       }
@@ -94,18 +96,29 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       if (!mounted) return;
       setState(() {
         _processing = false;
+        _extractionAttempted = true;
+        _result = null;
         _statusMessage = e.toString();
       });
       return;
     }
 
-    final wavBytes = bytes;
-    if (wavBytes == null) return;
+    final fileName = file.name;
+    if (fileName.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _processing = false;
+        _extractionAttempted = true;
+        _result = null;
+        _statusMessage = s.keyMismatch;
+      });
+      return;
+    }
 
     String? text;
     String? error;
     try {
-      final wav = WavFile.decode(wavBytes);
+      final wav = await AudioInputLoader.loadFromBytes(audioBytes, fileName);
       final settings = ref.read(settingsProvider);
       text = await StegoRunner.extract(
         wav,
@@ -119,10 +132,25 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     if (!mounted) return;
     setState(() {
       _processing = false;
+      _extractionAttempted = true;
       _result = text;
-      _statusMessage = error ?? (text == null ? s.keyMismatch : null);
+      _statusMessage =
+          error ??
+          (text == null
+              ? s.keyMismatch
+              : text.isEmpty
+              ? s.noText
+              : null);
     });
   }
+
+  String _resultBody(AppStrings s) {
+    if (_result != null && _result!.isNotEmpty) return _result!;
+    if (_result != null && _result!.isEmpty) return s.noText;
+    return _statusMessage ?? s.noText;
+  }
+
+  bool get _extractSucceeded => _result != null && _result!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -154,9 +182,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     enabled: !_processing,
+                    onChanged: (_) {
+                      if (_bitLengthError != null) {
+                        setState(() => _bitLengthError = null);
+                      }
+                    },
                     decoration: InputDecoration(
                       labelText: s.msgBitLengthHint,
                       helperText: s.msgBitLengthHelper,
+                      errorText: _bitLengthError,
                       prefixIcon: const Icon(Icons.format_list_numbered),
                     ),
                   ),
@@ -184,13 +218,14 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   }
 
   Widget _resultCard(AppStrings s) {
-    if (_result == null && _statusMessage == null) {
+    if (!_extractionAttempted) {
       return const SizedBox.shrink();
     }
+    final theme = Theme.of(context);
     return Card(
-      color: _result != null
-          ? Theme.of(context).colorScheme.primaryContainer
-          : Theme.of(context).colorScheme.errorContainer,
+      color: _extractSucceeded
+          ? theme.colorScheme.primaryContainer
+          : theme.colorScheme.errorContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -199,23 +234,17 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
             Row(
               children: [
                 Icon(
-                  _result != null
+                  _extractSucceeded
                       ? Icons.check_circle_outline
                       : Icons.error_outline,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  s.extractedText,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text(s.extractedText, style: theme.textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 12),
-            SelectableText(
-              _result ?? s.noText,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            if (_result != null) ...[
+            SelectableText(_resultBody(s), style: theme.textTheme.bodyLarge),
+            if (_extractSucceeded) ...[
               const SizedBox(height: 12),
               Align(
                 alignment: AlignmentDirectional.centerEnd,

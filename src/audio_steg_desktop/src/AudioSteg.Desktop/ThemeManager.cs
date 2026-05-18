@@ -24,6 +24,7 @@ public static class ThemeManager
         resources["AccentBrush"] = new SolidColorBrush(accent);
         resources["AccentForegroundBrush"] = new SolidColorBrush(Colors.White);
         resources["PrimaryBrush"] = new SolidColorBrush(accent);
+        resources["ChartCoverBrush"] = new SolidColorBrush(accent);
     }
 
     public static void Apply(Window window)

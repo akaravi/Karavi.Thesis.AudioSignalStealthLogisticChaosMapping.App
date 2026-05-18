@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart' as rec;
 
+import '../../app/session_log.dart';
+import 'spectrum_analyzer.dart';
 import 'wav_io.dart';
 
 /// Internal state of [AudioRecorderService].
@@ -57,8 +59,11 @@ class AudioRecorderService {
       StreamController<RecorderState>.broadcast();
   final StreamController<double> _amplitudeController =
       StreamController<double>.broadcast();
+  final StreamController<List<double>> _spectrumController =
+      StreamController<List<double>>.broadcast();
 
   RecorderState _state = RecorderState.idle;
+  DateTime? _lastSpectrumEmit;
   int _sampleRate = 44100;
   int _numChannels = 1;
 
@@ -75,6 +80,7 @@ class AudioRecorderService {
       _state == RecorderState.recording ||
       _state == RecorderState.stopping;
   int get currentSampleRate => _sampleRate;
+  Stream<List<double>> get spectrumStream => _spectrumController.stream;
 
   Future<bool> ensurePermission() async {
     if (Platform.isAndroid || Platform.isIOS) {
@@ -127,7 +133,9 @@ class AudioRecorderService {
         );
 
         _setState(RecorderState.recording);
-      } catch (_) {
+        SessionLog.write('AudioRecorder: recording');
+      } catch (e, st) {
+        SessionLog.write('AudioRecorder: start failed', error: e, stack: st);
         await _safeRollbackTo(RecorderState.idle);
         rethrow;
       }
@@ -171,9 +179,13 @@ class AudioRecorderService {
       // ignore: unused_local_variable
       final _ = old;
 
-      if (bytes.isEmpty) return null;
+      if (bytes.isEmpty) {
+        SessionLog.write('AudioRecorder: stop — no bytes captured');
+        return null;
+      }
       final samples = _bytesToInt16Le(bytes);
       if (samples.isEmpty) return null;
+      SessionLog.write('AudioRecorder: stop OK (${samples.length} samples)');
       return WavFile(
         sampleRate: _sampleRate,
         numChannels: _numChannels,
@@ -218,6 +230,7 @@ class AudioRecorderService {
     _setState(RecorderState.disposed);
     await _stateController.close();
     await _amplitudeController.close();
+    await _spectrumController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -229,6 +242,36 @@ class AudioRecorderService {
     _buffer.add(chunk);
     if (!_amplitudeController.isClosed) {
       _amplitudeController.add(_estimateDbfs(chunk));
+    }
+    _emitSpectrumFromBuffer();
+  }
+
+  void _emitSpectrumFromBuffer() {
+    if (_spectrumController.isClosed) return;
+    final now = DateTime.now();
+    if (_lastSpectrumEmit != null &&
+        now.difference(_lastSpectrumEmit!) < const Duration(milliseconds: 50)) {
+      return;
+    }
+    final bytes = _buffer.toBytes();
+    if (bytes.length < 512) return;
+    const take = 2048;
+    final start = bytes.length > take ? bytes.length - take : 0;
+    final slice = bytes.sublist(start);
+    final n = slice.length ~/ 2;
+    if (n < 256) return;
+    final pcm = Int16List(n);
+    final bd = ByteData.sublistView(slice);
+    for (var i = 0; i < n; i++) {
+      pcm[i] = bd.getInt16(i * 2, Endian.little);
+    }
+    _lastSpectrumEmit = now;
+    try {
+      _spectrumController.add(
+        SpectrumAnalyzer.bandsFromPcm(pcm, sampleRate: _sampleRate),
+      );
+    } catch (e, st) {
+      SessionLog.write('AudioRecorder: spectrum failed', error: e, stack: st);
     }
   }
 

@@ -71,3 +71,15 @@
 | 2026-05-18 | 12:00 | ui | هم‌ترازی UI دسکتاپ با Flutter: Material3، ناوبری پایین/ریل، دکمه ضبط دایره‌ای، موج‌نما، چیپ متریک | `Themes/*`, `Controls/*`, `Views/*`, `MainWindow.*` |
 | 2026-05-18 | 12:20 | feat | پشتیبانی MP3 در استخراج/ذخیره دیالوگ دسکتاپ — `AudioInputLoader` + NAudio | `AudioSteg.Core/Audio/AudioInputLoader.cs` |
 | 2026-05-18 | 08:30 | monitor | لاگ فایل Flutter (`SessionLog`) + `monitor_flutter.ps1` + `flutter run -v` به `logs/flutter_run_monitor.log` برای پایش کرش هنگام تست | `lib/app/session_log.dart`, `scripts/monitor_flutter.ps1`, `logs/*` |
+| 2026-05-18 | 08:40 | bugfix | کرش native ویندوز (`Lost connection`، بدون Dart error): `ExcludeSemantics` سراسری Win + تب‌های Offstage + موج‌نما؛ throttle setState موج‌نما ۸۰ms؛ لاگ مسیر ضبط/embed | `main.dart`, `home_shell.dart`, `waveform_view.dart`, `embed_screen.dart` |
+| 2026-05-18 | 09:00 | ui | نمودار مقایسه cover/stego در صفحه نهان‌نگاری (دو رنگ، خط پیوسته/خط‌چین) — Flutter + WPF | `dual_waveform_chart.dart`, `DualWaveformControl`, `EmbedView`, `embed_screen.dart` |
+| 2026-05-18 | 09:20 | feat | نام فایل ذخیره `stego_YYYY_MM_DD_HHMM_{msg_len}.wav`؛ خواندن WAV+MP3 در Flutter (FFmpeg) و دسکتاپ (NAudio) | `StegoFileNaming`, `audio_input_loader.dart`, embed/extract screens |
+| 2026-05-18 | 09:45 | ui | اکولایزر ۳۲ باندی زنده هنگام ضبط (FFT) و پخش (timeline) — Flutter + WPF | `SpectrumAnalyzer`, `AudioEqualizerView`, `EqualizerControl`, embed views |
+| 2026-05-18 | 10:00 | feat | دکمه «بارگذاری فایل صوتی» کنار ضبط در Embed — WAV/MP3 به‌جای ضبط زنده | `embed_screen.dart`, `EmbedView` |
+| 2026-05-18 | 10:30 | fix | اکولایزر Flutter: نمایش واضح‌تر + بیلد مجدد؛ اسکریپت junction برای ویندوز بدون Developer Mode | `audio_equalizer_view.dart`, `ensure_windows_plugin_junctions.ps1` |
+| 2026-05-18 | 14:10 | build | اسکریپت تجمیعی `_build-all-projects.ps1` (ریشه مخزن): restore/build/test/publish دسکتاپ، Flutter analyze/test/build windows، ZIP استقرار، ترمینال‌های dev اختیاری؛ آینه‌ی pub و retry مشابه Milad Tools | `_build-all-projects.ps1` |
+| 2026-05-18 | 14:25 | build | پرسیدن مسیر ذخیره ZIP با `Read-Host` (مثل Milad Tools)؛ حذف پیش‌فرض خودکار `publish\releases` | `_build-all-projects.ps1` |
+| 2026-05-18 | 14:40 | build | `flutter build web --release` در `_build-all-projects.ps1`؛ پوشه `audio_steg_app_web` در ZIP؛ افزودن پلتفرم web به Flutter (`web/index.html`, …) | `_build-all-projects.ps1`, `src/audio_steg_app/web/` |
+| 2026-05-18 | 15:05 | fix | رفع شکست `flutter analyze` در بیلد: حذف `test/widget_test.dart` پیش‌فرض (ارجاع به `MyApp`)؛ حذف import اضافی `dart:typed_data` در `audio_player.dart` | `test/widget_test.dart`, `lib/core/audio/audio_player.dart` |
+| 2026-05-18 | 09:30 | fix | رفع نمایش زودهنگام «چیزی استخراج نشد» در تب رمزگشایی هنگام کلیک انتخاب فایل قبل از picker؛ اعتبارسنجی طول بیت در فیلد ورودی | `features/extract/extract_screen.dart` |
+| 2026-05-18 | 10:17 | gitignore | تکمیل `.gitignore` ریشه: افزودن بخش .NET/C#/WPF (bin/, obj/, publish/, *.user, *.suo, _wpftmp, NuGet, Rider/ReSharper)؛ حذف فایل‌های ساختنی از ایندکس git با `git rm --cached` | `.gitignore` |
