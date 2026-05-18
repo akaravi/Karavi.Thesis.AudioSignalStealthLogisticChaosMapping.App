@@ -7,6 +7,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         AppState.Load();
-        base.OnStartup(e);
+        ThemeManager.Apply(Resources);
+        new MainWindow().Show();
     }
 }

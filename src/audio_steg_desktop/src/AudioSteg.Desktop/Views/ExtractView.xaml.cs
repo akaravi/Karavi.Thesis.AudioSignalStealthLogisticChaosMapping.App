@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Microsoft.Win32;
 
 namespace AudioSteg.Desktop.Views;
@@ -19,9 +20,9 @@ public partial class ExtractView : UserControl
         PickTitle.Text = s.PickFile;
         BitLengthBox.SetValue(ToolTipService.ToolTipProperty, s.MsgBitLengthHint);
         BitLengthHelper.Text = s.MsgBitLengthHelper;
-        PickButton.Content = s.PickFile;
+        PickLabel.Text = s.PickFile;
         ResultTitle.Text = s.ExtractedText;
-        CopyButton.Content = s.Copy;
+        CopyLabel.Text = s.Copy;
     }
 
     private int? ParseBitLength()
@@ -47,7 +48,7 @@ public partial class ExtractView : UserControl
         if (bitLen is null) return;
 
         var s = ThemeManager.Strings;
-        var dlg = new OpenFileDialog { Filter = "WAV files (*.wav)|*.wav" };
+        var dlg = new OpenFileDialog { Filter = Core.Audio.AudioInputLoader.OpenDialogFilter };
         if (dlg.ShowDialog() != true) return;
 
         BusyBar.Visibility = Visibility.Visible;
@@ -61,8 +62,7 @@ public partial class ExtractView : UserControl
         {
             try
             {
-                var bytes = File.ReadAllBytes(dlg.FileName);
-                var wav = Core.Audio.WavFile.Decode(bytes);
+                var wav = Core.Audio.AudioInputLoader.LoadFromPath(dlg.FileName);
                 text = AppState.Watermarking.Extract(wav, bitLen.Value);
             }
             catch (Exception ex)
@@ -84,12 +84,21 @@ public partial class ExtractView : UserControl
         {
             StatusText.Text = s.KeyMismatch;
             ResultText.Text = s.NoText;
+            ResultHeaderIcon.Text = "\uE783";
+            ResultPanel.Style = (Style)FindResource("MaterialCard");
+            ResultPanel.Background = (Brush)FindResource("ErrorContainerBrush");
+            ResultTitle.Foreground = (Brush)FindResource("OnErrorContainerBrush");
+            ResultText.Foreground = (Brush)FindResource("OnErrorContainerBrush");
             ResultPanel.Visibility = Visibility.Visible;
             return;
         }
 
         StatusText.Text = string.Empty;
         ResultText.Text = text;
+        ResultHeaderIcon.Text = "\uE73E";
+        ResultPanel.Style = (Style)FindResource("ResultCard");
+        ResultTitle.Foreground = (Brush)FindResource("OnPrimaryContainerBrush");
+        ResultText.Foreground = (Brush)FindResource("OnPrimaryContainerBrush");
         ResultPanel.Visibility = Visibility.Visible;
     }
 

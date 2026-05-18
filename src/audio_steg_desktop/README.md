@@ -10,7 +10,7 @@
 ## ساخت و اجرا
 
 ```bash
-cd audio_steg_desktop
+cd src/audio_steg_desktop
 dotnet build AudioSteg.sln
 dotnet test
 dotnet run --project src/AudioSteg.Desktop

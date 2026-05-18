@@ -2,9 +2,9 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using AudioSteg.Core.Audio;
 using AudioSteg.Core.Stego;
+using AudioSteg.Desktop.Models;
 using AudioSteg.Desktop.Services;
 using Microsoft.Win32;
 
@@ -22,15 +22,8 @@ public partial class EmbedView : UserControl
     public EmbedView()
     {
         InitializeComponent();
-        _capture.AmplitudeDb += db =>
-        {
-            Dispatcher.Invoke(() =>
-            {
-                _amps.Add(db);
-                if (_amps.Count > 200) _amps.RemoveAt(0);
-                DrawWaveform();
-            });
-        };
+        _capture.AmplitudeDb += OnAmplitudeDb;
+        RecordBtn.Click += (_, _) => RecordBtn_Click(this, new RoutedEventArgs());
         Loaded += (_, _) => ApplyStrings();
     }
 
@@ -38,47 +31,28 @@ public partial class EmbedView : UserControl
     {
         var s = ThemeManager.Strings;
         MessageTextBox.SetValue(ToolTipService.ToolTipProperty, s.TextHint);
-        RefreshRecordButton();
+        RecordBtn.LabelIdle = s.StartRecording;
+        RecordBtn.LabelActive = s.StopRecording;
+        RecordBtn.RefreshVisual();
+        PlayLabel.Text = s.Play;
+        SaveLabel.Text = s.SaveStego;
+        VerifyLabel.Text = s.Verify;
     }
 
-    private void DrawWaveform()
+    private void OnAmplitudeDb(double db)
     {
-        WaveformBar.Child = null;
-        if (_amps.Count == 0) return;
-        var canvas = new Canvas { Width = WaveformBar.ActualWidth > 0 ? WaveformBar.ActualWidth : 400, Height = 48 };
-        var min = _amps.Min();
-        var max = _amps.Max();
-        var range = Math.Max(max - min, 1e-6);
-        for (var i = 0; i < _amps.Count; i++)
+        if (!Dispatcher.CheckAccess())
         {
-            var x = i * canvas.Width / Math.Max(_amps.Count - 1, 1);
-            var h = ((_amps[i] - min) / range) * 40 + 4;
-            var rect = new Rectangle
-            {
-                Width = Math.Max(canvas.Width / _amps.Count - 1, 2),
-                Height = h,
-                Fill = (Brush)FindResource("AccentBrush"),
-                RadiusX = 1,
-                RadiusY = 1,
-            };
-            Canvas.SetLeft(rect, x);
-            Canvas.SetBottom(rect, 4);
-            canvas.Children.Add(rect);
+            Dispatcher.BeginInvoke(() => OnAmplitudeDb(db));
+            return;
         }
-        WaveformBar.Child = canvas;
+        _amps.Add(db);
+        if (_amps.Count > 200) _amps.RemoveAt(0);
+        Waveform.IsActive = _capture.IsRecording;
+        Waveform.SetSamples(_amps);
     }
 
-    private void RefreshRecordButton()
-    {
-        var s = ThemeManager.Strings;
-        RecordButton.Content = _capture.IsRecording ? s.StopRecording : s.StartRecording;
-        RecordButton.Background = _capture.IsRecording
-            ? (Brush)FindResource("ErrorBrush")
-            : (Brush)FindResource("AccentBrush");
-        RecordButton.Foreground = Brushes.White;
-    }
-
-    private async void RecordButton_Click(object sender, RoutedEventArgs e)
+    private async void RecordBtn_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
         var s = ThemeManager.Strings;
@@ -88,52 +62,61 @@ public partial class EmbedView : UserControl
             _busy = true;
             BusyBar.Visibility = Visibility.Visible;
             StatusText.Text = s.Processing;
-            RecordButton.IsEnabled = false;
+            RecordBtn.IsEnabled = false;
 
-            await Task.Run(() =>
+            var messageText = MessageTextBox.Text.Trim();
+            string? errorMessage = null;
+            WatermarkOutcome? outcome = null;
+
+            try
             {
-                try
+                await Task.Run(() =>
                 {
                     var cover = _capture.StopAndRead();
                     if (cover is null)
                     {
-                        Dispatcher.Invoke(() => StatusText.Text = "No recorded audio.");
+                        errorMessage = s.ErrorNoRecording;
                         return;
                     }
 
-                    var text = MessageTextBox.Text.Trim();
-                    if (string.IsNullOrEmpty(text))
+                    if (string.IsNullOrEmpty(messageText))
                     {
-                        Dispatcher.Invoke(() => StatusText.Text = s.ErrorEmpty);
+                        errorMessage = s.ErrorEmpty;
                         return;
                     }
 
-                    var required = MessageBits.BitLengthForText(text);
+                    var required = MessageBits.BitLengthForText(messageText);
                     if (required > cover.ToMono().Samples.Length)
                     {
-                        Dispatcher.Invoke(() =>
-                            StatusText.Text = $"{s.ErrorTooLong} ({required} bits)");
+                        errorMessage = $"{s.ErrorTooLong} ({required} bits)";
                         return;
                     }
 
-                    var outcome = AppState.Watermarking.Embed(text, cover);
-                    Dispatcher.Invoke(() => ShowResult(outcome, null));
-                }
-                catch (Exception ex)
-                {
-                    Dispatcher.Invoke(() => StatusText.Text = ex.Message);
-                }
-            });
+                    outcome = AppState.Watermarking.Embed(messageText, cover);
+                });
 
-            BusyBar.Visibility = Visibility.Collapsed;
-            RecordButton.IsEnabled = true;
-            _busy = false;
-            RefreshRecordButton();
+                if (errorMessage is not null)
+                    StatusText.Text = errorMessage;
+                else if (outcome is not null)
+                    ShowResult(outcome);
+            }
+            catch (Exception ex)
+            {
+                StatusText.Text = ex.Message;
+            }
+            finally
+            {
+                BusyBar.Visibility = Visibility.Collapsed;
+                RecordBtn.IsEnabled = true;
+                RecordBtn.IsRecording = false;
+                Waveform.IsActive = false;
+                _busy = false;
+            }
+
             return;
         }
 
-        var msg = MessageTextBox.Text.Trim();
-        if (string.IsNullOrEmpty(msg))
+        if (string.IsNullOrEmpty(MessageTextBox.Text.Trim()))
         {
             StatusText.Text = s.ErrorEmpty;
             return;
@@ -142,51 +125,57 @@ public partial class EmbedView : UserControl
         try
         {
             _amps.Clear();
+            Waveform.SetSamples(_amps);
             _capture.Start();
             _stego = null;
             _outcome = null;
             ResultPanel.Visibility = Visibility.Collapsed;
+            VerifyBanner.Visibility = Visibility.Collapsed;
             StatusText.Text = s.Recording;
-            RefreshRecordButton();
+            RecordBtn.IsRecording = true;
+            Waveform.IsActive = true;
+            MessageTextBox.IsEnabled = false;
         }
         catch (Exception ex)
         {
             StatusText.Text = ex.Message;
+            RecordBtn.IsRecording = false;
         }
     }
 
-    private void ShowResult(WatermarkOutcome outcome, string? error)
+    private void ShowResult(WatermarkOutcome outcome)
     {
         var s = ThemeManager.Strings;
         _outcome = outcome;
         _stego = outcome.Stego;
-        StatusText.Text = error ?? string.Empty;
+        StatusText.Text = string.Empty;
+        MessageTextBox.IsEnabled = true;
 
         ResultPanel.Visibility = Visibility.Visible;
-        ResultTitle.Text = s.QualityMetrics;
+        ResultTitle.Text = s.SuccessSaved;
+        MetricsTitle.Text = s.QualityMetrics;
 
         var m = outcome.Metrics;
         var duration = outcome.Stego.Samples.Length / (double)outcome.Stego.SampleRate;
-        MetricsText.Text =
-            $"{s.Duration}: {duration:F2} s\n" +
-            $"{s.BitsEmbedded}: {outcome.BitsEmbedded}\n" +
-            $"{s.Capacity}: {outcome.CapacityBits}\n" +
-            $"{s.Utilization}: {outcome.Utilization * 100:F1} %\n" +
-            $"{s.MsgBitLength}: {outcome.BitsEmbedded}\n" +
-            $"{s.SnrLabel}: {FormatMetric(m.SnrDb)}\n" +
-            $"{s.PsnrLabel}: {FormatMetric(m.PsnrDb)}\n" +
-            $"{s.BerLabel}: {m.BerPercent:F4}\n" +
-            $"{s.NpcrLabel}: {m.NpcrPercent:F4}\n" +
-            $"{s.UaciLabel}: {m.UaciPercent:F4}";
+        var chips = new List<MetricChipItem>
+        {
+            new("\uE121", s.Duration, $"{duration:F2} s"),
+            new("\uE7C1", s.BitsEmbedded, $"{outcome.BitsEmbedded}"),
+            new("\uE7F4", s.Capacity, $"{outcome.CapacityBits}"),
+            new("\uE9F9", s.Utilization, $"{outcome.Utilization * 100:F1} %"),
+            new("\uE8FD", s.MsgBitLength, $"{outcome.BitsEmbedded}"),
+        };
+        if (double.IsFinite(m.SnrDb))
+            chips.Add(new("\uE9D9", s.SnrLabel, m.SnrDb.ToString("F2")));
+        if (double.IsFinite(m.PsnrDb))
+            chips.Add(new("\uE9D9", s.PsnrLabel, m.PsnrDb.ToString("F2")));
+        chips.Add(new("\uE94C", s.BerLabel, m.BerPercent.ToString("F4")));
+        chips.Add(new("\uE72E", s.NpcrLabel, m.NpcrPercent.ToString("F4")));
+        chips.Add(new("\uE72E", s.UaciLabel, m.UaciPercent.ToString("F4")));
+        MetricsItems.ItemsSource = chips;
 
-        PlayButton.Content = s.Play;
-        SaveButton.Content = s.SaveStego;
-        VerifyButton.Content = s.Verify;
-        VerifyText.Visibility = Visibility.Collapsed;
+        VerifyBanner.Visibility = Visibility.Collapsed;
     }
-
-    private static string FormatMetric(double v) =>
-        double.IsFinite(v) ? v.ToString("F2") : "∞";
 
     private void PlayButton_Click(object sender, RoutedEventArgs e)
     {
@@ -200,36 +189,48 @@ public partial class EmbedView : UserControl
         if (_stego is null) return;
         var dlg = new SaveFileDialog
         {
-            Filter = "WAV files (*.wav)|*.wav",
+            Filter = Core.Audio.AudioInputLoader.OpenDialogFilter,
             FileName = $"stego_{DateTime.Now:yyyyMMdd_HHmmss}.wav",
         };
         if (dlg.ShowDialog() != true) return;
         File.WriteAllBytes(dlg.FileName, _stego.Encode());
-        StatusText.Text = $"{ThemeManager.Strings.Copied}: {dlg.FileName}";
+        StatusText.Text = $"{ThemeManager.Strings.SuccessSaved}: {dlg.FileName}";
     }
 
     private async void VerifyButton_Click(object sender, RoutedEventArgs e)
     {
         if (_stego is null || _outcome is null) return;
         var s = ThemeManager.Strings;
-        VerifyText.Visibility = Visibility.Visible;
+        VerifyBanner.Visibility = Visibility.Visible;
         VerifyText.Text = s.Verifying;
-        VerifyText.Foreground = (Brush)FindResource("MutedBrush");
+        VerifyBanner.Background = (Brush)FindResource("SurfaceVariantBrush");
+        VerifyBannerIcon.Text = "\uE121";
+        VerifyText.Foreground = (Brush)FindResource("TextBrush");
 
         var original = MessageTextBox.Text.Trim();
-        var extracted = await Task.Run(() =>
-            AppState.Watermarking.Extract(_stego, _outcome.BitsEmbedded));
+        var bits = _outcome.BitsEmbedded;
+        var stego = _stego;
+        var extracted = await Task.Run(() => AppState.Watermarking.Extract(stego, bits));
 
         if (string.IsNullOrEmpty(extracted))
+        {
             VerifyText.Text = s.VerifyEmpty;
+            VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 179, 38, 30));
+            VerifyBannerIcon.Text = "\uE783";
+            VerifyText.Foreground = (Brush)FindResource("ErrorBrush");
+        }
         else if (extracted == original)
         {
             VerifyText.Text = s.VerifyMatch;
+            VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 46, 125, 50));
+            VerifyBannerIcon.Text = "\uE73E";
             VerifyText.Foreground = (Brush)FindResource("SuccessBrush");
         }
         else
         {
             VerifyText.Text = s.VerifyMismatch;
+            VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 179, 38, 30));
+            VerifyBannerIcon.Text = "\uE783";
             VerifyText.Foreground = (Brush)FindResource("ErrorBrush");
         }
     }

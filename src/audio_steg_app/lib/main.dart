@@ -6,24 +6,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app_theme.dart';
 import 'app/home_shell.dart';
+import 'app/session_log.dart';
 import 'app/settings_controller.dart';
 
 void main() {
-  // Global error guards — anything that escapes a try/catch ends up here so
-  // the process never silently dies. Errors are sent to debug log AND shown
-  // to the user via a transient overlay.
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    debugPrint('FlutterError: ${details.exceptionAsString()}');
+    SessionLog.write(
+      'FlutterError',
+      error: details.exception,
+      stack: details.stack,
+    );
   };
 
   runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      await SessionLog.init();
+      SessionLog.write('App starting');
       runApp(const ProviderScope(child: AudioStegApp()));
     },
     (error, stack) {
-      debugPrint('UncaughtZonedError: $error\n$stack');
+      SessionLog.write('UncaughtZonedError', error: error, stack: stack);
     },
   );
 }

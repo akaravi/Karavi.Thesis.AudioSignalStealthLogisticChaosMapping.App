@@ -1,6 +1,8 @@
 # Cursor.01.plan.md
 
-پلن اصلی اپلیکیشن نهان‌نگاری صوتی چندسکویی (Windows / Linux / Android) بر پایه الگوریتم‌های MATLAB در پوشه [Matlab/](Matlab/).
+پلن اصلی اپلیکیشن نهان‌نگاری صوتی چندسکویی (Windows / Linux / Android) بر پایه الگوریتم‌های MATLAB در پوشه [src/Matlab/](src/Matlab/).
+
+**ساختار مخزن:** تمام پروژه‌ها زیر `src/` — `src/audio_steg_app` (Flutter)، `src/audio_steg_desktop` (.NET)، `src/Matlab`.
 
 تکنولوژی: **Flutter 3.41 (Dart 3.11)** • معماری: **Clean Architecture + Riverpod**
 تنها منبع الگوریتم: **۵ اسکریپت متلب** (`embed_extract_data`, `logistic_map_keygen`, `evaluate_stego`, `main_steganography`, `train_deep_autoencoder` اختیاری/غیرفعال)
@@ -311,4 +313,22 @@
 - ✅ `dotnet build AudioSteg.sln` — ۰ خطا
 - ✅ `dotnet test` — ۴/۴ Passed
 - ✅ معادل Flutter: فقط LSB + Logistic-Chaos از ۴ اسکریپت فعال متلب
-- ✅ README: `audio_steg_desktop/README.md`
+- ✅ README: `src/audio_steg_desktop/README.md`
+
+---
+
+## Part 16 — استانداردسازی شاخه `src/`
+
+### دستور
+انتقال همه پروژه‌ها به فولدر `src/` در ریشه مخزن.
+
+### اقدامات
+1. `audio_steg_app` → `src/audio_steg_app`
+2. `audio_steg_desktop` → `src/audio_steg_desktop`
+3. `Matlab` → `src/Matlab`
+4. `README.md` ریشه با نقشه مخزن
+5. حذف پوشه orphan `lib/` در ریشه
+
+### Result 16
+- ✅ ساختار استاندارد: کد و پروژه‌ها فقط زیر `src/`
+- ✅ مستندات ریشه و README دسکتاپ به‌روز شد

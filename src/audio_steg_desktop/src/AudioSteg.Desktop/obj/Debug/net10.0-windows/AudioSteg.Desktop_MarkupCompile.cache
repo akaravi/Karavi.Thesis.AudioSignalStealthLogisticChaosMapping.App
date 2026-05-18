@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\obj\Debug\net10.0-windows\
 AudioSteg.Desktop
 none
 false
 TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NET10_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\audio_steg_desktop\src\AudioSteg.Desktop\App.xaml
-6-1042413162
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Desktop\App.xaml
+9-1435538174
 
-11749201156
-221-2014686637
-MainWindow.xaml;Themes\DarkTheme.xaml;Themes\LightTheme.xaml;Views\EmbedView.xaml;Views\ExtractView.xaml;Views\SettingsView.xaml;
+14242961950
+2211873992195
+Controls\RecordButtonControl.xaml;Controls\WaveformControl.xaml;MainWindow.xaml;Themes\DarkTheme.xaml;Themes\LightTheme.xaml;Themes\SharedStyles.xaml;Views\EmbedView.xaml;Views\ExtractView.xaml;Views\SettingsView.xaml;
 
 False
 

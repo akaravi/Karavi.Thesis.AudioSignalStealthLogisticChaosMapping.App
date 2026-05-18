@@ -16,7 +16,9 @@ public sealed class AppStrings
     public string StartRecording => T("شروع ضبط", "Start Recording");
     public string StopRecording => T("پایان ضبط", "Stop Recording");
     public string SaveStego => T("ذخیره فایل نهان‌نگاری شده", "Save stego file");
-    public string PickFile => T("انتخاب فایل WAV", "Pick a WAV file");
+    public string SuccessSaved => T("فایل ذخیره شد", "File saved");
+    public string ColorSeed => T("رنگ تم", "Theme color");
+    public string PickFile => T("انتخاب فایل صوتی (WAV/MP3)", "Pick audio file (WAV/MP3)");
     public string ExtractedText => T("متن استخراج شده", "Extracted text");
     public string NoText => T("چیزی استخراج نشد", "Nothing extracted");
     public string Copy => T("کپی", "Copy");
@@ -38,6 +40,7 @@ public sealed class AppStrings
     public string Processing => T("در حال پردازش…", "Processing…");
     public string Recording => T("در حال ضبط…", "Recording…");
     public string ErrorEmpty => T("متن نمی‌تواند خالی باشد.", "Text cannot be empty.");
+    public string ErrorNoRecording => T("صدایی ضبط نشده است.", "No recorded audio.");
     public string ErrorTooLong => T("متن طولانی‌تر از ظرفیت صدای ضبط شده است.", "Text too long for the recorded audio.");
     public string KeyMismatch => T("کلید/پارامترها صحیح نیستند یا داده‌ای پیدا نشد.", "Wrong key/params or no payload found.");
     public string QualityMetrics => T("متریک‌های کیفیت", "Quality metrics");

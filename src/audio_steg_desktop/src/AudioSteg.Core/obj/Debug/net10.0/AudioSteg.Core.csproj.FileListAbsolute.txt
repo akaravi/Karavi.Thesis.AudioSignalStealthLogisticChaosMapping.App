@@ -10,3 +10,16 @@ D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\refint\AudioSteg.Core.dll
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.pdb
 D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\ref\AudioSteg.Core.dll
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\bin\Debug\net10.0\AudioSteg.Core.deps.json
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\bin\Debug\net10.0\AudioSteg.Core.dll
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\bin\Debug\net10.0\AudioSteg.Core.pdb
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.GeneratedMSBuildEditorConfig.editorconfig
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.AssemblyInfoInputs.cache
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.AssemblyInfo.cs
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.csproj.CoreCompileInputs.cache
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.sourcelink.json
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.dll
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\refint\AudioSteg.Core.dll
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.pdb
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\ref\AudioSteg.Core.dll
+D:\SourceKaravi\GitHub\Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App\src\audio_steg_desktop\src\AudioSteg.Core\obj\Debug\net10.0\AudioSteg.Core.csproj.AssemblyReference.cache

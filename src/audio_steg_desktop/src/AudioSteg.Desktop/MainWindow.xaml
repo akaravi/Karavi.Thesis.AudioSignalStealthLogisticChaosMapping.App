@@ -3,28 +3,55 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:AudioSteg.Desktop.Views"
         Title="Audio Steganography"
-        Height="720" Width="960"
-        MinHeight="560" MinWidth="720"
+        Height="780" Width="960"
+        MinHeight="600" MinWidth="720"
         WindowStartupLocation="CenterScreen">
-  <DockPanel>
-    <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,12">
-      <DockPanel>
-        <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
-        <Button DockPanel.Dock="Right" x:Name="AboutButton" Content="ℹ" Width="36" Height="36"
-                Click="AboutButton_Click" ToolTip="About" />
-      </DockPanel>
+  <Grid x:Name="RootGrid">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- AppBar -->
+    <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="8,4">
+      <Grid Height="56">
+        <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Button x:Name="AboutButton" HorizontalAlignment="Right" VerticalAlignment="Center"
+                Width="40" Height="40" Background="Transparent" BorderThickness="0"
+                Click="AboutButton_Click" ToolTip="About" Cursor="Hand">
+          <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="18" Text="&#xE946;"
+                     Foreground="{DynamicResource TextBrush}" />
+        </Button>
+      </Grid>
     </Border>
-    <TabControl x:Name="MainTabs" Margin="12">
-      <TabItem x:Name="EmbedTabItem">
-        <views:EmbedView />
-      </TabItem>
-      <TabItem x:Name="ExtractTabItem">
-        <views:ExtractView />
-      </TabItem>
-      <TabItem x:Name="SettingsTabItem">
-        <views:SettingsView />
-      </TabItem>
-    </TabControl>
-  </DockPanel>
+
+    <!-- Content + optional rail -->
+    <Grid Grid.Row="1" x:Name="ContentHost">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition x:Name="RailColumn" Width="0" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border x:Name="NavRail" Grid.Column="0" Visibility="Collapsed"
+              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0"
+              Background="{DynamicResource SurfaceBrush}" Width="88" Padding="0,12">
+        <StackPanel x:Name="RailButtons" />
+      </Border>
+
+      <Grid Grid.Column="1">
+        <views:EmbedView x:Name="EmbedPage" Visibility="Visible" />
+        <views:ExtractView x:Name="ExtractPage" Visibility="Collapsed" />
+        <views:SettingsView x:Name="SettingsPage" Visibility="Collapsed" />
+      </Grid>
+    </Grid>
+
+    <!-- Bottom navigation (narrow) -->
+    <Border x:Name="BottomNav" Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8,4">
+      <UniformGrid x:Name="BottomNavGrid" Rows="1" Columns="3" />
+    </Border>
+  </Grid>
 </Window>

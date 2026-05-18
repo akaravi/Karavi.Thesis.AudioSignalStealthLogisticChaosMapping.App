@@ -65,3 +65,9 @@
 | 2026-05-18 | 10:15 | 15 | ساخت solution دسکتاپ .NET 10: Core (watermarking+WAV), Desktop (WPF), Tests (xUnit) | `audio_steg_desktop/` |
 | 2026-05-18 | 10:16 | 15 | UI WPF: EmbedView (ضبط/embed/متریک/verify)، ExtractView (WAV+msg_len)، SettingsView (تم/زبان/r/x0) | `src/AudioSteg.Desktop/Views/` |
 | 2026-05-18 | 10:17 | 15 | بیلد و تست: `dotnet build` ۰ خطا؛ `dotnet test` ۴/۴ Passed | `AudioSteg.sln` |
+| 2026-05-18 | 11:00 | 16 | انتقال پروژه‌ها به `src/`: Flutter، .NET Desktop، Matlab | `src/audio_steg_app`, `src/audio_steg_desktop`, `src/Matlab` |
+| 2026-05-18 | 11:01 | 16 | افزودن `README.md` ریشه با نقشه مخزن؛ حذف `lib/` orphan ریشه | `README.md` |
+| 2026-05-18 | 11:35 | fix | رفع خطای cross-thread در EmbedView (خواندن MessageTextBox از Task.Run) | `Views/EmbedView.xaml.cs` |
+| 2026-05-18 | 12:00 | ui | هم‌ترازی UI دسکتاپ با Flutter: Material3، ناوبری پایین/ریل، دکمه ضبط دایره‌ای، موج‌نما، چیپ متریک | `Themes/*`, `Controls/*`, `Views/*`, `MainWindow.*` |
+| 2026-05-18 | 12:20 | feat | پشتیبانی MP3 در استخراج/ذخیره دیالوگ دسکتاپ — `AudioInputLoader` + NAudio | `AudioSteg.Core/Audio/AudioInputLoader.cs` |
+| 2026-05-18 | 08:30 | monitor | لاگ فایل Flutter (`SessionLog`) + `monitor_flutter.ps1` + `flutter run -v` به `logs/flutter_run_monitor.log` برای پایش کرش هنگام تست | `lib/app/session_log.dart`, `scripts/monitor_flutter.ps1`, `logs/*` |

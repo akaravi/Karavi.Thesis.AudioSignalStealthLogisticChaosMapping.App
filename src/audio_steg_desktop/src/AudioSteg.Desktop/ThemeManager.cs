@@ -6,7 +6,7 @@ namespace AudioSteg.Desktop;
 
 public static class ThemeManager
 {
-    public static void Apply(Window window)
+    public static void Apply(ResourceDictionary resources)
     {
         var s = AppState.Settings;
         var isDark = s.ThemeMode switch
@@ -16,19 +16,20 @@ public static class ThemeManager
             _ => IsSystemDark(),
         };
 
-        window.Resources.MergedDictionaries.Clear();
-        window.Resources.MergedDictionaries.Add(
-            new ResourceDictionary
-            {
-                Source = new Uri(isDark
-                    ? "Themes/DarkTheme.xaml"
-                    : "Themes/LightTheme.xaml", UriKind.Relative),
-            });
+        resources.MergedDictionaries.Clear();
+        resources.MergedDictionaries.Add(LoadDict("Themes/SharedStyles.xaml"));
+        resources.MergedDictionaries.Add(LoadDict(isDark ? "Themes/DarkTheme.xaml" : "Themes/LightTheme.xaml"));
 
         var accent = (Color)ColorConverter.ConvertFromString(s.AccentColor)!;
-        window.Resources["AccentBrush"] = new SolidColorBrush(accent);
-        window.Resources["AccentForegroundBrush"] = new SolidColorBrush(Colors.White);
+        resources["AccentBrush"] = new SolidColorBrush(accent);
+        resources["AccentForegroundBrush"] = new SolidColorBrush(Colors.White);
+        resources["PrimaryBrush"] = new SolidColorBrush(accent);
+    }
 
+    public static void Apply(Window window)
+    {
+        Apply(window.Resources);
+        var s = AppState.Settings;
         window.FlowDirection = s.Language == AppLanguage.Fa
             ? FlowDirection.RightToLeft
             : FlowDirection.LeftToRight;
@@ -39,6 +40,9 @@ public static class ThemeManager
     }
 
     public static AppStrings Strings => new(AppState.Settings.Language);
+
+    private static ResourceDictionary LoadDict(string path) =>
+        new() { Source = new Uri(path, UriKind.Relative) };
 
     private static bool IsSystemDark()
     {

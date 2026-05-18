@@ -95,6 +95,9 @@
         }
       },
       "AudioSteg.Core/1.0.0": {
+        "dependencies": {
+          "NAudio": "2.2.1"
+        },
         "runtime": {
           "AudioSteg.Core.dll": {
             "assemblyVersion": "1.0.0.0",
