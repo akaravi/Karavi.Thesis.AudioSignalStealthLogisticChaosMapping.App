@@ -2,8 +2,8 @@
 
 پلن اصلی اپلیکیشن نهان‌نگاری صوتی چندسکویی (Windows / Linux / Android) بر پایه الگوریتم‌های MATLAB در پوشه [Matlab/](Matlab/).
 
-تکنولوژی: **Flutter 3.41 (Dart 3.11)** • معماری: **Clean Architecture + Riverpod + Strategy Pattern**
-دو حالت stego: **Digital LSB+Chaos (وفادار به متلب)** و **Over-the-Air FSK+Chaos (مقاوم در برابر هوا)**
+تکنولوژی: **Flutter 3.41 (Dart 3.11)** • معماری: **Clean Architecture + Riverpod**
+تنها منبع الگوریتم: **۵ اسکریپت متلب** (`embed_extract_data`, `logistic_map_keygen`, `evaluate_stego`, `main_steganography`, `train_deep_autoencoder` اختیاری/غیرفعال)
 
 ---
 
@@ -221,3 +221,94 @@
 | فیلدهای جدید UI | Duration, BitsEmbedded, Capacity, Utilization, SNR, PSNR |
 | Roundtrip Verify | متن embed → extract → compare in-place |
 | About dialog | Material 3 با gradient icon |
+
+---
+
+## Part 12 — حذف روش FSK و نگه‌داشتن فقط LSB + Logistic-Chaos
+
+### دستور
+فقط از روش واترمارکینگ LSB + Logistic-Chaos (روش MATLAB/پایان‌نامه) استفاده شود و روش دیگر (FSK + Chaos Over-the-Air) از برنامه فلاتر حذف شود.
+
+### اقدامات
+1. حذف `lib/core/stego/codecs/fsk_codec.dart` (کامل BFSK + Hamming + CRC)
+2. حذف `test/core/fsk_codec_test.dart`
+3. حذف `lib/features/shared/mode_switch.dart` (ویجت انتخاب حالت)
+4. ساده‌سازی `stego_engine.dart` — حذف `StegoMode` enum و کامل منطق FSK/OTA. فقط LSB.
+5. ساده‌سازی `stego_runner.dart` — حذف پارامتر `mode`، همیشه LSB.
+6. ساده‌سازی `embed_screen.dart` — حذف `StegoModeSwitch` و import مربوطه.
+7. ساده‌سازی `extract_screen.dart` — حذف تب میکروفن (فقط با FSK کاربرد داشت)، فقط استخراج از فایل.
+8. ساده‌سازی `app_strings.dart` — حذف رشته‌های `mode*`, `modeOverAir*`, `listenLive`, `stopListening`, `listening`, `fromMic`.
+9. به‌روزرسانی `stego_engine_test.dart` — حذف تست‌های FSK و auto-detect.
+10. به‌روزرسانی `aboutAlgoBody` — حذف اشاره به BFSK.
+11. به‌روزرسانی `appTitle` — از «بیسم نهان‌نگاری صوتی / Audio Steg Walkie-Talkie» به «نهان‌نگاری صوتی آشوب / Audio Chaos Steganography».
+12. به‌روزرسانی `stego.dart` barrel — حذف export `fsk_codec.dart`.
+
+### Result 12
+
+- ✅ فایل‌های FSK حذف شدند: `fsk_codec.dart`, `fsk_codec_test.dart`, `mode_switch.dart`
+- ✅ `StegoMode` enum و تمام منطق Over-the-Air از engine و runner حذف شد
+- ✅ UI ساده‌شده: بدون mode switch، بدون تب میکروفن در Extract
+- ✅ تمام رشته‌های i18n مربوط به FSK حذف شدند
+- ✅ تست‌ها فقط LSB + Chaos را پوشش می‌دهند (تست wrong-key اضافه شد)
+- ✅ هیچ reference باقی‌مانده به `StegoMode`, `FskCodec`, `fsk_codec`, `overTheAir`, `mode_switch` وجود ندارد
+- ✅ عنوان اپ و توضیح الگوریتم به‌روز شد
+
+---
+
+## Part 14 — فایل مرکزی `audio_watermarking.dart`
+
+### دستور
+انتقال کدهای اصلی watermarking به یک فایل مشخص برای استفاده در هر جای پروژه.
+
+### Result 14
+- ✅ `lib/core/stego/audio_watermarking.dart` شامل: `LogisticMap`, `MessageBits`, `WatermarkMetrics`, `AudioWatermarking`
+- ✅ import پیشنهادی: `package:audio_steg_app/core/stego/audio_watermarking.dart`
+- ✅ `stego.dart` فقط `audio_watermarking.dart` + `stego_runner.dart` را export می‌کند
+- ✅ کلاس‌های قدیمی `LsbCodec` / `StegoEngine` به‌صورت wrapper سازگار باقی ماندند
+
+| آیتم | وضعیت |
+|---|---|
+| فایل‌های حذف‌شده | fsk_codec.dart, fsk_codec_test.dart, mode_switch.dart |
+| روش فعال | LSB + Logistic-Chaos (MATLAB port) |
+| خطاهای جدید | ۰ (خطاهای قبلی مربوط به pub get هستند) |
+
+---
+
+## Part 13 — انحصار منبع: فقط ۵ اسکریپت MATLAB
+
+### دستور
+خارج از `embed_extract_data.m`, `evaluate_stego.m`, `logistic_map_keygen.m`, `main_steganography.m`, `train_deep_autoencoder.m` روش کاربردی ندارد.
+
+### اقدامات
+1. حذف `TextCodec` (هدر ۳۲بیت خارج از متلب) → `message_bits.dart` (UTF-8 به بیت، بدون فریم اضافی)
+2. استخراج فقط با `msg_len` شناخته‌شده (مثل `main_steganography.m`)
+3. `StegoMetrics.evaluate` با SNR, PSNR, BER, NPCR, UACI از `evaluate_stego.m`
+4. `LsbCodec.embedBits` = `embed_extract_data.m`؛ کلید متمایز `x0+1e-10` برای NPCR/UACI
+5. UI Extract: فیلد «طول پیام (بیت)»
+6. بدون FSK، بدون autoencoder فعال در اپ
+
+### Result 13
+- ✅ هسته فقط از ۵ فایل متلب مشتق می‌شود
+- ✅ `train_deep_autoencoder` در اپ پیاده‌سازی نشده (مطابق خط ۲۴–۲۵ متلب)
+- ✅ متریک‌های کامل evaluate_stego در UI Embed نمایش داده می‌شوند
+
+---
+
+## Part 15 — نسخه دسکتاپ .NET 10 (WPF)
+
+### دستور
+ساخت همان نرم‌افزار Flutter برای دسکتاپ ویندوز با **.NET 10** و WPF.
+
+### اقدامات
+1. Solution `audio_steg_desktop/AudioSteg.sln`:
+   - `AudioSteg.Core` — `WavFile`, `LogisticMap`, `MessageBits`, `WatermarkMetrics`, `AudioWatermarking`
+   - `AudioSteg.Desktop` — WPF: Embed / Extract / Settings، NAudio ضبط/پخش، تم روشن/تاریک، i18n fa/en
+   - `AudioSteg.Core.Tests` — xUnit (۴ تست)
+2. UI: ضبط کاور → embed → متریک → پخش/ذخیره/verify؛ Extract با `msg_len`؛ Settings برای r/x0/تم/زبان
+3. تنظیمات در `%LocalAppData%\AudioSteg.Desktop\settings.json`
+
+### Result 15
+- ✅ `dotnet build AudioSteg.sln` — ۰ خطا
+- ✅ `dotnet test` — ۴/۴ Passed
+- ✅ معادل Flutter: فقط LSB + Logistic-Chaos از ۴ اسکریپت فعال متلب
+- ✅ README: `audio_steg_desktop/README.md`

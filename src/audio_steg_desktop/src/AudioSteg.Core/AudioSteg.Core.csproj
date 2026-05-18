@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AudioSteg.Core</RootNamespace>
+    <Description>LSB + Logistic-Chaos audio watermarking (MATLAB port)</Description>
+  </PropertyGroup>
+</Project>

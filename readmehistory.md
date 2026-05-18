@@ -48,3 +48,20 @@
 | 2026-05-07 | 15:22 | run-all | جایگزینی `IndexedStack` با `Stack(Offstage+TickerMode)` در `home_shell.dart` برای حذف warning AXTree و حفظ state تب‌ها | `lib/app/home_shell.dart` |
 | 2026-05-07 | 15:24 | run-all | تأیید با web search: warning `AXTree error 19` یک باگ شناخته‌شده upstream Flutter engine (issue #98099, #98778, #103808) از Tooltip overlay است — benign، فقط یک‌بار در startup، رفتار اپ تأثیر نمی‌پذیرد | اسناد |
 | 2026-05-07 | 15:25 | run-all | بیلد و restart نهایی — pid=52176 responding=True، stderr فقط ۱ خط (warning upstream)، CPU idle (1.05s/16s)، حافظه ثابت ۸۹.۵MB | `build/windows/x64/runner/Release/audio_steg_app.exe` |
+| 2026-05-18 | 06:40 | 12 | حذف کامل روش FSK (Over-the-Air BFSK + Hamming + CRC) — فقط روش LSB + Logistic-Chaos (MATLAB port) باقی ماند | `core/stego/codecs/fsk_codec.dart` (deleted) |
+| 2026-05-18 | 06:40 | 12 | حذف تست FSK | `test/core/fsk_codec_test.dart` (deleted) |
+| 2026-05-18 | 06:40 | 12 | حذف ویجت mode switch | `features/shared/mode_switch.dart` (deleted) |
+| 2026-05-18 | 06:41 | 12 | ساده‌سازی StegoEngine — حذف StegoMode enum و منطق OTA | `core/stego/engine/stego_engine.dart` |
+| 2026-05-18 | 06:41 | 12 | ساده‌سازی StegoRunner — حذف پارامتر mode | `core/stego/engine/stego_runner.dart` |
+| 2026-05-18 | 06:42 | 12 | ساده‌سازی embed_screen — حذف StegoModeSwitch | `features/embed/embed_screen.dart` |
+| 2026-05-18 | 06:42 | 12 | ساده‌سازی extract_screen — حذف تب میکروفن (فقط file extraction) | `features/extract/extract_screen.dart` |
+| 2026-05-18 | 06:43 | 12 | حذف رشته‌های i18n مربوط به FSK و به‌روزرسانی عنوان اپ | `lib/app/app_strings.dart` |
+| 2026-05-18 | 06:43 | 12 | به‌روزرسانی تست engine — فقط LSB + تست wrong-key | `test/core/stego_engine_test.dart` |
+| 2026-05-18 | 07:10 | 13 | هم‌ترازی کامل با ۵ فایل متلب: حذف TextCodec (هدر ۳۲بیت)، extract با msg_len، NPCR/UACI/BER در metrics | `core/stego/*` |
+| 2026-05-18 | 07:11 | 13 | صفحه Extract: ورودی طول پیام (بیت) مطابق main_steganography.m | `features/extract/extract_screen.dart` |
+| 2026-05-18 | 07:12 | 13 | StegoEngine: جریان embed+evaluate با کلید متمایز برای NPCR/UACI | `core/stego/engine/stego_engine.dart` |
+| 2026-05-18 | 07:30 | 14 | انتقال هستهٔ watermarking به فایل واحد `audio_watermarking.dart` | `lib/core/stego/audio_watermarking.dart` |
+| 2026-05-18 | 07:31 | 14 | فایل‌های قدیمی فقط re-export می‌کنند؛ API اصلی: `AudioWatermarking` | `stego.dart`, `lsb_codec.dart`, ... |
+| 2026-05-18 | 10:15 | 15 | ساخت solution دسکتاپ .NET 10: Core (watermarking+WAV), Desktop (WPF), Tests (xUnit) | `audio_steg_desktop/` |
+| 2026-05-18 | 10:16 | 15 | UI WPF: EmbedView (ضبط/embed/متریک/verify)، ExtractView (WAV+msg_len)، SettingsView (تم/زبان/r/x0) | `src/AudioSteg.Desktop/Views/` |
+| 2026-05-18 | 10:17 | 15 | بیلد و تست: `dotnet build` ۰ خطا؛ `dotnet test` ۴/۴ Passed | `AudioSteg.sln` |

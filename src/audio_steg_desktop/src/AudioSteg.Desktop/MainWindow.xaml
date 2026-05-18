@@ -1,0 +1,30 @@
+<Window x:Class="AudioSteg.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:AudioSteg.Desktop.Views"
+        Title="Audio Steganography"
+        Height="720" Width="960"
+        MinHeight="560" MinWidth="720"
+        WindowStartupLocation="CenterScreen">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      <DockPanel>
+        <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <Button DockPanel.Dock="Right" x:Name="AboutButton" Content="ℹ" Width="36" Height="36"
+                Click="AboutButton_Click" ToolTip="About" />
+      </DockPanel>
+    </Border>
+    <TabControl x:Name="MainTabs" Margin="12">
+      <TabItem x:Name="EmbedTabItem">
+        <views:EmbedView />
+      </TabItem>
+      <TabItem x:Name="ExtractTabItem">
+        <views:ExtractView />
+      </TabItem>
+      <TabItem x:Name="SettingsTabItem">
+        <views:SettingsView />
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</Window>
