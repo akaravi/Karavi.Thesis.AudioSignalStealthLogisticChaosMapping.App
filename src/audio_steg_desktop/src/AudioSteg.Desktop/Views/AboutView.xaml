@@ -6,16 +6,16 @@
       <Border Style="{StaticResource MaterialCard}" Padding="20" Margin="0,0,0,16">
         <StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-            <Border Width="64" Height="64" CornerRadius="32"
+            <Border Width="64" Height="64" CornerRadius="32" ClipToBounds="True"
                     Background="{DynamicResource PrimaryContainerBrush}">
-              <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;" FontSize="32"
-                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                         Foreground="{DynamicResource OnPrimaryContainerBrush}" />
+              <Image x:Name="ProfilePhoto" Stretch="UniformToFill" />
             </Border>
             <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
               <TextBlock x:Name="ProfileTitle" Style="{StaticResource SectionTitle}" />
               <TextBlock x:Name="ThesisLine" Style="{StaticResource BodySmall}" Margin="0,4,0,0"
                          Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
+              <TextBlock x:Name="VersionLine" Style="{StaticResource BodySmall}" Margin="0,6,0,0"
+                         Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" />
             </StackPanel>
           </StackPanel>
           <TextBlock x:Name="BioText" Style="{StaticResource BodySmall}" TextWrapping="Wrap" />

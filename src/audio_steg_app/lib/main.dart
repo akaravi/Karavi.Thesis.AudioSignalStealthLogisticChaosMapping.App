@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app_bootstrap.dart';
 import 'app/app_config.dart';
+import 'app/app_version.dart';
 import 'app/app_config_provider.dart';
 import 'app/app_locale.dart';
 import 'app/app_strings.dart';
@@ -28,6 +29,7 @@ void main() {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
       await SessionLog.init();
+      await AppVersion.load();
       SessionLog.write('App starting');
       final appConfig = await AppConfig.load();
       runApp(

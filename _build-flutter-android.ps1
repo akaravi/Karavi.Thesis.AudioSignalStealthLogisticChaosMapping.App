@@ -71,6 +71,44 @@ function Resolve-ExistingOrNewDirectory {
     return (Resolve-Path -LiteralPath $Path).Path
 }
 
+function Get-FlutterPubspecVersionLabel {
+    param([Parameter(Mandatory = $true)][string]$FlutterProjectPath)
+
+    $pubspec = Join-Path $FlutterProjectPath "pubspec.yaml"
+    foreach ($line in Get-Content -LiteralPath $pubspec) {
+        if ($line -match '^\s*version:\s*(.+?)\s*(?:#.*)?$') {
+            return $Matches[1].Trim()
+        }
+    }
+    throw "Could not read version from $pubspec"
+}
+
+function Get-SafeVersionFileToken {
+    param([Parameter(Mandatory = $true)][string]$VersionLabel)
+    return ($VersionLabel -replace '\+', '_' -replace '[^\w\.\-]', '_')
+}
+
+function Get-PublishedAndroidArtifactFileName {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceFileName,
+        [Parameter(Mandatory = $true)][string]$VersionToken
+    )
+
+    if ($SourceFileName -eq 'app-release.apk') {
+        return "AudioSteg_${VersionToken}.apk"
+    }
+    if ($SourceFileName -match '^app-(.+)-release\.apk$') {
+        return "AudioSteg_${VersionToken}_$($Matches[1]).apk"
+    }
+    if ($SourceFileName -eq 'app-release.aab') {
+        return "AudioSteg_${VersionToken}.aab"
+    }
+
+    $base = [System.IO.Path]::GetFileNameWithoutExtension($SourceFileName)
+    $ext = [System.IO.Path]::GetExtension($SourceFileName)
+    return "${base}_${VersionToken}${ext}"
+}
+
 function Write-PubGet403Hints {
     Write-Host ""
     Write-Host "flutter pub get failed. Try VPN/proxy, -UseFlutterIoCnMirror, or -OfflinePubGet." -ForegroundColor Yellow
@@ -228,13 +266,15 @@ function Resolve-FlutterAppBundleOutput {
 function Copy-AndroidArtifactsToPublish {
     param(
         [Parameter(Mandatory = $true)][object[]]$SourceFiles,
-        [Parameter(Mandatory = $true)][string]$DestinationDir
+        [Parameter(Mandatory = $true)][string]$DestinationDir,
+        [Parameter(Mandatory = $true)][string]$VersionToken
     )
 
     New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
     foreach ($src in $SourceFiles) {
         $item = if ($src -is [System.IO.FileInfo]) { $src } else { Get-Item $src.FullName }
-        $dest = Join-Path $DestinationDir $item.Name
+        $destName = Get-PublishedAndroidArtifactFileName -SourceFileName $item.Name -VersionToken $VersionToken
+        $dest = Join-Path $DestinationDir $destName
         Copy-Item -Force $item.FullName $dest
         Write-Host "  android -> $dest" -ForegroundColor Yellow
     }
@@ -243,7 +283,8 @@ function Copy-AndroidArtifactsToPublish {
 function Invoke-AndroidZip {
     param(
         [Parameter(Mandatory = $true)][string]$ZipDirectory,
-        [Parameter(Mandatory = $true)][string]$AndroidPublishDir
+        [Parameter(Mandatory = $true)][string]$AndroidPublishDir,
+        [Parameter(Mandatory = $true)][string]$VersionToken
     )
 
     if (-not (Test-Path $AndroidPublishDir)) {
@@ -261,7 +302,7 @@ function Invoke-AndroidZip {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $resolvedZipDir = Resolve-ExistingOrNewDirectory -Path $ZipDirectory
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $zipName = "KaraviThesis_AudioSteg_Android_$stamp.zip"
+    $zipName = "KaraviThesis_AudioSteg_Android_${VersionToken}_$stamp.zip"
     $zipFullPath = Join-Path $resolvedZipDir $zipName
     $stageRoot = Join-Path $root "publish\android-staging"
     if (Test-Path $stageRoot) { Remove-Item -Recurse -Force $stageRoot }
@@ -307,6 +348,10 @@ if ($OfflinePubGet) { $flutterPubGetArgs += "--offline" }
 Assert-PathExists -PathToCheck $flutterAppPath -Label "Flutter project"
 Assert-PathExists -PathToCheck (Join-Path $flutterAppPath "android") -Label "Android module"
 
+$appVersionLabel = Get-FlutterPubspecVersionLabel -FlutterProjectPath $flutterAppPath
+$appVersionFileToken = Get-SafeVersionFileToken -VersionLabel $appVersionLabel
+Write-Host "App version (pubspec): $appVersionLabel" -ForegroundColor DarkGray
+
 if (-not [string]::IsNullOrWhiteSpace($AndroidOutputDirectory)) {
     $androidPublishDir = Resolve-ExistingOrNewDirectory -Path $AndroidOutputDirectory
 }
@@ -332,7 +377,7 @@ if ($PackageOnly) {
         throw "-PackageOnly requires ZIP output; do not combine with -SkipPackage."
     }
     Write-Host "Packaging existing Android artifacts (no build)..." -ForegroundColor Cyan
-    Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir
+    Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir -VersionToken $appVersionFileToken
     Write-Host ""
     Write-Host "Done." -ForegroundColor Green
     Write-Host "  Android publish: $androidPublishDir" -ForegroundColor Yellow
@@ -377,10 +422,10 @@ if ($buildBundle) {
 }
 
 Write-Host "Publishing Android artifacts..." -ForegroundColor Cyan
-Copy-AndroidArtifactsToPublish -SourceFiles $builtAndroidFiles -DestinationDir $androidPublishDir
+Copy-AndroidArtifactsToPublish -SourceFiles $builtAndroidFiles -DestinationDir $androidPublishDir -VersionToken $appVersionFileToken
 
 if (-not $SkipPackage) {
-    Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir
+    Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir -VersionToken $appVersionFileToken
 }
 
 Write-Host ""

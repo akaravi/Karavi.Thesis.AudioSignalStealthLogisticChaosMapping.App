@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/about_constants.dart';
 import '../../app/app_strings.dart';
+import '../../app/app_version.dart';
 import '../shared/tab_scroll_body.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -25,6 +26,10 @@ class AboutScreen extends StatelessWidget {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: scheme.primaryContainer,
+                      backgroundImage: const AssetImage(
+                        AboutConstants.profilePhotoAsset,
+                      ),
+                      onBackgroundImageError: (_, _) {},
                       child: Icon(
                         Icons.person_outline,
                         size: 36,
@@ -45,6 +50,15 @@ class AboutScreen extends StatelessWidget {
                             s.aboutThesis,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${s.aboutVersion}: ${AppVersion.display}',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ],
                       ),
@@ -188,9 +202,9 @@ class _InfoTile extends StatelessWidget {
       leading: Icon(icon, color: scheme.primary),
       title: Text(
         title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

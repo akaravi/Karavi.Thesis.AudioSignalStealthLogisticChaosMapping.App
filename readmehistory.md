@@ -124,6 +124,9 @@
 | 2026-05-19 | 26:00 | build | اسکریپت `_build-android-web.ps1` (قدیمی): بیلد APK/AAB اندروید + وب — جایگزین شد | — |
 | 2026-05-19 | 19:54 | fix | بیلد اندروید: URL صحیح `download.flutter.io/` (بدون `/maven2/`) + `settingsEvaluated` برای آینه Aliyun؛ خروجی در `D:\PublishKaravi\ThesisAudioSteg` | `android/settings.gradle.kts`, `android/build.gradle.kts` |
 | 2026-05-19 | 22:00 | build | تغییر نام و محدودسازی: `_build-flutter-android.ps1` — فقط Android (APK/AAB)، بدون وب؛ ZIP `KaraviThesis_AudioSteg_Android_*` | `_build-flutter-android.ps1` (حذف `_build-android-web.ps1`) |
+| 2026-05-19 | 24:00 | build | `_build-flutter-android.ps1`: نام APK/AAB با ورژن pubspec — مثلاً `AudioSteg_1.0.0_1.apk`؛ ZIP هم شامل ورژن | `_build-flutter-android.ps1` |
+| 2026-05-19 | 23:00 | feat | نسخه برنامه `1.0.0+1`: Flutter اسپلش اول + درباره (`package_info_plus`)؛ WPF درباره (`InformationalVersion` در csproj) | `pubspec.yaml`, `app_version.dart`, `splash_flow_screen.dart`, `about_screen.dart`, `AboutView.*`, `AppVersion.cs` |
+| 2026-05-19 | 23:30 | ui | عکس پروفایل در کادر کنار نام در درباره — Flutter `CircleAvatar` + WPF `Image` دایره‌ای | `assets/images/about_profile.png`, `about_screen.dart`, `AboutView.*` |
 | 2026-05-19 | 20:15 | fix | اشتراک در دیالوگ recovery: فایل WAV استگانو (نه متن طول پیام) — `shareStegoWavBytes` | `embed_screen.dart`, `stego_share.dart` |
 | 2026-05-19 | 20:45 | feat | دکمه شناور «نهان‌نگاری جدید» بالای صفحه Embed — بازنشانی برای ساخت فایل تازه | `embed_screen.dart`, `app_strings.dart` |
 | 2026-05-19 | 21:00 | content | تماس: موبایل با `tel:` و برچسب «تماس»؛ حذف تلفن ثابت؛ ایمیل `karavi@ntk.ir` | `about_constants.dart`, `about_screen.dart`, `AboutView.*`, `AppStrings.cs` |

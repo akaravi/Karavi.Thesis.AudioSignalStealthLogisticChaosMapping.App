@@ -176,6 +176,7 @@ public sealed class AppStrings
         "چیزی استخراج نشد — embed با شکست مواجه شده است.", "Nothing extracted — embed seems broken.",
         "لم يُستخرج شيء — يبدو أن الإخفاء فشل.", "Rien extrait — l’intégration semble avoir échoué.");
     public string AboutTitle => T("درباره برنامه", "About this app", "حول التطبيق", "À propos de l’application");
+    public string AboutVersion => T("نسخه", "Version", "الإصدار", "Version");
     public string AboutAlgoBody => T(
         "فقط بر اساس اسکریپت‌های متلب:\n• embed_extract_data.m\n• logistic_map_keygen.m\n• evaluate_stego.m\n• main_steganography.m",
         "Based only on MATLAB scripts:\n• embed_extract_data.m\n• logistic_map_keygen.m\n• evaluate_stego.m\n• main_steganography.m",

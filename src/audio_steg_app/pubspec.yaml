@@ -17,6 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
+# Keep in sync with AudioSteg.Desktop.csproj InformationalVersion
 
 environment:
   sdk: ^3.11.5
@@ -49,6 +50,7 @@ dependencies:
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
   share_plus: ^11.0.0
+  package_info_plus: ^8.3.0
   flutter_localizations:
     sdk: flutter
 
@@ -91,6 +93,7 @@ flutter:
 
   assets:
     - assets/app-config.json
+    - assets/images/about_profile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,5 +1,7 @@
 /// Shared URLs for the About tab (Flutter + documentation).
 abstract final class AboutConstants {
+  static const profilePhotoAsset = 'assets/images/about_profile.png';
+
   static const gitHubApp =
       'https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App';
   static const gitHubThesis =

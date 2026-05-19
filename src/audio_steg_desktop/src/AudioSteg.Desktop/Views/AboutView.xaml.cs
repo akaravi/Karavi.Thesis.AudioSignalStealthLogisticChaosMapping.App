@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using AudioSteg.Desktop.Localization;
 
 namespace AudioSteg.Desktop.Views;
@@ -12,6 +13,7 @@ public partial class AboutView : UserControl
     public AboutView()
     {
         InitializeComponent();
+        ProfilePhoto.Source = new BitmapImage(new Uri(AboutConstants.ProfilePhotoPackUri));
         Loaded += (_, _) => ApplyStrings();
     }
 
@@ -20,6 +22,7 @@ public partial class AboutView : UserControl
         var s = ThemeManager.Strings;
         ProfileTitle.Text = s.AboutProfileTitle;
         ThesisLine.Text = s.AboutThesis;
+        VersionLine.Text = $"{s.AboutVersion}: {AppVersion.Display}";
         BioText.Text = s.AboutBio;
         SupervisorTitle.Text = s.AboutSupervisorSection;
         LinksTitle.Text = s.AboutLinksSection;

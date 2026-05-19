@@ -837,3 +837,21 @@
 - ✅ **PWA/Web:** `web/icons/Icon-{192,512}.png`, maskable، `favicon.png`؛ `manifest.json` + `apple-touch-icon`
 - ✅ **Flutter Windows:** `windows/runner/resources/app_icon.ico`
 - ✅ **WPF Desktop:** `Assets/app.ico`؛ `<ApplicationIcon>` + `MainWindow Icon="Assets/app.ico"`؛ `dotnet build` سبز
+
+---
+
+## Part 43 — نسخه برنامه (Flutter + WPF)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ورژن 1.0.0+1؛ نمایش در پایین اسپلش اول، درباره Flutter، درباره WPF"
+}
+```
+
+### Result 43
+- ✅ Flutter: `pubspec.yaml` `version: 1.0.0+1`؛ `package_info_plus` + `AppVersion.load()` در `main.dart`
+- ✅ اسپلش اول (`SplashFlowScreen` صفحه ۰): `نسخه: 1.0.0+1` پایین صفحه
+- ✅ Flutter درباره: زیر عنوان پایان‌نامه در کارت پروفایل
+- ✅ WPF: `InformationalVersion` در `AudioSteg.Desktop.csproj`؛ `AppVersion.Display` در `AboutView`

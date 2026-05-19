@@ -2,6 +2,8 @@ namespace AudioSteg.Desktop;
 
 public static class AboutConstants
 {
+    public const string ProfilePhotoPackUri = "pack://application:,,,/Assets/about_profile.png";
+
     public const string GitHubApp =
         "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App";
     public const string GitHubThesis =

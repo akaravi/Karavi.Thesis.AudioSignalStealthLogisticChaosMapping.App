@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../app/app_strings.dart';
+import '../../app/app_version.dart';
 import 'splash_wave_painter.dart';
 
 /// Two themed splash screens: audio wave, then steganography / chaos.
@@ -85,6 +86,8 @@ class _SplashFlowScreenState extends State<SplashFlowScreen>
                 title: s.splashTitleAudio,
                 subtitle: s.splashSubtitleAudio,
                 showBits: false,
+                showVersion: true,
+                versionLabel: '${s.aboutVersion}: ${AppVersion.display}',
               )
             : _SplashPage(
                 wavePhase: _waveCtrl,
@@ -106,6 +109,8 @@ class _SplashPage extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool showBits;
+  final bool showVersion;
+  final String? versionLabel;
 
   const _SplashPage({
     required this.wavePhase,
@@ -114,6 +119,8 @@ class _SplashPage extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.showBits,
+    this.showVersion = false,
+    this.versionLabel,
   });
 
   @override
@@ -215,6 +222,17 @@ class _SplashPage extends StatelessWidget {
                       color: scheme.primary.withValues(alpha: 0.7),
                     ),
                   ),
+                  if (showVersion && versionLabel != null) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      versionLabel!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                 ],
               ),
