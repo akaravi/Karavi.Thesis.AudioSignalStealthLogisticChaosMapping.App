@@ -691,3 +691,38 @@
 - ✅ **Flutter:** `assets/app-config.json` + `AppConfig.load()` در `main.dart`
 - ✅ حذف سوئیچ «رفتار نهان‌نگاری» از UI تنظیمات کاربر
 - ✅ Embed: مخفی‌سازی دکمه بارگذاری وقتی `ShowEmbedLoadFileButton` = false
+
+---
+
+## Part 36 — قانون بدون CDN (فونت / CSS / JS)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "severity": "must",
+  "task": "ممنوعیت استفاده از CDN برای فونت، CSS و JS در زمان اجرا — همهٔ دارایی‌های استاتیک باید داخل پروژه باشند"
+}
+```
+
+### Result 36
+- ✅ قانون Cursor: `.cursor/rules/no-external-cdn-assets.mdc` (`alwaysApply: true`)
+- ✅ Flutter `web/index.html`: فقط `flutter_bootstrap.js` و استایل inline — بدون لینک خارجی
+- ℹ️ فونت‌ها: Material/Cupertino از باندل Flutter؛ در صورت فونت سفارشی → `assets/fonts/` + `pubspec.yaml`
+
+---
+
+## Part 37 — اسکریپت `_build-android-web.ps1`
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "اسکریپت PowerShell برای بیلد Flutter Android (APK/AAB) و Web + publish + ZIP"
+}
+```
+
+### Result 37
+- ✅ `_build-android-web.ps1`: `flutter pub get` (آینه خودکار)، analyze/test اختیاری، `build apk` / `appbundle` / `build web`
+- ✅ خروجی: `publish\flutter\android\`, `publish\flutter\web\`, ZIP اختیاری
+- ✅ پارامترها: `-AndroidArtifact Apk|AppBundle|Both`, `-SplitPerAbi`, `-SkipAndroid`, `-SkipWeb`, `-UseFlutterIoCnMirror`

@@ -255,7 +255,19 @@ function Write-PubGet403Hints {
     Write-Host "  Try: upgrade Flutter/Dart; use VPN/proxy; or use a pub mirror." -ForegroundColor Yellow
     Write-Host "  Re-run with -OfflinePubGet if dependencies are already in the local pub cache." -ForegroundColor Yellow
     Write-Host "  Quick mirror: -UseFlutterIoCnMirror  (or -PubHostedUrl / -FlutterStorageBaseUrl)" -ForegroundColor Yellow
-    Write-Host "  This script retries pub get once with flutter-io.cn if the first attempt fails (unless -DisableAutoMirrorRetry or PUB_HOSTED_URL was set before run)." -ForegroundColor Yellow
+    Write-Host "  This script retries pub get with flutter-io.cn then Tsinghua mirror if needed (-DisableAutoMirrorRetry to skip)." -ForegroundColor Yellow
+}
+
+function Test-FlutterPubGetPackagesResolved {
+    param([Parameter(Mandatory = $true)][string]$ProjectDirectory)
+
+    return (Test-Path (Join-Path $ProjectDirectory ".dart_tool\package_config.json"))
+}
+
+function Test-FlutterPubGetSymlinkOnlyWarning {
+    param([Parameter(Mandatory = $true)][string]$LogText)
+
+    return $LogText -match '(?i)Developer Mode|symlink support'
 }
 
 function Write-FlutterPubGetFailureHints {
@@ -318,8 +330,13 @@ function Invoke-FlutterPubGetWithMirrorRetry {
     )
 
     $tryAutoMirror = -not $DisableAutoMirrorRetry -and -not $OfflinePubGet -and -not $userSuppliedMirrorViaParam -and [string]::IsNullOrWhiteSpace($savedEnvPubHostedAtScriptStart)
+    $mirrorFallbacks = @(
+        @{ Label = "flutter-io.cn"; Pub = "https://pub.flutter-io.cn"; Storage = "https://storage.flutter-io.cn" }
+        @{ Label = "Tsinghua"; Pub = "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"; Storage = "https://mirrors.tuna.tsinghua.edu.cn/flutter" }
+    )
+    $maxAttempts = if ($tryAutoMirror) { 1 + $mirrorFallbacks.Count } else { 1 }
     $attempt = 0
-    while ($true) {
+    while ($attempt -lt $maxAttempts) {
         $attempt++
         $exitCode = 0
         $pubLogText = ""
@@ -343,21 +360,28 @@ function Invoke-FlutterPubGetWithMirrorRetry {
         if ($exitCode -eq 0) {
             return
         }
-        if ($pubLogText -match '(?i)Developer Mode|symlink support') {
-            Write-FlutterPubGetFailureHints -LogText $pubLogText -LaunchDeveloperSettingsPage:$OpenDeveloperSettings
-            throw "Flutter pub get: Enable Windows Developer Mode for plugin symlinks, then re-run. Project: $ProjectDirectory"
+        if ((Test-FlutterPubGetSymlinkOnlyWarning -LogText $pubLogText) -and
+            (Test-FlutterPubGetPackagesResolved -ProjectDirectory $ProjectDirectory)) {
+            Write-Host "flutter pub get: dependencies resolved; ignoring Windows symlink warning (web build can continue)." -ForegroundColor Yellow
+            return
         }
         if ($OfflinePubGet) {
             Write-FlutterPubGetFailureHints -LogText $pubLogText
             throw "Flutter failed (exit $exitCode) in '$ProjectDirectory': flutter $($flutterPubGetArgs -join ' ')"
         }
-        if ($attempt -ge 2 -or -not $tryAutoMirror) {
-            Write-FlutterPubGetFailureHints -LogText $pubLogText
-            throw "Flutter failed (exit $exitCode) in '$ProjectDirectory': flutter $($flutterPubGetArgs -join ' ')"
+        if ($attempt -lt $maxAttempts -and $tryAutoMirror) {
+            $mirror = $mirrorFallbacks[$attempt - 1]
+            Write-Host "flutter pub get failed; retry $($attempt + 1)/$maxAttempts with $($mirror.Label) mirror (-DisableAutoMirrorRetry to skip)." -ForegroundColor Yellow
+            $env:PUB_HOSTED_URL = $mirror.Pub
+            $env:FLUTTER_STORAGE_BASE_URL = $mirror.Storage
+            continue
         }
-        Write-Host "flutter pub get failed; retrying once with flutter-io.cn mirror (-DisableAutoMirrorRetry to skip)." -ForegroundColor Yellow
-        $env:PUB_HOSTED_URL = "https://pub.flutter-io.cn"
-        $env:FLUTTER_STORAGE_BASE_URL = "https://storage.flutter-io.cn"
+        if ((Test-FlutterPubGetSymlinkOnlyWarning -LogText $pubLogText)) {
+            Write-FlutterPubGetFailureHints -LogText $pubLogText -LaunchDeveloperSettingsPage:$OpenDeveloperSettings
+            throw "Flutter pub get: Enable Windows Developer Mode for plugin symlinks, then re-run. Project: $ProjectDirectory"
+        }
+        Write-FlutterPubGetFailureHints -LogText $pubLogText
+        throw "Flutter failed (exit $exitCode) in '$ProjectDirectory': flutter $($flutterPubGetArgs -join ' ')"
     }
 }
 

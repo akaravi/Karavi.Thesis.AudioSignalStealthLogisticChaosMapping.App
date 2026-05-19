@@ -95,6 +95,22 @@ class AppStrings {
       'Partager le fichier audio stégo',
     ),
   );
+  String get shareFileDownloaded => _t(
+    const _S(
+      'فایل برای دانلود آماده شد.',
+      'File is ready to download.',
+      'الملف جاهز للتنزيل.',
+      'Le fichier est prêt au téléchargement.',
+    ),
+  );
+  String get shareTextCopiedToClipboard => _t(
+    const _S(
+      'متن در حافظه کپی شد (مرورگر اشتراک‌گذاری را پشتیبانی نمی‌کند).',
+      'Text copied to clipboard (share is not supported in this browser).',
+      'تم نسخ النص إلى الحافظة (المشاركة غير مدعومة في هذا المتصفح).',
+      'Texte copié dans le presse-papiers (partage non pris en charge).',
+    ),
+  );
   String get fromFile =>
       _t(const _S('از فایل', 'From file', 'من ملف', 'Depuis un fichier'));
   String get loadAudioFile => _t(

@@ -1,0 +1,58 @@
+---
+description: No CDN for fonts, CSS, or JS — all static assets must ship inside the project
+alwaysApply: true
+---
+
+# No external CDN for runtime assets
+
+## Rule (must)
+
+Do **not** load fonts, stylesheets, or scripts from a CDN or any third-party URL at **runtime** in the app UI.
+
+All of the following must come from **this repository** (or build output copied from it):
+
+- Web fonts (`@font-face`, `fonts.googleapis.com`, `gstatic.com`, etc.)
+- CSS (`<link rel="stylesheet" href="https://...">`, `@import url("https://...")`)
+- JavaScript (`<script src="https://...">`)
+
+## Allowed
+
+- Relative / same-origin paths: `assets/`, `web/`, `build/web/`, `icons/`, `flutter_bootstrap.js`, etc.
+- Flutter: `pubspec.yaml` `fonts:` and `assets:`; Material/Cupertino icons bundled by Flutter
+- WPF: local `Themes/`, embedded resources, system fonts
+- Dependencies installed at **build time** (pub, NuGet) — not fetched from CDN when the user opens the app
+- `url_launcher` / hyperlinks that open external sites in the browser (not embedding CDN assets in the app shell)
+
+## Forbidden examples
+
+```html
+<!-- BAD -->
+<link href="https://fonts.googleapis.com/css2?family=..." rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/..."></script>
+```
+
+```css
+/* BAD */
+@import url("https://cdn.example.com/theme.css");
+```
+
+## Good examples
+
+```html
+<!-- GOOD -->
+<link rel="stylesheet" href="styles/app.css">
+<script src="flutter_bootstrap.js"></script>
+```
+
+```yaml
+# GOOD — Flutter pubspec.yaml
+flutter:
+  fonts:
+    - family: MyFont
+      fonts:
+        - asset: assets/fonts/MyFont-Regular.ttf
+```
+
+## Completion check
+
+Before merging UI changes, search touched HTML/CSS/JS/XAML-WebView templates for `http://`, `https://`, `cdn`, `googleapis`, `gstatic`, `unpkg`, `jsdelivr`. Replace with local assets and document new files under `assets/` or `web/`.

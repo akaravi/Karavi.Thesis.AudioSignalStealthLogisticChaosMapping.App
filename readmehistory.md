@@ -118,3 +118,7 @@
 | 2026-05-19 | 23:45 | fix | حذف `share` تکراری در `app_strings.dart`؛ پرسش مسیر ZIP در ابتدای `_build-flutter-web.ps1` | `app_strings.dart`, `_build-flutter-web.ps1` |
 | 2026-05-19 | 24:15 | config | تنظیمات استقرار embed: Flutter `assets/app-config.json`؛ WPF `appsettings.json` کنار exe — `ShowEmbedLoadFileButton`, `ShowEmbedRecoveryDialog` | `AppConfig.cs`, `appsettings.json`, `app_config.dart`, `EmbedView.*`, `embed_screen.dart` |
 | 2026-05-19 | 24:30 | config | WPF: حذف `app-config.json` دسکتاپ؛ فقط `appsettings.json` (کنوانسیون .NET) | `AppConfig.cs`, `appsettings.json`, `AudioSteg.Desktop.csproj` |
+| 2026-05-19 | 24:45 | build | رفع `flutter pub get` exit 69: آینه Tsinghua پس از flutter-io.cn؛ نادیده symlink اگر پکیج‌ها resolve شدند؛ حذف `test` تکراری از pubspec | `_build-flutter-web.ps1`, `_build-all-projects.ps1`, `pubspec.yaml` |
+| 2026-05-19 | 25:00 | rule | قانون پروژه: ممنوعیت CDN برای فونت/CSS/JS در زمان اجرا — دارایی‌ها فقط از داخل repo | `.cursor/rules/no-external-cdn-assets.mdc`, `Cursor.01.plan.md` Part 36 |
+| 2026-05-19 | 25:30 | fix | رفع دکمه اشتراک‌گذاری: فایل WAV موقت روی دسکتاپ؛ وب → دانلود؛ متن → کلیپبورد | `stego_share.dart`, `wav_xfile*.dart`, `embed_screen.dart`, `app_strings.dart` |
+| 2026-05-19 | 26:00 | build | اسکریپت `_build-android-web.ps1`: بیلد APK/AAB اندروید + وب، publish و ZIP | `_build-android-web.ps1`, `publish\flutter\android`, `publish\flutter\web` |

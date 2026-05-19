@@ -403,9 +403,17 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       IconButton.filledTonal(
                         tooltip: s.share,
                         onPressed: () async {
-                          await shareRecoveryBitsText(
+                          final outcome = await shareRecoveryBitsText(
                             s.shareRecoveryBitsText(bits),
                           );
+                          if (!dialogCtx.mounted) return;
+                          if (outcome == StegoShareOutcome.textCopied) {
+                            ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                              SnackBar(
+                                content: Text(s.shareTextCopiedToClipboard),
+                              ),
+                            );
+                          }
                         },
                         icon: const Icon(Icons.share_outlined),
                       ),
@@ -530,11 +538,19 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final s = AppStrings.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await shareStegoWavBytes(
+      final outcome = await shareStegoWavBytes(
         bytes: stego.encode(),
         fileName: stegoWavFileName(result.msgBitLength),
         subject: s.shareStego,
       );
+      if (!mounted) return;
+      final message = switch (outcome) {
+        StegoShareOutcome.fileDownloaded => s.shareFileDownloaded,
+        StegoShareOutcome.shared || StegoShareOutcome.textCopied => null,
+      };
+      if (message != null) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(e.toString())));
