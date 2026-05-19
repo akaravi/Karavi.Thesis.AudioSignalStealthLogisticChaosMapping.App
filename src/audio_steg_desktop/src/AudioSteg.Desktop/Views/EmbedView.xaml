@@ -19,16 +19,8 @@
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <controls:RecordButtonControl x:Name="RecordBtn" Grid.Column="0" HorizontalAlignment="Center" />
-            <Button x:Name="LoadFileBtn" Grid.Column="2" Style="{StaticResource TonalButton}"
-                    MinWidth="110" Margin="0,28,0,0" VerticalAlignment="Top"
-                    Click="LoadFileBtn_Click">
-              <StackPanel HorizontalAlignment="Center">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8E5;" FontSize="28"
-                           HorizontalAlignment="Center" />
-                <TextBlock x:Name="LoadFileLabel" TextWrapping="Wrap" TextAlignment="Center"
-                           Margin="0,6,0,0" MaxWidth="120" />
-              </StackPanel>
-            </Button>
+            <controls:LoadFileButtonControl x:Name="LoadFileBtn" Grid.Column="2"
+                                            HorizontalAlignment="Center" />
           </Grid>
           <ProgressBar x:Name="BusyBar" Height="22" Width="22" Margin="0,12,0,0"
                        HorizontalAlignment="Center" IsIndeterminate="True" Visibility="Collapsed" />
@@ -42,37 +34,22 @@
         <StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
             <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE73E;" FontSize="20"
-                       Foreground="{DynamicResource OnPrimaryContainerBrush}" VerticalAlignment="Center" />
+                       Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
             <TextBlock x:Name="ResultTitle" Margin="8,0,0,0" Style="{StaticResource SectionTitle}"
-                       Foreground="{DynamicResource OnPrimaryContainerBrush}" />
+                       Foreground="{DynamicResource TextBrush}" />
           </StackPanel>
-          <TextBlock x:Name="CompareChartTitle" Style="{StaticResource SectionTitle}" FontSize="14"
-                     Foreground="{DynamicResource OnPrimaryContainerBrush}" Margin="0,0,0,8" />
-          <controls:DualWaveformControl x:Name="CompareChart" Margin="0,0,0,12" />
-          <TextBlock x:Name="MetricsTitle" Style="{StaticResource SectionTitle}" FontSize="14"
-                     Foreground="{DynamicResource OnPrimaryContainerBrush}" Margin="0,0,0,8" />
-          <ItemsControl x:Name="MetricsItems" ItemTemplate="{StaticResource MetricChipTemplate}" />
-          <WrapPanel Margin="0,12,0,0">
-            <Button x:Name="PlayButton" Style="{StaticResource FilledButton}" Margin="0,0,8,8"
+          <WrapPanel Margin="0,0,0,12">
+            <Button x:Name="PlayButton" Style="{StaticResource IconFilledButton}" Margin="0,0,8,8"
                     Click="PlayButton_Click">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
-                <TextBlock x:Name="PlayLabel" />
-              </StackPanel>
+              <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" FontSize="16" />
             </Button>
-            <Button x:Name="PauseButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
+            <Button x:Name="PauseButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,8"
                     Click="PauseButton_Click" IsEnabled="False">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" Margin="0,0,8,0" />
-                <TextBlock x:Name="PauseLabel" />
-              </StackPanel>
+              <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" FontSize="16" />
             </Button>
-            <Button x:Name="StopPlaybackButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
+            <Button x:Name="StopPlaybackButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,8"
                     Click="StopPlaybackButton_Click" IsEnabled="False">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" Margin="0,0,8,0" />
-                <TextBlock x:Name="StopPlaybackLabel" />
-              </StackPanel>
+              <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" FontSize="16" />
             </Button>
             <Button x:Name="SaveButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
                     Click="SaveButton_Click">
@@ -89,11 +66,22 @@
               </StackPanel>
             </Button>
           </WrapPanel>
-          <Border x:Name="VerifyBanner" Margin="0,12,0,0" CornerRadius="12" Padding="12"
+          <Border x:Name="VerifyBanner" Margin="0,0,0,12" CornerRadius="12" Padding="12"
                   Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">
               <TextBlock x:Name="VerifyBannerIcon" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,8,0" />
               <TextBlock x:Name="VerifyText" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </StackPanel>
+          </Border>
+          <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="16" Padding="12"
+                  Margin="0,0,0,0">
+            <StackPanel>
+              <TextBlock x:Name="CompareChartTitle" Style="{StaticResource SectionTitle}" FontSize="14"
+                         Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8" />
+              <controls:DualWaveformControl x:Name="CompareChart" Margin="0,0,0,12" />
+              <TextBlock x:Name="MetricsTitle" Style="{StaticResource SectionTitle}" FontSize="14"
+                         Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8" />
+              <ItemsControl x:Name="MetricsItems" ItemTemplate="{StaticResource MetricChipTemplate}" />
             </StackPanel>
           </Border>
         </StackPanel>

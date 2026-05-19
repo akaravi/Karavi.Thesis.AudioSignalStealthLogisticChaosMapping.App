@@ -6,9 +6,14 @@
 
 # -----------------------------------------------------------------------------
 # .NET / C# / WPF Desktop
+# Note: .gitignore does not untrack files already committed. If bin/obj slipped in:
+#   git ls-files "**/bin/**" "**/obj/**" | % { git rm --cached -f $_ }
 # -----------------------------------------------------------------------------
 **/bin/
 **/obj/
+**/*.dll
+**/*.pdb
+!**/test/**/fixtures/**
 **/publish/
 publish/
 **/out/

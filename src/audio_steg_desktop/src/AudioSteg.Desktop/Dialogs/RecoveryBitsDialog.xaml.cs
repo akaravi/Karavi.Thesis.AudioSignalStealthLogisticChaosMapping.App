@@ -24,7 +24,6 @@ public partial class RecoveryBitsDialog : Window
         Title = s.EmbedCompleteTitle;
         TitleText.Text = s.EmbedCompleteTitle;
         MessageText.Text = s.EmbedRecoveryMessage;
-        ValueLabel.Text = s.MsgBitLength;
         ToolTipService.SetToolTip(CopyButton, s.Copy);
         CapacityHintText.Text = s.EmbedRecoveryCapacityHint(_capacityBits);
         OkButton.Content = s.EmbedRecoveryOk;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/about/about_screen.dart';
 import '../features/embed/embed_screen.dart';
 import '../features/extract/extract_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -20,11 +21,17 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final wide = MediaQuery.of(context).size.width >= 720;
-    final pages = const [EmbedScreen(), ExtractScreen(), SettingsScreen()];
+    final pages = const [
+      EmbedScreen(),
+      ExtractScreen(),
+      SettingsScreen(),
+      AboutScreen(),
+    ];
     final destinations = [
       _Dest(Icons.shield_outlined, Icons.shield, s.embedTab),
       _Dest(Icons.search_outlined, Icons.search, s.extractTab),
       _Dest(Icons.settings_outlined, Icons.settings, s.settingsTab),
+      _Dest(Icons.groups_outlined, Icons.groups, s.aboutUsTab),
     ];
 
     // Stack of Offstage pages keeps each tab's state alive while removing
@@ -46,17 +53,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           ),
       ],
     );
+    final scheme = Theme.of(context).colorScheme;
     final scaffold = Scaffold(
       appBar: AppBar(
         title: Text(s.appTitle),
         centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: s.aboutTitle,
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _showAboutDialog(context, s),
-          ),
-        ],
+        backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
       ),
       body: wide
           ? Row(
@@ -95,77 +99,6 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             ),
     );
     return scaffold;
-  }
-
-  Future<void> _showAboutDialog(BuildContext context, AppStrings s) async {
-    final theme = Theme.of(context);
-    showAboutDialog(
-      context: context,
-      applicationName: s.appTitle,
-      applicationVersion: '1.0.0',
-      applicationLegalese: s.aboutThesis,
-      applicationIcon: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Icon(
-          Icons.graphic_eq,
-          color: theme.colorScheme.onPrimary,
-          size: 36,
-        ),
-      ),
-      children: [
-        const SizedBox(height: 8),
-        _aboutRow(theme, Icons.person_outline, s.aboutAuthor, 'Karavi'),
-        const SizedBox(height: 8),
-        _aboutRow(
-          theme,
-          Icons.functions,
-          s.aboutAlgo,
-          s.aboutAlgoBody,
-          multiline: true,
-        ),
-      ],
-    );
-  }
-
-  Widget _aboutRow(
-    ThemeData theme,
-    IconData icon,
-    String label,
-    String value, {
-    bool multiline = false,
-  }) {
-    return Row(
-      crossAxisAlignment: multiline
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: theme.textTheme.bodyMedium,
-              children: [
-                TextSpan(
-                  text: '$label: ',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                TextSpan(text: value),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 

@@ -1,8 +1,9 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using AudioSteg.Core.Stego;
 using AudioSteg.Desktop.Localization;
 
 namespace AudioSteg.Desktop.Views;
@@ -11,7 +12,7 @@ public partial class SettingsView : UserControl
 {
     private static readonly string[] SeedColors =
     [
-        "#6750A4", "#1B73E8", "#2E7D32", "#E65100", "#C62828", "#455A64",
+        "#00B4B7", "#1B73E8", "#2E7D32", "#E65100", "#C62828", "#455A64",
     ];
 
     private bool _loading;
@@ -32,6 +33,8 @@ public partial class SettingsView : UserControl
         LogisticLabel.Text = s.LogisticParams;
         RLabel.Text = s.RParam;
         X0Label.Text = s.X0Param;
+        RRangeHint.Text = s.LogisticRRangeHint;
+        X0RangeHint.Text = s.LogisticX0RangeHint;
         ResetLabel.Text = s.Reset;
 
         BuildThemeSegments(s);
@@ -39,9 +42,9 @@ public partial class SettingsView : UserControl
         BuildColorSeeds();
 
         var st = AppState.Settings;
-        RSlider.Value = st.R;
-        X0Slider.Value = st.X0;
-        UpdateSliderLabels();
+        RSlider.Value = LogisticParamBounds.ClampR(st.R);
+        X0Slider.Value = LogisticParamBounds.ClampX0(st.X0);
+        SyncParamTextBoxes();
         _loading = false;
     }
 
@@ -68,22 +71,22 @@ public partial class SettingsView : UserControl
     private void BuildLanguageSegments(AppStrings s)
     {
         LanguageSegments.Children.Clear();
-        var faBtn = CreateSegment(s.Persian, AppState.Settings.Language == AppLanguage.Fa);
-        faBtn.Click += (_, _) =>
+        AddLanguageButton(s.Persian, AppLanguage.Fa);
+        AddLanguageButton(s.English, AppLanguage.En);
+        AddLanguageButton(s.Arabic, AppLanguage.Ar);
+        AddLanguageButton(s.French, AppLanguage.Fr);
+    }
+
+    private void AddLanguageButton(string label, AppLanguage lang)
+    {
+        var btn = CreateSegment(label, AppState.Settings.Language == lang);
+        btn.Click += (_, _) =>
         {
-            AppState.Settings.Language = AppLanguage.Fa;
+            AppState.Settings.Language = lang;
             AppState.Save();
             RefreshShell();
         };
-        var enBtn = CreateSegment(s.English, AppState.Settings.Language == AppLanguage.En);
-        enBtn.Click += (_, _) =>
-        {
-            AppState.Settings.Language = AppLanguage.En;
-            AppState.Save();
-            RefreshShell();
-        };
-        LanguageSegments.Children.Add(faBtn);
-        LanguageSegments.Children.Add(enBtn);
+        LanguageSegments.Children.Add(btn);
     }
 
     private void BuildColorSeeds()
@@ -137,27 +140,82 @@ public partial class SettingsView : UserControl
             Cursor = System.Windows.Input.Cursors.Hand,
         };
 
-    private void UpdateSliderLabels()
+    private void SyncParamTextBoxes()
     {
-        if (RValueText is null || X0ValueText is null) return;
-        RValueText.Text = RSlider.Value.ToString("F3");
-        X0ValueText.Text = X0Slider.Value.ToString("F2");
+        RTextBox.Text = RSlider.Value.ToString("F3", CultureInfo.InvariantCulture);
+        X0TextBox.Text = X0Slider.Value.ToString("F2", CultureInfo.InvariantCulture);
     }
 
     private void RSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_loading || !IsLoaded) return;
-        AppState.Settings.R = RSlider.Value;
+        AppState.Settings.R = LogisticParamBounds.ClampR(RSlider.Value);
         AppState.Save();
-        UpdateSliderLabels();
+        SyncParamTextBoxes();
     }
 
     private void X0Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_loading || !IsLoaded) return;
-        AppState.Settings.X0 = X0Slider.Value;
+        AppState.Settings.X0 = LogisticParamBounds.ClampX0(X0Slider.Value);
         AppState.Save();
-        UpdateSliderLabels();
+        SyncParamTextBoxes();
+    }
+
+    private void RTextBox_LostFocus(object sender, RoutedEventArgs e) => CommitRFromTextBox();
+
+    private void X0TextBox_LostFocus(object sender, RoutedEventArgs e) => CommitX0FromTextBox();
+
+    private void ParamTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        if (sender == RTextBox) CommitRFromTextBox();
+        else if (sender == X0TextBox) CommitX0FromTextBox();
+        e.Handled = true;
+    }
+
+    private void CommitRFromTextBox()
+    {
+        if (_loading) return;
+        if (!LogisticParamBounds.TryParseR(RTextBox.Text, out var r))
+        {
+            MessageBox.Show(
+                ThemeManager.Strings.LogisticInvalidValue,
+                ThemeManager.Strings.AppTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            SyncParamTextBoxes();
+            return;
+        }
+
+        _loading = true;
+        RSlider.Value = r;
+        AppState.Settings.R = r;
+        AppState.Save();
+        SyncParamTextBoxes();
+        _loading = false;
+    }
+
+    private void CommitX0FromTextBox()
+    {
+        if (_loading) return;
+        if (!LogisticParamBounds.TryParseX0(X0TextBox.Text, out var x0))
+        {
+            MessageBox.Show(
+                ThemeManager.Strings.LogisticInvalidValue,
+                ThemeManager.Strings.AppTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            SyncParamTextBoxes();
+            return;
+        }
+
+        _loading = true;
+        X0Slider.Value = x0;
+        AppState.Settings.X0 = x0;
+        AppState.Save();
+        SyncParamTextBoxes();
+        _loading = false;
     }
 
     private void ResetButton_Click(object sender, RoutedEventArgs e)

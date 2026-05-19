@@ -6,16 +6,16 @@
   <Color x:Key="TextColor">#FFE6E1E5</Color>
   <Color x:Key="MutedColor">#FFCAC4D0</Color>
   <Color x:Key="BorderColor">#FF49454F</Color>
-  <Color x:Key="PrimaryColor">#FFD0BCFF</Color>
-  <Color x:Key="OnPrimaryColor">#FF381E72</Color>
-  <Color x:Key="PrimaryContainerColor">#FF4F378B</Color>
-  <Color x:Key="OnPrimaryContainerColor">#FFEADDFF</Color>
-  <Color x:Key="SecondaryContainerColor">#FF4A4458</Color>
+  <Color x:Key="PrimaryColor">#FF4DD0D3</Color>
+  <Color x:Key="OnPrimaryColor">#FF003738</Color>
+  <Color x:Key="PrimaryContainerColor">#FF004F52</Color>
+  <Color x:Key="OnPrimaryContainerColor">#FFB2EBEC</Color>
+  <Color x:Key="SecondaryContainerColor">#FF1E4A4C</Color>
   <Color x:Key="ErrorColor">#FFF2B8B5</Color>
   <Color x:Key="OnErrorContainerColor">#FFF9DEDC</Color>
   <Color x:Key="ErrorContainerColor">#FF8C1D18</Color>
   <Color x:Key="SuccessColor">#FF81C784</Color>
-  <Color x:Key="NavIndicatorColor">#FF4A4458</Color>
+  <Color x:Key="NavIndicatorColor">#FF004F52</Color>
   <Color x:Key="ChartStegoColor">#FF80CBC4</Color>
 
   <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />

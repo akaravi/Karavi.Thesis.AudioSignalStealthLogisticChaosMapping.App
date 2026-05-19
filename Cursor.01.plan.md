@@ -419,3 +419,275 @@
 - ✅ `home_shell.dart`: `Positioned.fill` برای تب‌های داخل Stack
 - ✅ Embed/Extract/Settings از اسکرول مشترک؛ TextField بدون اسکرول داخلی
 - ✅ `web/index.html`: `overflow: hidden` و `overscroll-behavior` برای وب موبایل
+
+---
+
+## Part 21 — پاپ‌آپ طول پیام پس از نهان‌نگاری
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "پس از رمزنگاری/نهان‌نگاری فایل صوتی، پاپ‌آپ با متن «برای بازیابی عبارت نهانگاری‌شده عدد طول پیام را یادداشت فرمایید»، نمایش عدد طول پیام و آیکن کپی برای clipboard"
+}
+```
+
+### Result 21
+- ✅ متن `embedRecoveryMessage` در Flutter (`app_strings.dart`) و WPF (`AppStrings.cs`) به‌روز شد
+- ✅ دیالوگ: عدد `msgBitLength` + `IconButton` کپی (`Icons.copy_outlined` / Segoe MDL2 `E8C8`) — Flutter `embed_screen.dart`، WPF `RecoveryBitsDialog`
+- ✅ برچسب اضافی «طول پیام (بیت)» از پاپ‌آپ حذف شد؛ پیام اصلی در مرکز نمایش داده می‌شود
+
+---
+
+## Part 22 — اجرای پروژه‌ها برای بررسی کاربر
+
+### دستور
+```json
+{ "task": "پروژه ها را اجرا کنم بررسی کنم" }
+```
+
+### Result 22
+- ✅ WPF: `dotnet build` + تست **۵/۵** — `AudioSteg.Desktop.exe` در پس‌زمینه
+- ✅ Flutter: `flutter analyze` صفر issue، تست **۲۴/۲۴** — `audio_steg_app.exe` (Release) در پس‌زمینه
+- ⚠️ `flutter build windows --debug` به‌خاطر نیاز symlink / Developer Mode شکست خورد؛ از بیلد Release موجود استفاده شد
+- ℹ️ SSL/HTTP health: N/A — هر دو اپ دسکتاپ GUI هستند
+- 📁 لاگ‌ها: `logs/{dotnet_*,flutter_*,wpf_*,flutter_app_*}.log`
+
+---
+
+## Part 23 — اجرای Flutter روی وب
+
+### دستور
+کد Flutter را در وب مجدد اجرا کن.
+
+### Result 23
+- ✅ `flutter run -d chrome --web-port=8080` — **http://localhost:8080** (HTTP 200)
+- ✅ Chrome باز شد؛ لاگ: `logs/flutter_web_run.log` — `App starting` بدون خطا
+- DevTools: `http://127.0.0.1:56439/...` (در لاگ run)
+
+---
+
+## Part 24 — UI تأیید فوری و دکمه Play
+
+### دستور
+- بنر نتیجه تأیید فوری: زیر دکمه‌ها، بالای مشخصات
+- بعد از پایان play، دکمه play دوباره فعال شود
+
+### Result 24
+- ✅ Flutter: `_buildVerifyBanner` بین `_buildResultActions` و بلوک waveform/metrics
+- ✅ WPF: `VerifyBanner` بین `WrapPanel` دکمه‌ها و Border مشخصات
+- ✅ Flutter: on `ProcessingState.completed` → `_isPlaying=false`، منبع صدا برای replay حفظ + `seek(0)` در resume
+- ✅ WPF: `OnPlaybackStopped` دیگر `Stop()` کامل نمی‌زند؛ reader به ابتدا برمی‌گردد و Play فعال می‌ماند
+
+---
+
+## Part 25 — تنظیم نمایش بازگردانی (appsettings)
+
+### دستور
+پارامتر در تنظیمات هر دو نرم‌افزار برای فعال/غیرفعال کردن نمایش بازگردانی در بخش نهان‌نگاری (مثل appsettings).
+
+### Result 25
+- ✅ `ShowEmbedRecoveryDialog` — پیش‌فرض `true`
+- ✅ Flutter: `SwitchListTile` در تنظیمات + `SharedPreferences`
+- ✅ WPF: `CheckBox` در تنظیمات + `appsettings.json` (کنار exe) + `%LocalAppData%/AudioSteg.Desktop/settings.json`
+- ✅ پاپ‌آپ طول پیام فقط وقتی تنظیم فعال باشد نمایش داده می‌شود
+
+---
+
+## Part 25 — run all (دیباگ، بیلد، اجرا)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "run all — دیباگ همه پروژه‌ها، بیلد، اجرا در پس‌زمینه، لیست آدرس‌ها، بررسی لاگ‌ها"
+}
+```
+
+### Result 25
+- ✅ **.NET:** `dotnet build` Debug — ۰ خطا (`logs/dotnet_build.log`)
+- ✅ **.NET تست:** ۵/۵ Passed (`logs/dotnet_test.log`)
+- ✅ **Flutter analyze:** No issues found (`logs/flutter_analyze.log`)
+- ✅ **Flutter test:** ۲۴/۲۴ Passed (`logs/flutter_test.log`)
+- ✅ **WPF اجرا:** `AudioSteg.Desktop.exe` — پنجره GUI فعال (بدون HTTP health)
+- ✅ **Flutter Web:** `flutter run -d chrome --web-port=8080` — **http://localhost:8080** HTTP 200 (`logs/flutter_web_run.log`)
+- ⚠️ **Flutter Windows native:** `flutter build windows` و `flutter run -d windows` — خطای «Building with plugins requires symlink support»؛ نیاز به **Developer Mode** در Windows (`start ms-settings:developers`) یا اجرای `scripts/ensure_windows_plugin_junctions.ps1` پس از فعال‌سازی
+- ℹ️ **SSL / API health:** N/A — اپ دسکتاپ/وب GUI؛ بدون endpoint سلامت HTTP در بک‌اند
+- 📁 **لاگ‌ها:** `logs/{dotnet_build,dotnet_test,flutter_analyze,flutter_test,flutter_build_windows,flutter_run,flutter_web_run}.*`
+
+---
+
+## Part 26 — کنتراست رنگ و پارامتر آشوب دستی
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رعایت قانون رنگ‌بندی (خوانایی متن)؛ پارامترهای آشوب با ورود دستی و حفاظت دامنه"
+}
+```
+
+### Result 26
+- ✅ Flutter: `AppTheme` — AppBar/NavigationBar/Input با `onSurface`؛ کارت نتیجه embed از `surfaceContainerLow` + حاشیه `primary` (نه پس‌زمینه teal پررنگ)
+- ✅ Flutter: `LogisticParamField` + `LogisticParamBounds` — اسلایدر + TextField برای r (۳٫۵–۴) و x0 (۰٫۰۱–۰٫۹۹)
+- ✅ WPF: `SettingsView` TextBox کنار Slider؛ `LogisticParamBounds.cs`؛ `ResultCard`/`TonalButton`/`TitleText` با `TextBrush`
+
+---
+
+## Part 27 — اسپلش راهنمای کاربری پس از زبان
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "اسپلش بعد از انتخاب زبان با کاربرد و راهنمای کوتاه کار با نرم‌افزار"
+}
+```
+
+### Result 27
+- ✅ جریان (به‌روز Part 30): دو اسپلش انیمیشنی (هر cold start) → زبان (یک‌بار) → **راهنمای سریع** (یک‌بار) → HomeShell
+- ✅ `UsageGuideSplashScreen`: هدف برنامه، مراحل نهان‌نگاری/رمزگشایی/تنظیمات/درباره ما + دکمه «شروع استفاده»
+- ✅ `usageGuideSeen` در `SharedPreferences`؛ i18n FA/EN در `app_strings.dart`
+
+---
+
+## Part 28 — رفع .gitignore برای خروجی build دات‌نت
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "فایل‌های bin/obj و DLLهای build قبلاً در git track شده‌اند؛ .gitignore را تقویت و از index خارج کن"
+}
+```
+
+### Result 28
+- ✅ علت: `.gitignore` فقط فایل‌های **untracked** را مسدود می‌کند؛ ۲۶۰ فایل `bin/` و `obj/` قبلاً commit شده بودند
+- ✅ `git rm --cached` برای همهٔ مسیرهای `bin/` و `obj/` زیر `src/audio_steg_desktop/` (شامل `AudioSteg.Desktop.dll`)
+- ✅ تقویت `.gitignore`: یادداشت `git rm --cached` + الگوی `**/*.dll` و `**/*.pdb` (به‌جز fixtures تست)
+- ℹ️ برای commit: فقط staging حذف track است؛ فایل‌های محلی build دست‌نخورده می‌مانند
+
+---
+
+## Part 29 — reset all (توقف و راه‌اندازی مجدد)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "reset all — توقف همه پروژه‌های در حال اجرا، دیباگ، بیلد، اجرای مجدد، لیست آدرس، health، بررسی لاگ"
+}
+```
+
+### Result 29
+- ✅ توقف: `dart`، `chrome` (نمونه‌های قبلی)، پاک‌سازی `*.pid`
+- ✅ **.NET:** `dotnet build` Debug — ۰ خطا؛ تست **۵/۵** (`logs/dotnet_build.log`, `logs/dotnet_test.log`)
+- ✅ **Flutter:** analyze صفر؛ تست **۲۴/۲۴** (`logs/flutter_analyze.log`, `logs/flutter_test.log`)
+- ✅ **WPF:** `AudioSteg.Desktop` — `pid=70668` (dotnet run)، `wpf_run.log` بدون خطا در stderr
+- ✅ **Flutter Web:** `http://localhost:8080` — **HTTP 200** (`logs/flutter_web_run.log`, `flutter_web.pid`)
+- ⚠️ **Flutter Windows native:** `flutter build windows` — symlink / **Developer Mode** لازم (`logs/flutter_build_windows.log`)
+- ℹ️ **SSL / API health:** N/A (GUI دسکتاپ/وب)
+
+---
+
+## Part 30 — ترتیب اسپلش: اصلی قبل از زبان، راهنما بعد از زبان
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "اسپلش راهنما بعد از انتخاب زبان؛ اسپلش اصلی برنامه قبل از انتخاب زبان"
+}
+```
+
+### Result 30
+- ✅ `AppBootstrap`: `SplashFlowScreen` (هر cold start) → `LanguageOnboardingScreen` (یک‌بار) → `UsageGuideSplashScreen` (یک‌بار) → `HomeShell`
+- ℹ️ متن اسپلش اصلی تا قبل از انتخاب زبان با locale پیش‌فرض (`fa`) نمایش داده می‌شود
+
+---
+
+## Part 31 — کنترل پخش در صفحه رمزگشایی
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "صفحه رمزگشایی: Play/Pause/Stop هم‌ردیف انتخاب فایل، فقط پس از بارگذاری؛ استخراج جدا"
+}
+```
+
+### Result 31
+- ✅ Flutter: بارگذاری فایل جدا از `extract`؛ `Wrap` شامل دکمه انتخاب + آیکن‌های گرد پخش/مکث/توقف (visible پس از load)
+- ✅ WPF: `PickButton` + `PlaybackPanel` در `WrapPanel`؛ `ExtractButton` جدا؛ `AudioPlaybackService`
+- ✅ i18n: `errorNoAudioLoaded` (fa/en/ar/fr)
+
+---
+
+## Part 32 — اسکریپت بیلد فقط Flutter Web
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "از _build-all-projects.ps1 اسکریپت جدا فقط برای flutter build web"
+}
+```
+
+### Result 32
+- ✅ `_build-flutter-web.ps1` در ریشه مخزن: `pub get` (با mirror retry)، `analyze`، `test`، `flutter build web --release`
+- ✅ خروجی: `src/audio_steg_app/build/web` و کپی در `publish/flutter/web`
+- ✅ ZIP اختیاری (`KaraviThesis_AudioSteg_FlutterWeb_*.zip`)؛ dev server با `-DevServerDevice chrome|edge|web-server`
+- ℹ️ بدون dotnet / Windows desktop؛ `-SkipPackage` و `-SkipDevServers` برای CI/بیلد سریع
+
+---
+
+## Part 33 — نام محصول و PWA
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "نام مناسب برای کاربر + PWA وب؛ آیکن مناسب"
+}
+```
+
+### Result 33
+- ✅ **عنوان کامل:** `نهان‌نگاری پیام در صوت` | `Audio Steganography` (fa/en/ar/fr در `AppStrings`)
+- ✅ **نام کوتاه:** `صوت‌نهان` | `AudioSteg` — manifest، اندروید، Apple web app title
+- ✅ PWA: `manifest.json` با `standalone`، `id`، توضیح دوزبانه؛ `index.html` با `theme-color` و metaهای نصب
+- ℹ️ آیکن‌های `web/icons/*` هنوز پیش‌فرض Flutter — جایگزینی گرافیک برند در گام بعد
+
+---
+
+## Part 34 — اشتراک‌گذاری Flutter (Share Center)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "دکمه share کنار save و کنار copy در popup طول پیام"
+}
+```
+
+### Result 34
+- ✅ `share_plus` + `stego_share.dart` — `SharePlus.instance.share` برای WAV و متن طول پیام
+- ✅ `embed_screen`: آیکن `Icons.share_outlined` کنار ذخیره و در دیالوگ recovery
+- ✅ i18n: `share`, `shareStego`, `shareRecoveryBitsText(bits)`
+
+---
+
+## Part 35 — تنظیمات استقرار (app-config / appsettings)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "تنظیمات استقرار embed — Flutter: app-config.json؛ WPF: appsettings.json (کنوانسیون .NET)"
+}
+```
+
+### Result 35
+- ✅ **WPF:** `appsettings.json` کنار exe — `ShowEmbedLoadFileButton`, `ShowEmbedRecoveryDialog` (`AppConfig.cs`)
+- ✅ **Flutter:** `assets/app-config.json` + `AppConfig.load()` در `main.dart`
+- ✅ حذف سوئیچ «رفتار نهان‌نگاری» از UI تنظیمات کاربر
+- ✅ Embed: مخفی‌سازی دکمه بارگذاری وقتی `ShowEmbedLoadFileButton` = false

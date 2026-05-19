@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 /// Visual accent for [CircleActionButton] gradients (theme-aware).
 enum CircleActionAccent { primary, secondary, error }
 
-/// Large circular action with gradient, glow, and optional pulse ring.
+/// Circle (record) or rounded square (upload file).
+enum ActionButtonShape { circle, roundedSquare }
+
+/// Themed action tile with gradient, glow, and optional pulse ring.
 class CircleActionButton extends StatefulWidget {
   final bool enabled;
   final VoidCallback onPressed;
@@ -11,6 +14,7 @@ class CircleActionButton extends StatefulWidget {
   final String label;
   final CircleActionAccent accent;
   final bool showPulse;
+  final ActionButtonShape shape;
 
   const CircleActionButton({
     super.key,
@@ -20,6 +24,7 @@ class CircleActionButton extends StatefulWidget {
     required this.label,
     this.accent = CircleActionAccent.primary,
     this.showPulse = false,
+    this.shape = ActionButtonShape.circle,
   });
 
   @override
@@ -29,7 +34,8 @@ class CircleActionButton extends StatefulWidget {
 class _CircleActionButtonState extends State<CircleActionButton>
     with SingleTickerProviderStateMixin {
   static const double _stackSize = 118;
-  static const double _circleSize = 76;
+  static const double _tileSize = 76;
+  static const double _squareRadius = 18;
 
   late final AnimationController _pulseCtrl = AnimationController(
     vsync: this,
@@ -68,7 +74,7 @@ class _CircleActionButtonState extends State<CircleActionButton>
   (Color base, Color onIcon) _resolveColors(ColorScheme scheme) {
     switch (widget.accent) {
       case CircleActionAccent.secondary:
-        return (scheme.tertiary, scheme.onTertiary);
+        return (scheme.secondary, scheme.onSecondary);
       case CircleActionAccent.error:
         return (scheme.error, scheme.onError);
       case CircleActionAccent.primary:
@@ -93,6 +99,12 @@ class _CircleActionButtonState extends State<CircleActionButton>
       height: 1.25,
       color: disabled ? scheme.onSurface.withValues(alpha: 0.38) : null,
     );
+    final isCircle = widget.shape == ActionButtonShape.circle;
+    final tileShape = isCircle ? BoxShape.circle : BoxShape.rectangle;
+    final tileRadius = isCircle ? null : BorderRadius.circular(_squareRadius);
+    final inkBorder = isCircle
+        ? const CircleBorder()
+        : RoundedRectangleBorder(borderRadius: tileRadius!);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -112,7 +124,8 @@ class _CircleActionButtonState extends State<CircleActionButton>
                       width: 92 + 18 * t,
                       height: 92 + 18 * t,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        shape: tileShape,
+                        borderRadius: tileRadius,
                         color: baseColor.withValues(alpha: 0.12 + 0.18 * t),
                       ),
                     );
@@ -120,7 +133,8 @@ class _CircleActionButtonState extends State<CircleActionButton>
                 ),
               DecoratedBox(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  shape: tileShape,
+                  borderRadius: tileRadius,
                   border: Border.all(
                     color: scheme.outlineVariant.withValues(
                       alpha: disabled ? 0.25 : 0.55,
@@ -131,16 +145,17 @@ class _CircleActionButtonState extends State<CircleActionButton>
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    customBorder: const CircleBorder(),
+                    customBorder: inkBorder,
                     onTap: widget.enabled ? widget.onPressed : null,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
                       curve: Curves.easeOutCubic,
-                      width: _circleSize,
-                      height: _circleSize,
+                      width: _tileSize,
+                      height: _tileSize,
                       margin: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        shape: tileShape,
+                        borderRadius: tileRadius,
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -198,17 +213,40 @@ class AudioSourceActionsPanel extends StatelessWidget {
   final String orLabel;
   final Widget loadAction;
   final Widget recordAction;
+  final bool showLoadAction;
 
   const AudioSourceActionsPanel({
     super.key,
     required this.orLabel,
     required this.loadAction,
     required this.recordAction,
+    this.showLoadAction = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (!showLoadAction) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              scheme.primaryContainer.withValues(alpha: 0.35),
+              scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            ],
+          ),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+        child: Center(child: recordAction),
+      );
+    }
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),

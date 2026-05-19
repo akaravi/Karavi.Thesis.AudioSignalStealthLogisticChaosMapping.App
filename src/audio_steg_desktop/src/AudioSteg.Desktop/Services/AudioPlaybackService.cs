@@ -48,11 +48,24 @@ public sealed class AudioPlaybackService : IDisposable
 
     public void Resume()
     {
-        if (_player is null || _player.PlaybackState != PlaybackState.Paused)
+        if (_player is null || _reader is null)
             return;
-        _player.Play();
-        StartSpectrumTimer();
-        NotifyStateChanged();
+
+        if (_player.PlaybackState == PlaybackState.Paused)
+        {
+            _player.Play();
+            StartSpectrumTimer();
+            NotifyStateChanged();
+            return;
+        }
+
+        if (_player.PlaybackState == PlaybackState.Stopped)
+        {
+            _reader.Position = 0;
+            _player.Play();
+            StartSpectrumTimer();
+            NotifyStateChanged();
+        }
     }
 
     public void Stop()
@@ -81,7 +94,14 @@ public sealed class AudioPlaybackService : IDisposable
     {
         if (_player is null)
             return;
-        Stop();
+
+        _spectrumTimer?.Stop();
+        SpectrumBands?.Invoke(new double[SpectrumAnalyzer.BandCount]);
+
+        if (_reader is not null)
+            _reader.Position = 0;
+
+        NotifyStateChanged();
     }
 
     private void StartSpectrumTimer()

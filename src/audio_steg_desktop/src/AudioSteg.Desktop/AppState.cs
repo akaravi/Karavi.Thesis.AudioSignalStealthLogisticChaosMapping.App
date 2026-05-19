@@ -4,7 +4,7 @@ using AudioSteg.Core.Stego;
 
 namespace AudioSteg.Desktop;
 
-public enum AppLanguage { Fa, En }
+public enum AppLanguage { Fa, En, Ar, Fr }
 
 public enum AppThemeMode { System, Light, Dark }
 
@@ -14,7 +14,7 @@ public sealed class AppSettings
     public AppLanguage Language { get; set; } = AppLanguage.Fa;
     public double R { get; set; } = WatermarkDefaults.R;
     public double X0 { get; set; } = WatermarkDefaults.X0;
-    public string AccentColor { get; set; } = "#6750A4";
+    public string AccentColor { get; set; } = "#00B4B7";
 }
 
 public static class AppState
@@ -29,20 +29,42 @@ public static class AppState
     public static AudioWatermarking Watermarking =>
         new(Settings.R, Settings.X0);
 
+    private static string AppSettingsFilePath =>
+        Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+
     public static void Load()
     {
+        AppConfig.Load();
+        Settings = new AppSettings();
+        MergeSettingsFromFile(AppSettingsFilePath);
+        MergeSettingsFromFile(SettingsPath);
+    }
+
+    private static void MergeSettingsFromFile(string path)
+    {
+        if (!File.Exists(path)) return;
         try
         {
-            if (!File.Exists(SettingsPath)) return;
-            var json = File.ReadAllText(SettingsPath);
+            var json = File.ReadAllText(path);
             var loaded = JsonSerializer.Deserialize<AppSettings>(json);
-            if (loaded is not null) Settings = loaded;
+            if (loaded is null) return;
+            Settings = Merge(Settings, loaded);
         }
         catch
         {
-            Settings = new AppSettings();
+            // Keep current values when a file is invalid.
         }
     }
+
+    private static AppSettings Merge(AppSettings target, AppSettings source) =>
+        new()
+        {
+            ThemeMode = source.ThemeMode,
+            Language = source.Language,
+            R = source.R,
+            X0 = source.X0,
+            AccentColor = source.AccentColor,
+        };
 
     public static void Save()
     {
@@ -59,5 +81,6 @@ public static class AppState
             R = WatermarkDefaults.R,
             X0 = WatermarkDefaults.X0,
         };
+        MergeSettingsFromFile(AppSettingsFilePath);
     }
 }

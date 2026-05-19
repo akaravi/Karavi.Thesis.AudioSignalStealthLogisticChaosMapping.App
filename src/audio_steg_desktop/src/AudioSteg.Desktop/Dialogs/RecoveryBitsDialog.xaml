@@ -9,10 +9,9 @@
       <TextBlock x:Name="TitleText" Style="{StaticResource SectionTitle}" TextWrapping="Wrap"
                  Margin="0,0,0,12" />
       <TextBlock x:Name="MessageText" Style="{StaticResource BodySmall}" TextWrapping="Wrap"
-                 Margin="0,0,0,16" />
+                 TextAlignment="Center" Margin="0,0,0,16" />
       <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="12" Padding="16,12">
         <StackPanel>
-          <TextBlock x:Name="ValueLabel" Style="{StaticResource BodySmall}" Margin="0,0,0,8" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <TextBlock x:Name="BitsValueText" FontSize="32" FontWeight="SemiBold"
                        VerticalAlignment="Center"

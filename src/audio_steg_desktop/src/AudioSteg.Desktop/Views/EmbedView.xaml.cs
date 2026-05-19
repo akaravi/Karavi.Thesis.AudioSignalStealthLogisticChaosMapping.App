@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using AudioSteg.Core.Audio;
 using AudioSteg.Core.Stego;
 using AudioSteg.Desktop.Dialogs;
@@ -20,6 +21,8 @@ public partial class EmbedView : UserControl
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
     private bool _busy;
+    private DispatcherTimer? _recordTimer;
+    private DateTime _recordStartUtc;
 
     public EmbedView()
     {
@@ -28,8 +31,12 @@ public partial class EmbedView : UserControl
         _playback.SpectrumBands += OnSpectrumBands;
         _playback.PlaybackStateChanged += UpdatePlaybackButtons;
         RecordBtn.Click += (_, _) => RecordBtn_Click(this, new RoutedEventArgs());
-        LoadFileBtn.Click += LoadFileBtn_Click;
-        Loaded += (_, _) => ApplyStrings();
+        LoadFileBtn.Click += (_, _) => LoadFileBtn_Click(this, new RoutedEventArgs());
+        Loaded += (_, _) =>
+        {
+            ApplyStrings();
+            ApplyEmbedLayout();
+        };
     }
 
     public void ApplyStrings()
@@ -40,12 +47,29 @@ public partial class EmbedView : UserControl
         RecordBtn.LabelIdle = s.StartRecording;
         RecordBtn.LabelActive = s.StopRecording;
         RecordBtn.RefreshVisual();
-        LoadFileLabel.Text = s.LoadAudioFile;
-        PlayLabel.Text = s.Play;
-        PauseLabel.Text = s.Pause;
-        StopPlaybackLabel.Text = s.StopPlayback;
+        LoadFileBtn.Label = s.LoadAudioFile;
+        LoadFileBtn.RefreshVisual();
+        ToolTipService.SetToolTip(PlayButton, s.Play);
+        ToolTipService.SetToolTip(PauseButton, s.Pause);
+        ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
         SaveLabel.Text = s.SaveStego;
         VerifyLabel.Text = s.Verify;
+    }
+
+    private void ApplyEmbedLayout()
+    {
+        var showLoad = AppConfig.Current.ShowEmbedLoadFileButton;
+        LoadFileBtn.Visibility = showLoad ? Visibility.Visible : Visibility.Collapsed;
+        if (showLoad)
+        {
+            Grid.SetColumn(RecordBtn, 0);
+            Grid.SetColumnSpan(RecordBtn, 1);
+        }
+        else
+        {
+            Grid.SetColumn(RecordBtn, 0);
+            Grid.SetColumnSpan(RecordBtn, 3);
+        }
     }
 
     private void OnSpectrumBands(double[] bands)
@@ -69,9 +93,10 @@ public partial class EmbedView : UserControl
         }
         var playing = _playback.IsPlaying;
         var hasSource = _playback.HasSource;
-        PlayButton.IsEnabled = !playing;
+        var paused = _playback.IsPaused;
+        PlayButton.IsEnabled = !playing && (_stego is not null);
         PauseButton.IsEnabled = playing;
-        StopPlaybackButton.IsEnabled = hasSource;
+        StopPlaybackButton.IsEnabled = hasSource && (playing || paused);
     }
 
     private async void RecordBtn_Click(object sender, RoutedEventArgs e)
@@ -119,6 +144,7 @@ public partial class EmbedView : UserControl
                 RecordBtn.IsRecording = false;
                 Equalizer.IsActive = false;
                 Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
+                StopRecordTimer();
                 _busy = false;
             }
 
@@ -145,12 +171,32 @@ public partial class EmbedView : UserControl
             LoadFileBtn.IsEnabled = false;
             Equalizer.IsActive = true;
             MessageTextBox.IsEnabled = false;
+            StartRecordTimer();
         }
         catch (Exception ex)
         {
             StatusText.Text = ex.Message;
             RecordBtn.IsRecording = false;
+            StopRecordTimer();
         }
+    }
+
+    private void StartRecordTimer()
+    {
+        _recordStartUtc = DateTime.UtcNow;
+        Equalizer.RecordingElapsed = TimeSpan.Zero;
+        _recordTimer?.Stop();
+        _recordTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _recordTimer.Tick += (_, _) =>
+            Equalizer.RecordingElapsed = DateTime.UtcNow - _recordStartUtc;
+        _recordTimer.Start();
+    }
+
+    private void StopRecordTimer()
+    {
+        _recordTimer?.Stop();
+        _recordTimer = null;
+        Equalizer.RecordingElapsed = null;
     }
 
     private async void LoadFileBtn_Click(object sender, RoutedEventArgs e)
@@ -289,7 +335,8 @@ public partial class EmbedView : UserControl
 
         VerifyBanner.Visibility = Visibility.Collapsed;
         UpdatePlaybackButtons();
-        ShowRecoveryBitsDialog(outcome.BitsEmbedded, outcome.CapacityBits);
+        if (AppConfig.Current.ShowEmbedRecoveryDialog)
+            ShowRecoveryBitsDialog(outcome.BitsEmbedded, outcome.CapacityBits);
     }
 
     private void ShowRecoveryBitsDialog(int msgBitLength, int capacityBits)
@@ -306,7 +353,7 @@ public partial class EmbedView : UserControl
         if (_stego is null) return;
         try
         {
-            if (_playback.IsPaused)
+            if (_playback.HasSource && (_playback.IsPaused || !_playback.IsPlaying))
                 _playback.Resume();
             else
                 _playback.Play(_stego);

@@ -21,9 +21,9 @@
   </Style>
 
   <Style x:Key="ResultCard" TargetType="Border" BasedOn="{StaticResource MaterialCard}">
-    <Setter Property="Background" Value="{DynamicResource PrimaryContainerBrush}" />
+    <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BorderThickness" Value="1" />
   </Style>
 
   <Style x:Key="MaterialTextBox" TargetType="TextBox">
@@ -77,8 +77,22 @@
   </Style>
 
   <Style x:Key="TonalButton" TargetType="Button" BasedOn="{StaticResource FilledButton}">
-    <Setter Property="Background" Value="{DynamicResource SecondaryContainerBrush}" />
-    <Setter Property="Foreground" Value="{DynamicResource OnPrimaryContainerBrush}" />
+    <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style x:Key="IconFilledButton" TargetType="Button" BasedOn="{StaticResource FilledButton}">
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="MinHeight" Value="48" />
+  </Style>
+
+  <Style x:Key="IconTonalButton" TargetType="Button" BasedOn="{StaticResource TonalButton}">
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="MinHeight" Value="48" />
   </Style>
 
   <Style x:Key="NavTabButton" TargetType="RadioButton">

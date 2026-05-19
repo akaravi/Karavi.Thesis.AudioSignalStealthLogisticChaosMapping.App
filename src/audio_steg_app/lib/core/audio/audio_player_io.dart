@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -57,6 +56,9 @@ class AudioPlayerService {
   Future<void> resume() async {
     if (!_sourceLoaded || _player.playing) return;
     try {
+      if (_player.processingState == ProcessingState.completed) {
+        await _player.seek(Duration.zero);
+      }
       await _player.play();
     } catch (e, st) {
       SessionLog.write('AudioPlayer: resume failed', error: e, stack: st);
@@ -98,7 +100,6 @@ class AudioPlayerService {
     });
     _stateSub = _player.playerStateStream.listen((st) {
       if (st.processingState == ProcessingState.completed) {
-        _sourceLoaded = false;
         if (!_spectrumController.isClosed) {
           _spectrumController.add(List<double>.filled(kSpectrumBandCount, 0));
         }

@@ -31,11 +31,11 @@ public static class ThemeManager
     {
         Apply(window.Resources);
         var s = AppState.Settings;
-        window.FlowDirection = s.Language == AppLanguage.Fa
+        window.FlowDirection = s.Language is AppLanguage.Fa or AppLanguage.Ar
             ? FlowDirection.RightToLeft
             : FlowDirection.LeftToRight;
 
-        window.FontFamily = s.Language == AppLanguage.Fa
+        window.FontFamily = s.Language is AppLanguage.Fa or AppLanguage.Ar
             ? new FontFamily("Segoe UI, Tahoma")
             : new FontFamily("Segoe UI");
     }

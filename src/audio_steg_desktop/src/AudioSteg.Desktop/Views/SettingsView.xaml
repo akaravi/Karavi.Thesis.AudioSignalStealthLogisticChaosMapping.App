@@ -13,7 +13,7 @@
       <Border Style="{StaticResource MaterialCard}" Margin="0,0,0,16">
         <StackPanel>
           <TextBlock x:Name="LanguageLabel" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
-          <UniformGrid x:Name="LanguageSegments" Rows="1" Columns="2" />
+          <UniformGrid x:Name="LanguageSegments" Rows="2" Columns="2" />
         </StackPanel>
       </Border>
 
@@ -28,13 +28,31 @@
         <StackPanel>
           <TextBlock x:Name="LogisticLabel" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
           <TextBlock x:Name="RLabel" Foreground="{DynamicResource TextBrush}" />
-          <Slider x:Name="RSlider" Minimum="3.5" Maximum="4.0" TickFrequency="0.01"
-                  IsSnapToTickEnabled="True" ValueChanged="RSlider_ValueChanged" />
-          <TextBlock x:Name="RValueText" Style="{StaticResource BodySmall}" Margin="0,0,0,12" />
-          <TextBlock x:Name="X0Label" Foreground="{DynamicResource TextBrush}" />
-          <Slider x:Name="X0Slider" Minimum="0.01" Maximum="0.99" TickFrequency="0.01"
-                  IsSnapToTickEnabled="True" ValueChanged="X0Slider_ValueChanged" />
-          <TextBlock x:Name="X0ValueText" Style="{StaticResource BodySmall}" />
+          <TextBlock x:Name="RRangeHint" Style="{StaticResource BodySmall}" Margin="0,0,0,6" />
+          <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="96" />
+            </Grid.ColumnDefinitions>
+            <Slider x:Name="RSlider" Grid.Column="0" Minimum="3.5" Maximum="4.0" TickFrequency="0.01"
+                    IsSnapToTickEnabled="True" ValueChanged="RSlider_ValueChanged" VerticalAlignment="Center" />
+            <TextBox x:Name="RTextBox" Grid.Column="1" Style="{StaticResource MaterialTextBox}"
+                     Margin="8,0,0,0" HorizontalContentAlignment="Center"
+                     LostFocus="RTextBox_LostFocus" KeyDown="ParamTextBox_KeyDown" />
+          </Grid>
+          <TextBlock x:Name="X0Label" Foreground="{DynamicResource TextBrush}" Margin="0,8,0,0" />
+          <TextBlock x:Name="X0RangeHint" Style="{StaticResource BodySmall}" Margin="0,0,0,6" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="96" />
+            </Grid.ColumnDefinitions>
+            <Slider x:Name="X0Slider" Grid.Column="0" Minimum="0.01" Maximum="0.99" TickFrequency="0.01"
+                    IsSnapToTickEnabled="True" ValueChanged="X0Slider_ValueChanged" VerticalAlignment="Center" />
+            <TextBox x:Name="X0TextBox" Grid.Column="1" Style="{StaticResource MaterialTextBox}"
+                     Margin="8,0,0,0" HorizontalContentAlignment="Center"
+                     LostFocus="X0TextBox_LostFocus" KeyDown="ParamTextBox_KeyDown" />
+          </Grid>
         </StackPanel>
       </Border>
 

@@ -7,7 +7,8 @@ namespace AudioSteg.Desktop;
 
 public partial class MainWindow : Window
 {
-    private readonly RadioButton[] _navButtons = new RadioButton[3];
+    private const int TabCount = 4;
+    private readonly RadioButton[] _navButtons = new RadioButton[TabCount];
     private int _selectedIndex;
 
     public MainWindow()
@@ -30,6 +31,7 @@ public partial class MainWindow : Window
         UpdateNavLabels();
         EmbedPage.ApplyStrings();
         ExtractPage.ApplyStrings();
+        AboutPage.ApplyStrings();
     }
 
     private void BuildNavigation()
@@ -37,8 +39,8 @@ public partial class MainWindow : Window
         BottomNavGrid.Children.Clear();
         RailButtons.Children.Clear();
 
-        var icons = new[] { "\uE9D8", "\uE721", "\uE713" };
-        for (var i = 0; i < 3; i++)
+        var icons = new[] { "\uE9D8", "\uE721", "\uE713", "\uE77B" };
+        for (var i = 0; i < TabCount; i++)
         {
             var idx = i;
             var btn = CreateNavButton(icons[i], i, "BottomNav");
@@ -55,7 +57,7 @@ public partial class MainWindow : Window
     private RadioButton CreateNavButton(string icon, int index, string groupName)
     {
         var s = ThemeManager.Strings;
-        var labels = new[] { s.EmbedTab, s.ExtractTab, s.SettingsTab };
+        var labels = new[] { s.EmbedTab, s.ExtractTab, s.SettingsTab, s.AboutUsTab };
         return new RadioButton
         {
             Style = (Style)FindResource("NavTabButton"),
@@ -74,7 +76,7 @@ public partial class MainWindow : Window
     private void UpdateNavLabels()
     {
         var s = ThemeManager.Strings;
-        var labels = new[] { s.EmbedTab, s.ExtractTab, s.SettingsTab };
+        var labels = new[] { s.EmbedTab, s.ExtractTab, s.SettingsTab, s.AboutUsTab };
         for (var i = 0; i < _navButtons.Length && i < BottomNavGrid.Children.Count; i++)
         {
             if (BottomNavGrid.Children[i] is RadioButton rb)
@@ -88,6 +90,7 @@ public partial class MainWindow : Window
         EmbedPage.Visibility = index == 0 ? Visibility.Visible : Visibility.Collapsed;
         ExtractPage.Visibility = index == 1 ? Visibility.Visible : Visibility.Collapsed;
         SettingsPage.Visibility = index == 2 ? Visibility.Visible : Visibility.Collapsed;
+        AboutPage.Visibility = index == 3 ? Visibility.Visible : Visibility.Collapsed;
 
         for (var i = 0; i < _navButtons.Length; i++)
             _navButtons[i].IsChecked = i == index;
@@ -106,11 +109,5 @@ public partial class MainWindow : Window
         NavRail.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
         BottomNav.Visibility = wide ? Visibility.Collapsed : Visibility.Visible;
         RailColumn.Width = wide ? new GridLength(88) : new GridLength(0);
-    }
-
-    private void AboutButton_Click(object sender, RoutedEventArgs e)
-    {
-        var s = ThemeManager.Strings;
-        MessageBox.Show(s.AboutAlgoBody, s.AboutTitle, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }
