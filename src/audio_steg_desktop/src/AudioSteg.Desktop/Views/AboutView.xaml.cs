@@ -38,11 +38,11 @@ public partial class AboutView : UserControl
 
         ContactPanel.Children.Clear();
         ContactPanel.Children.Add(CreateLinkRow(
-            $"{s.AboutPhoneLandline}: {AboutConstants.PhoneLandline}",
-            $"tel:{AboutConstants.PhoneLandline}"));
-        ContactPanel.Children.Add(CreateLinkRow(
-            $"{s.AboutPhoneMobile}: {AboutConstants.PhoneMobile}",
+            $"{s.AboutCall}: {AboutConstants.PhoneMobile}",
             $"tel:{AboutConstants.PhoneMobile}"));
+        ContactPanel.Children.Add(CreateLinkRow(
+            $"{s.AboutEmail}: {AboutConstants.Email}",
+            $"mailto:{AboutConstants.Email}"));
     }
 
     private static UIElement CreateInfoRow(string text, string mdl2Icon)

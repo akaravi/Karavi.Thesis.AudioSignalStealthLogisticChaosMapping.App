@@ -8,11 +8,18 @@
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
-    "display_override": ["standalone", "minimal-ui", "browser"],
+    "display_override": [
+        "standalone",
+        "minimal-ui",
+        "browser"
+    ],
     "background_color": "#121212",
     "theme_color": "#00B4B7",
     "orientation": "any",
-    "categories": ["utilities", "education"],
+    "categories": [
+        "utilities",
+        "education"
+    ],
     "prefer_related_applications": false,
     "icons": [
         {

@@ -14,6 +14,11 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            val storageBase =
+                System.getenv("FLUTTER_STORAGE_BASE_URL") ?: "https://storage.googleapis.com"
+            url = uri("$storageBase/download.flutter.io/")
+        }
     }
 }
 
@@ -23,4 +28,28 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        val storageBase =
+            System.getenv("FLUTTER_STORAGE_BASE_URL") ?: "https://storage.googleapis.com"
+        maven { url = uri("$storageBase/download.flutter.io/maven2/") }
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io/") }
+    }
+}
+
 include(":app")
+
+// After global init scripts (e.g. Aliyun mirrors), ensure Flutter engine Maven is reachable.
+gradle.settingsEvaluated {
+    dependencyResolutionManagement {
+        repositories {
+            val storageBase =
+                System.getenv("FLUTTER_STORAGE_BASE_URL") ?: "https://storage.googleapis.com"
+            maven { url = uri("$storageBase/download.flutter.io/maven2/") }
+            maven { url = uri("https://storage.googleapis.com/download.flutter.io/") }
+        }
+    }
+}

@@ -1,6 +1,5 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/platform/platform.dart';
@@ -50,41 +49,6 @@ Future<StegoShareOutcome> shareStegoWavBytes({
     }
     if (isMobilePlatform) rethrow;
     return _downloadWavFallback(bytes, fileName);
-  }
-}
-
-Future<StegoShareOutcome> shareRecoveryBitsText(String text) async {
-  if (kIsWeb) {
-    try {
-      final result = await SharePlus.instance.share(
-        ShareParams(text: text, mailToFallbackEnabled: true),
-      );
-      if (result.status != ShareResultStatus.dismissed) {
-        return StegoShareOutcome.shared;
-      }
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('shareRecoveryBitsText web: $e\n$st');
-      }
-    }
-    await Clipboard.setData(ClipboardData(text: text));
-    return StegoShareOutcome.textCopied;
-  }
-
-  try {
-    final result = await SharePlus.instance.share(
-      ShareParams(text: text, mailToFallbackEnabled: true),
-    );
-    if (result.status == ShareResultStatus.dismissed) {
-      throw StateError('Share dismissed');
-    }
-    return StegoShareOutcome.shared;
-  } catch (e, st) {
-    if (kDebugMode) {
-      debugPrint('shareRecoveryBitsText: $e\n$st');
-    }
-    await Clipboard.setData(ClipboardData(text: text));
-    return StegoShareOutcome.textCopied;
   }
 }
 

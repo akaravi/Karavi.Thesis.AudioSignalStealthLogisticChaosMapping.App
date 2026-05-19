@@ -55,7 +55,7 @@ public partial class RecordButtonControl : UserControl
     private void StartPulse()
     {
         PulseRing.Opacity = 0.2;
-        var anim = new DoubleAnimation(100, 130, TimeSpan.FromMilliseconds(550))
+        var anim = new DoubleAnimation(50, 65, TimeSpan.FromMilliseconds(550))
         {
             AutoReverse = true,
             RepeatBehavior = RepeatBehavior.Forever,
@@ -68,8 +68,8 @@ public partial class RecordButtonControl : UserControl
     {
         PulseRing.BeginAnimation(WidthProperty, null);
         PulseRing.BeginAnimation(HeightProperty, null);
-        PulseRing.Width = 110;
-        PulseRing.Height = 110;
+        PulseRing.Width = 55;
+        PulseRing.Height = 55;
         PulseRing.Opacity = 0;
     }
 

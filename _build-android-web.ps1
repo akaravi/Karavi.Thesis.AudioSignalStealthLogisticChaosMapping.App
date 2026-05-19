@@ -27,7 +27,8 @@ param(
     [switch]$SkipTests,
     [switch]$SkipFlutterAnalyze,
     [string]$WebBaseHref = "/",
-    [string]$WebOutputDirectory = ""
+    [string]$WebOutputDirectory = "",
+    [string]$AndroidOutputDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -240,17 +241,16 @@ function Resolve-FlutterAppBundleOutput {
 
 function Copy-AndroidArtifactsToPublish {
     param(
-        [Parameter(Mandatory = $true)][string[]]$SourceFiles,
+        [Parameter(Mandatory = $true)][object[]]$SourceFiles,
         [Parameter(Mandatory = $true)][string]$DestinationDir
     )
 
-    if (Test-Path $DestinationDir) {
-        Remove-Item -Recurse -Force $DestinationDir
-    }
     New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
     foreach ($src in $SourceFiles) {
-        Copy-Item -Force $src.FullName (Join-Path $DestinationDir $src.Name)
-        Write-Host "  android -> $(Join-Path $DestinationDir $src.Name)" -ForegroundColor Yellow
+        $item = if ($src -is [System.IO.FileInfo]) { $src } else { Get-Item $src.FullName }
+        $dest = Join-Path $DestinationDir $item.Name
+        Copy-Item -Force $item.FullName $dest
+        Write-Host "  android -> $dest" -ForegroundColor Yellow
     }
 }
 
@@ -285,7 +285,18 @@ function Invoke-AndroidWebZip {
     New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
 
     if ($IncludeAndroid -and (Test-Path $AndroidPublishDir)) {
-        Copy-Item -Recurse -Force $AndroidPublishDir (Join-Path $stageRoot "android")
+        $stageAndroid = Join-Path $stageRoot "android"
+        New-Item -ItemType Directory -Path $stageAndroid -Force | Out-Null
+        $artifacts = @(
+            Get-ChildItem -Path $AndroidPublishDir -File -Filter "*.apk" -ErrorAction SilentlyContinue
+            Get-ChildItem -Path $AndroidPublishDir -File -Filter "*.aab" -ErrorAction SilentlyContinue
+        )
+        if ($artifacts.Count -eq 0) {
+            throw "No APK/AAB files in $AndroidPublishDir for ZIP staging."
+        }
+        foreach ($f in $artifacts) {
+            Copy-Item -Force $f.FullName (Join-Path $stageAndroid $f.Name)
+        }
     }
     if ($IncludeWeb -and (Test-Path $WebPublishDir)) {
         Copy-Item -Recurse -Force $WebPublishDir (Join-Path $stageRoot "web")
@@ -335,7 +346,15 @@ $webPublishDir = $defaultWebPublishDir
 if (-not [string]::IsNullOrWhiteSpace($WebOutputDirectory)) {
     $webPublishDir = Resolve-ExistingOrNewDirectory -Path $WebOutputDirectory
 }
-$androidPublishDir = $defaultAndroidPublishDir
+if (-not [string]::IsNullOrWhiteSpace($AndroidOutputDirectory)) {
+    $androidPublishDir = Resolve-ExistingOrNewDirectory -Path $AndroidOutputDirectory
+}
+elseif (-not [string]::IsNullOrWhiteSpace($ZipOutputDirectory)) {
+    $androidPublishDir = Resolve-ExistingOrNewDirectory -Path $ZipOutputDirectory
+}
+else {
+    $androidPublishDir = $defaultAndroidPublishDir
+}
 
 if (-not $SkipPackage) {
     if ([string]::IsNullOrWhiteSpace($ZipOutputDirectory)) {
@@ -366,6 +385,8 @@ $builtAndroidFiles = @()
 
 if (-not $SkipAndroid) {
     Assert-AndroidSdkAvailable
+    Write-Host "Flutter precache (android)..." -ForegroundColor Cyan
+    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("precache", "--android")
     $buildApk = $AndroidArtifact -in @("Apk", "Both")
     $buildBundle = $AndroidArtifact -in @("AppBundle", "Both")
 

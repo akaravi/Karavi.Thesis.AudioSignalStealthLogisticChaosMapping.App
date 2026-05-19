@@ -62,6 +62,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   @override
   void initState() {
     super.initState();
+    _textCtrl.addListener(() {
+      if (mounted) setState(() {});
+    });
     _stateSub = _recorder.stateStream.listen((s) {
       if (!mounted) return;
       setState(() {});
@@ -222,7 +225,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       picked = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: AudioInputLoader.audioPickerExtensions,
-        withData: true,
+        withData: kIsWeb,
       );
     } catch (e) {
       _showStatus(e.toString());
@@ -243,34 +246,21 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _statusMessage = s.processing;
     });
 
-    late final Uint8List bytes;
-    try {
-      if (file.bytes != null) {
-        bytes = file.bytes!;
-      } else if (!kIsWeb && file.path != null) {
-        bytes = await nativeReadBytes(file.path!);
-      } else {
-        throw StateError('No bytes/path available');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _processing = false;
-        _statusMessage = e.toString();
-      });
-      return;
-    }
-
     WavFile cover;
     try {
-      cover = await AudioInputLoader.loadFromBytes(bytes, name);
+      cover = await AudioInputLoader.loadPickedFile(
+        fileName: name,
+        bytes: file.bytes,
+        path: kIsWeb ? null : file.path,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _busy = false;
         _processing = false;
-        _statusMessage = e.toString();
+        _statusMessage = e.toString().contains('MP3 decode failed')
+            ? s.errorMp3Decode
+            : e.toString();
       });
       return;
     }
@@ -401,18 +391,24 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       ),
                       const SizedBox(width: 4),
                       IconButton.filledTonal(
-                        tooltip: s.share,
+                        tooltip: s.shareStego,
                         onPressed: () async {
-                          final outcome = await shareRecoveryBitsText(
-                            s.shareRecoveryBitsText(bits),
+                          final outcome = await shareStegoWavBytes(
+                            bytes: result.stego.encode(),
+                            fileName: stegoWavFileName(result.msgBitLength),
+                            subject: s.shareStego,
                           );
                           if (!dialogCtx.mounted) return;
-                          if (outcome == StegoShareOutcome.textCopied) {
-                            ScaffoldMessenger.of(dialogCtx).showSnackBar(
-                              SnackBar(
-                                content: Text(s.shareTextCopiedToClipboard),
-                              ),
-                            );
+                          final message = switch (outcome) {
+                            StegoShareOutcome.fileDownloaded =>
+                              s.shareFileDownloaded,
+                            StegoShareOutcome.shared ||
+                            StegoShareOutcome.textCopied => null,
+                          };
+                          if (message != null) {
+                            ScaffoldMessenger.of(
+                              dialogCtx,
+                            ).showSnackBar(SnackBar(content: Text(message)));
                           }
                         },
                         icon: const Icon(Icons.share_outlined),
@@ -486,6 +482,77 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   void _showStatus(String msg) {
     if (!mounted) return;
     setState(() => _statusMessage = msg);
+  }
+
+  bool get _canStartNewEmbed =>
+      _stego != null ||
+      _cover != null ||
+      _textCtrl.text.trim().isNotEmpty ||
+      _recorder.isRecording ||
+      _isPlaying ||
+      _playbackLoaded ||
+      _statusMessage != null ||
+      _verifyStatus != null;
+
+  bool get _newEmbedFabEnabled {
+    if (_processing || _verifying) return _recorder.isRecording;
+    if (_busy && !_recorder.isRecording) return false;
+    return _canStartNewEmbed;
+  }
+
+  Future<void> _startNewEmbed() async {
+    if (!_newEmbedFabEnabled) return;
+    _busy = true;
+    try {
+      if (_recorder.isRecording) {
+        await _recorder.cancel();
+      }
+      await _cancelSpectrum();
+      _clearRecordTimer();
+      try {
+        await _player.stop();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('Embed new: stop playback: $e\n$st');
+        }
+      }
+      if (!mounted) return;
+      _textCtrl.clear();
+      FocusManager.instance.primaryFocus?.unfocus();
+      setState(() {
+        _processing = false;
+        _verifying = false;
+        _cover = null;
+        _stego = null;
+        _result = null;
+        _statusMessage = null;
+        _verifyStatus = null;
+        _verifyOk = null;
+        _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+        _isPlaying = false;
+        _playbackLoaded = false;
+      });
+      SessionLog.write('Embed: new session');
+    } finally {
+      if (mounted) {
+        _busy = false;
+      }
+    }
+  }
+
+  Widget _buildNewEmbedFab(AppStrings s) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 4,
+      shadowColor: scheme.shadow.withValues(alpha: 0.4),
+      color: scheme.primaryContainer,
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: s.embedNew,
+        onPressed: _newEmbedFabEnabled ? _startNewEmbed : null,
+        icon: Icon(Icons.note_add_outlined, color: scheme.onPrimaryContainer),
+      ),
+    );
   }
 
   Future<void> _saveStego() async {
@@ -604,80 +671,94 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final isRecording = _recorder.isRecording;
     final eqActive = isRecording || _isPlaying || _playbackLoaded;
     final canPickFile = !isRecording && !_processing && !_busy;
-    return TabScrollBody(
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        TextField(
-          controller: _textCtrl,
-          maxLines: 4,
-          minLines: 3,
-          scrollPhysics: const NeverScrollableScrollPhysics(),
-          enabled: !isRecording && !_processing,
-          decoration: InputDecoration(
-            labelText: s.textHint,
-            prefixIcon: const Icon(Icons.message_outlined),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-            child: Column(
-              children: [
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    s.audioEqualizer,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                AudioEqualizerView(
-                  bands: _eqBands,
-                  active: eqActive,
-                  recordingElapsed: isRecording ? _recordingElapsed : null,
-                ),
-                const SizedBox(height: 16),
-                AudioSourceActionsPanel(
-                  orLabel: s.audioSourceOr,
-                  showLoadAction: appConfig.showEmbedLoadFileButton,
-                  loadAction: CircleActionButton(
-                    icon: Icons.upload_file_outlined,
-                    label: s.loadAudioFile,
-                    shape: ActionButtonShape.roundedSquare,
-                    enabled: canPickFile,
-                    onPressed: _loadAndEmbed,
-                    accent: CircleActionAccent.primary,
-                  ),
-                  recordAction: RecordButton(
-                    isActive: isRecording,
-                    enabled: !_processing && (isRecording || !_busy),
-                    onPressed: _toggleRecord,
-                    labelIdle: s.startRecording,
-                    labelActive: s.stopRecording,
-                  ),
-                ),
-                if (_processing) ...[
-                  const SizedBox(height: 12),
-                  const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                ],
-                if (_statusMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _statusMessage!,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ],
+        TabScrollBody(
+          padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
+          children: [
+            TextField(
+              controller: _textCtrl,
+              maxLines: 4,
+              minLines: 3,
+              scrollPhysics: const NeverScrollableScrollPhysics(),
+              enabled: !isRecording && !_processing,
+              decoration: InputDecoration(
+                labelText: s.textHint,
+                prefixIcon: const Icon(Icons.message_outlined),
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        s.audioEqualizer,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    AudioEqualizerView(
+                      bands: _eqBands,
+                      active: eqActive,
+                      recordingElapsed: isRecording ? _recordingElapsed : null,
+                    ),
+                    const SizedBox(height: 16),
+                    AudioSourceActionsPanel(
+                      orLabel: s.audioSourceOr,
+                      showLoadAction: appConfig.showEmbedLoadFileButton,
+                      loadAction: CircleActionButton(
+                        icon: Icons.upload_file_outlined,
+                        label: s.loadAudioFile,
+                        shape: ActionButtonShape.roundedSquare,
+                        enabled: canPickFile,
+                        onPressed: _loadAndEmbed,
+                        accent: CircleActionAccent.primary,
+                      ),
+                      recordAction: RecordButton(
+                        isActive: isRecording,
+                        enabled: !_processing && (isRecording || !_busy),
+                        onPressed: _toggleRecord,
+                        labelIdle: s.startRecording,
+                        labelActive: s.stopRecording,
+                      ),
+                    ),
+                    if (_processing) ...[
+                      const SizedBox(height: 12),
+                      const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      ),
+                    ],
+                    if (_statusMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _statusMessage!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_stego != null) _buildResultCard(s),
+          ],
         ),
-        const SizedBox(height: 16),
-        if (_stego != null) _buildResultCard(s),
+        PositionedDirectional(
+          top: 8,
+          end: 8,
+          child: SafeArea(bottom: false, child: _buildNewEmbedFab(s)),
+        ),
       ],
     );
   }

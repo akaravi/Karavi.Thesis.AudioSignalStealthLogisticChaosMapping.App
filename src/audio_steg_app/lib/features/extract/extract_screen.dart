@@ -12,7 +12,6 @@ import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/wav_io.dart';
-import '../../core/io/native_file.dart';
 import '../../core/stego/stego.dart';
 import '../shared/tab_scroll_body.dart';
 
@@ -82,7 +81,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       picked = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: AudioInputLoader.audioPickerExtensions,
-        withData: true,
+        withData: kIsWeb,
       );
     } catch (e) {
       if (!mounted) return;
@@ -103,24 +102,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _result = null;
     });
 
-    late final Uint8List audioBytes;
-    try {
-      if (file.bytes != null) {
-        audioBytes = file.bytes!;
-      } else if (!kIsWeb && file.path != null) {
-        audioBytes = await nativeReadBytes(file.path!);
-      } else {
-        throw StateError('No bytes/path available');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _loadingFile = false;
-        _statusMessage = e.toString();
-      });
-      return;
-    }
-
     final fileName = file.name;
     if (fileName.isEmpty) {
       if (!mounted) return;
@@ -134,9 +115,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     WavFile? wav;
     String? error;
     try {
-      wav = await AudioInputLoader.loadFromBytes(audioBytes, fileName);
+      wav = await AudioInputLoader.loadPickedFile(
+        fileName: fileName,
+        bytes: file.bytes,
+        path: kIsWeb ? null : file.path,
+      );
     } catch (e) {
-      error = e.toString();
+      error = e.toString().contains('MP3 decode failed')
+          ? s.errorMp3Decode
+          : e.toString();
     }
 
     await _player.stop();

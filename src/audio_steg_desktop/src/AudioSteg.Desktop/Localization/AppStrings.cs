@@ -199,8 +199,8 @@ public sealed class AppStrings
     public string AboutPersonalSite => T("وب‌سایت شخصی", "Personal website", "الموقع الشخصي", "Site personnel");
     public string AboutCompanySite => T("وب‌سایت شرکت NTK", "NTK company website", "موقع شركة NTK", "Site NTK");
     public string AboutContactSection => T("تماس", "Contact", "اتصل بنا", "Contact");
-    public string AboutPhoneLandline => T("تلفن ثابت", "Landline", "هاتف أرضي", "Fixe");
-    public string AboutPhoneMobile => T("موبایل", "Mobile", "جوال", "Mobile");
+    public string AboutCall => T("تماس", "Call", "اتصال", "Appeler");
+    public string AboutEmail => T("ایمیل", "Email", "البريد", "E-mail");
     public string AboutThesis => T(
         "پایان‌نامه: نهان‌نگاری مخفی سیگنال صوتی با نگاشت آشوب لاجستیک",
         "Thesis: Audio Signal Stealth Steganography via Logistic Chaos Mapping",

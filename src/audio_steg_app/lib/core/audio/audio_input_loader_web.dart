@@ -9,6 +9,17 @@ import 'wav_io.dart';
 abstract final class AudioInputLoader {
   static const audioPickerExtensions = ['wav', 'mp3'];
 
+  static Future<WavFile> loadPickedFile({
+    required String fileName,
+    Uint8List? bytes,
+    String? path,
+  }) async {
+    if (bytes == null) {
+      throw StateError('No file bytes for $fileName');
+    }
+    return loadFromBytes(bytes, fileName);
+  }
+
   static Future<WavFile> loadFromBytes(Uint8List bytes, String fileName) async {
     final ext = p.extension(fileName).toLowerCase();
     return switch (ext) {

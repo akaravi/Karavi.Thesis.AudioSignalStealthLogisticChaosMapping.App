@@ -655,7 +655,7 @@
 - ✅ **عنوان کامل:** `نهان‌نگاری پیام در صوت` | `Audio Steganography` (fa/en/ar/fr در `AppStrings`)
 - ✅ **نام کوتاه:** `صوت‌نهان` | `AudioSteg` — manifest، اندروید، Apple web app title
 - ✅ PWA: `manifest.json` با `standalone`، `id`، توضیح دوزبانه؛ `index.html` با `theme-color` و metaهای نصب
-- ℹ️ آیکن‌های `web/icons/*` هنوز پیش‌فرض Flutter — جایگزینی گرافیک برند در گام بعد
+- ✅ آیکن برند — Part 39
 
 ---
 
@@ -726,3 +726,113 @@
 - ✅ `_build-android-web.ps1`: `flutter pub get` (آینه خودکار)، analyze/test اختیاری، `build apk` / `appbundle` / `build web`
 - ✅ خروجی: `publish\flutter\android\`, `publish\flutter\web\`, ZIP اختیاری
 - ✅ پارامترها: `-AndroidArtifact Apk|AppBundle|Both`, `-SplitPerAbi`, `-SkipAndroid`, `-SkipWeb`, `-UseFlutterIoCnMirror`
+
+### Result 37b (اجرای publish)
+- ✅ `app-release.apk` (~52MB) در `D:\PublishKaravi\ThesisAudioSteg`
+- ✅ ZIP: `KaraviThesis_AudioSteg_AndroidWeb_*.zip` همان پوشه
+- ✅ Gradle: Maven Flutter `…/download.flutter.io/` (نه `maven2`) + سازگاری `ntk-mirrors.gradle`
+
+---
+
+## Part 38 — اشتراک‌گذاری فایل صوتی در دیالوگ recovery
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "در اشتراک‌گذاری باید فایل صوتی (WAV استگانو) اشتراک گذاشته شود، نه متن طول پیام"
+}
+```
+
+### Result 38
+- ✅ دیالوگ `embedRecovery`: دکمه share → `shareStegoWavBytes` (همان مسیر دکمه share اصلی)
+- ✅ حذف `shareRecoveryBitsText` از `stego_share.dart`
+- ✅ tooltip دیالوگ: `shareStego` («اشتراک‌گذاری فایل صوتی»)
+
+---
+
+## Part 39 — دکمه شناور «نهان‌نگاری جدید» در Embed
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "بالای صفحه نهان‌نگاری دکمه آیکن new شناور — با فشردن، آماده ساخت فایل نهان‌نگاری جدید"
+}
+```
+
+### Result 39
+- ✅ `PositionedDirectional` + `Icons.note_add_outlined` بالای تب Embed
+- ✅ `_startNewEmbed`: پاک‌سازی متن، cover/stego، پخش، ضبط (cancel)، verify
+- ✅ i18n: `embedNew` (fa/en/ar/fr)
+- ✅ padding بالای `TabScrollBody` برای عدم هم‌پوشانی با FAB
+
+---
+
+## Part 40 — تماس و ایمیل درباره ما
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "شماره موبایل تماس (tel)؛ جایگزینی با ایمیل karavi@ntk.ir؛ حذف تلفن ثابت"
+}
+```
+
+### Result 40
+- ✅ Flutter + WPF: `tel:09125210076` با برچسب «تماس»
+- ✅ `mailto:karavi@ntk.ir` در بخش تماس
+- ✅ حذف `03133355555` (تلفن ثابت)
+
+---
+
+## Part 41 — نصف ارتفاع ضبط / بارگذاری
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ارتفاع بخش شروع ضبط و بارگذاری فایل را نصف حالت فعلی کن"
+}
+```
+
+### Result 41
+- ✅ Flutter: `_stackSize` 118→59، `_tileSize` 76→38، padding پنل، جداکننده «یا»
+- ✅ WPF: `RecordButtonControl` و `LoadFileButtonControl` 130→65، دکمه 96→48
+
+---
+
+## Part 42 — رفع خطای MP3 (MediaExtractor)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع bad state: mp3 decode failed to instantiate extract هنگام بارگذاری MP3"
+}
+```
+
+### Result 42
+- ✅ IO: `AudioDecoder.convertToWav` از مسیر فایل؛ `withData: false` در picker (غیر وب)
+- ✅ `loadPickedFile` — اولویت `path` برای MP3
+- ✅ پیام کاربر: `errorMp3Decode` (fa/en/ar/fr)
+
+---
+
+## Part 39 — آیکن برند (PWA / Android / Windows)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "آیکن مناسب نرم‌افزار نهان‌نگاری صوت برای PWA، اندروید و ویندوز (Flutter + WPF)"
+}
+```
+
+### Result 39
+- ✅ منبع: `assets/branding/app_icon.png` — موج صوتی + قفل، پس‌زمینه `#121212`، accent `#00B4B7`
+- ✅ `flutter_launcher_icons` در `pubspec.yaml` — `dart run flutter_launcher_icons`
+- ✅ **Android:** adaptive icon (`ic_launcher.xml`, `drawable-*dpi/ic_launcher_foreground.png`, `ic_launcher_background` = `#121212`)
+- ✅ **PWA/Web:** `web/icons/Icon-{192,512}.png`, maskable، `favicon.png`؛ `manifest.json` + `apple-touch-icon`
+- ✅ **Flutter Windows:** `windows/runner/resources/app_icon.ico`
+- ✅ **WPF Desktop:** `Assets/app.ico`؛ `<ApplicationIcon>` + `MainWindow Icon="Assets/app.ico"`؛ `dotnet build` سبز

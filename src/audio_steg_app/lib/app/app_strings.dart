@@ -45,6 +45,9 @@ class AppStrings {
       _t(const _S('صوت‌نهان', 'AudioSteg', 'صوت خفي', 'AudioSteg'));
   String get embedTab =>
       _t(const _S('نهان‌نگاری', 'Embed', 'إخفاء', 'Intégrer'));
+  String get embedNew => _t(
+    const _S('نهان‌نگاری جدید', 'New embed', 'إخفاء جديد', 'Nouvel intégrage'),
+  );
   String get extractTab =>
       _t(const _S('رمزگشایی', 'Extract', 'استخراج', 'Extraire'));
   String get settingsTab =>
@@ -261,6 +264,14 @@ class AppStrings {
       'Text cannot be empty.',
       'لا يمكن أن يكون النص فارغاً.',
       'Le texte ne peut pas être vide.',
+    ),
+  );
+  String get errorMp3Decode => _t(
+    const _S(
+      'خواندن فایل MP3 ممکن نشد. فایل را دوباره انتخاب کنید یا از WAV استفاده کنید.',
+      'Could not read the MP3 file. Pick the file again or use WAV.',
+      'تعذر قراءة ملف MP3. اختر الملف مرة أخرى أو استخدم WAV.',
+      'Impossible de lire le MP3. Réessayez ou utilisez un WAV.',
     ),
   );
   String get errorTooLong => _t(
@@ -707,10 +718,8 @@ class AppStrings {
   );
   String get aboutContactSection =>
       _t(const _S('تماس', 'Contact', 'اتصل بنا', 'Contact'));
-  String get aboutPhoneLandline =>
-      _t(const _S('تلفن ثابت', 'Landline', 'هاتف أرضي', 'Fixe'));
-  String get aboutPhoneMobile =>
-      _t(const _S('موبایل', 'Mobile', 'جوال', 'Mobile'));
+  String get aboutCall => _t(const _S('تماس', 'Call', 'اتصال', 'Appeler'));
+  String get aboutEmail => _t(const _S('ایمیل', 'Email', 'البريد', 'E-mail'));
   String get aboutOpenLinkFailed => _t(
     const _S(
       'باز کردن پیوند ممکن نشد.',

@@ -103,16 +103,16 @@ class AboutScreen extends StatelessWidget {
           children: [
             _LinkTile(
               icon: Icons.phone_in_talk_outlined,
-              label: s.aboutPhoneLandline,
-              subtitle: AboutConstants.phoneLandline,
-              url: 'tel:${AboutConstants.phoneLandline}',
+              label: s.aboutCall,
+              subtitle: AboutConstants.phoneMobile,
+              url: 'tel:${AboutConstants.phoneMobile}',
               errorMessage: s.aboutOpenLinkFailed,
             ),
             _LinkTile(
-              icon: Icons.smartphone_outlined,
-              label: s.aboutPhoneMobile,
-              subtitle: AboutConstants.phoneMobile,
-              url: 'tel:${AboutConstants.phoneMobile}',
+              icon: Icons.email_outlined,
+              label: s.aboutEmail,
+              subtitle: AboutConstants.email,
+              url: 'mailto:${AboutConstants.email}',
               errorMessage: s.aboutOpenLinkFailed,
             ),
           ],
@@ -213,7 +213,10 @@ class _LinkTile extends StatelessWidget {
 
   Future<void> _open(BuildContext context) async {
     final uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    final mode = uri.scheme == 'http' || uri.scheme == 'https'
+        ? LaunchMode.externalApplication
+        : LaunchMode.platformDefault;
+    if (!await launchUrl(uri, mode: mode)) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
         context,

@@ -10,17 +10,47 @@ import 'wav_io.dart';
 abstract final class AudioInputLoader {
   static const audioPickerExtensions = ['wav', 'mp3'];
 
-  static Future<WavFile> loadFromBytes(Uint8List bytes, String fileName) async {
+  /// Loads audio from a file picker result (path preferred on IO for MP3).
+  static Future<WavFile> loadPickedFile({
+    required String fileName,
+    Uint8List? bytes,
+    String? path,
+  }) async {
     final ext = p.extension(fileName).toLowerCase();
-    return switch (ext) {
-      '.wav' => WavFile.decode(bytes),
-      '.mp3' => decodeMp3ToWav(bytes),
-      _ => throw FormatException('Unsupported audio format: $ext'),
-    };
+    switch (ext) {
+      case '.wav':
+        final data =
+            bytes ?? await nativeReadBytes(_requirePath(path, fileName));
+        return WavFile.decode(data);
+      case '.mp3':
+        if (path != null && path.isNotEmpty) {
+          try {
+            return await decodeMp3ToWav(
+              bytes ?? Uint8List(0),
+              sourcePath: path,
+            );
+          } on StateError {
+            rethrow;
+          }
+        }
+        final mp3Bytes =
+            bytes ?? await nativeReadBytes(_requirePath(path, fileName));
+        return decodeMp3ToWav(mp3Bytes);
+      default:
+        throw FormatException('Unsupported audio format: $ext');
+    }
   }
 
-  static Future<WavFile> loadFromPath(String filePath) async {
-    final bytes = await nativeReadBytes(filePath);
-    return loadFromBytes(bytes, filePath);
+  static Future<WavFile> loadFromBytes(Uint8List bytes, String fileName) =>
+      loadPickedFile(fileName: fileName, bytes: bytes);
+
+  static Future<WavFile> loadFromPath(String filePath) =>
+      loadPickedFile(fileName: filePath, path: filePath);
+
+  static String _requirePath(String? path, String fileName) {
+    if (path != null && path.isNotEmpty) {
+      return path;
+    }
+    throw StateError('No file path for $fileName');
   }
 }

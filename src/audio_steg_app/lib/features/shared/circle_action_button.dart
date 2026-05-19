@@ -33,9 +33,9 @@ class CircleActionButton extends StatefulWidget {
 
 class _CircleActionButtonState extends State<CircleActionButton>
     with SingleTickerProviderStateMixin {
-  static const double _stackSize = 118;
-  static const double _tileSize = 76;
-  static const double _squareRadius = 18;
+  static const double _stackSize = 59;
+  static const double _tileSize = 38;
+  static const double _squareRadius = 9;
 
   late final AnimationController _pulseCtrl = AnimationController(
     vsync: this,
@@ -94,9 +94,9 @@ class _CircleActionButtonState extends State<CircleActionButton>
     final iconColor = disabled
         ? scheme.onSurface.withValues(alpha: 0.45)
         : onIcon;
-    final labelStyle = theme.textTheme.titleSmall?.copyWith(
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
       fontWeight: FontWeight.w600,
-      height: 1.25,
+      height: 1.2,
       color: disabled ? scheme.onSurface.withValues(alpha: 0.38) : null,
     );
     final isCircle = widget.shape == ActionButtonShape.circle;
@@ -121,8 +121,8 @@ class _CircleActionButtonState extends State<CircleActionButton>
                   builder: (context, _) {
                     final t = _pulseCtrl.value;
                     return Container(
-                      width: 92 + 18 * t,
-                      height: 92 + 18 * t,
+                      width: 46 + 9 * t,
+                      height: 46 + 9 * t,
                       decoration: BoxDecoration(
                         shape: tileShape,
                         borderRadius: tileRadius,
@@ -152,7 +152,7 @@ class _CircleActionButtonState extends State<CircleActionButton>
                       curve: Curves.easeOutCubic,
                       width: _tileSize,
                       height: _tileSize,
-                      margin: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         shape: tileShape,
                         borderRadius: tileRadius,
@@ -174,17 +174,17 @@ class _CircleActionButtonState extends State<CircleActionButton>
                             : [
                                 BoxShadow(
                                   color: baseColor.withValues(alpha: 0.42),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                                 BoxShadow(
                                   color: scheme.shadow.withValues(alpha: 0.12),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
                                 ),
                               ],
                       ),
-                      child: Icon(widget.icon, size: 34, color: iconColor),
+                      child: Icon(widget.icon, size: 20, color: iconColor),
                     ),
                   ),
                 ),
@@ -192,9 +192,9 @@ class _CircleActionButtonState extends State<CircleActionButton>
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 5),
         SizedBox(
-          width: 124,
+          width: 100,
           child: Text(
             widget.label,
             textAlign: TextAlign.center,
@@ -229,9 +229,9 @@ class AudioSourceActionsPanel extends StatelessWidget {
     if (!showLoadAction) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -249,9 +249,9 @@ class AudioSourceActionsPanel extends StatelessWidget {
     }
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -269,16 +269,16 @@ class AudioSourceActionsPanel extends StatelessWidget {
         children: [
           Expanded(child: Center(child: loadAction)),
           Padding(
-            padding: const EdgeInsets.only(top: 44),
+            padding: const EdgeInsets.only(top: 22),
             child: Column(
               children: [
                 Container(
                   width: 1,
-                  height: 36,
+                  height: 18,
                   color: scheme.outlineVariant.withValues(alpha: 0.6),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Text(
                     orLabel,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -289,7 +289,7 @@ class AudioSourceActionsPanel extends StatelessWidget {
                 ),
                 Container(
                   width: 1,
-                  height: 36,
+                  height: 18,
                   color: scheme.outlineVariant.withValues(alpha: 0.6),
                 ),
               ],

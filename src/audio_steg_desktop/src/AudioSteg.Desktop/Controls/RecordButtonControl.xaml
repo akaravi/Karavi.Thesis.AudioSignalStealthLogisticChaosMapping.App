@@ -2,27 +2,27 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <StackPanel HorizontalAlignment="Center">
-    <Grid Width="130" Height="130">
-      <Ellipse x:Name="PulseRing" Width="110" Height="110" Opacity="0"
+    <Grid Width="65" Height="65">
+      <Ellipse x:Name="PulseRing" Width="55" Height="55" Opacity="0"
                Fill="{DynamicResource ErrorBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-      <Button x:Name="MainButton" Width="96" Height="96" Click="MainButton_Click"
+      <Button x:Name="MainButton" Width="48" Height="48" Click="MainButton_Click"
               HorizontalAlignment="Center" VerticalAlignment="Center" BorderThickness="0" Cursor="Hand">
         <Button.Template>
           <ControlTemplate TargetType="Button">
             <Grid>
-              <Ellipse x:Name="Circle" Width="96" Height="96" Fill="{TemplateBinding Background}">
+              <Ellipse x:Name="Circle" Width="48" Height="48" Fill="{TemplateBinding Background}">
                 <Ellipse.Effect>
-                  <DropShadowEffect BlurRadius="18" ShadowDepth="6" Opacity="0.35" Color="#40000000" />
+                  <DropShadowEffect BlurRadius="9" ShadowDepth="3" Opacity="0.35" Color="#40000000" />
                 </Ellipse.Effect>
               </Ellipse>
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Grid>
           </ControlTemplate>
         </Button.Template>
-        <TextBlock x:Name="IconGlyph" FontFamily="Segoe MDL2 Assets" FontSize="42" Foreground="White" Text="&#xE720;" />
+        <TextBlock x:Name="IconGlyph" FontFamily="Segoe MDL2 Assets" FontSize="21" Foreground="White" Text="&#xE720;" />
       </Button>
     </Grid>
-    <TextBlock x:Name="LabelText" Margin="0,8,0,0" HorizontalAlignment="Center"
-               FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+    <TextBlock x:Name="LabelText" Margin="0,4,0,0" HorizontalAlignment="Center"
+               FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
   </StackPanel>
 </UserControl>
