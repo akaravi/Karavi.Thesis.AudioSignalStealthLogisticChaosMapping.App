@@ -712,20 +712,21 @@
 
 ---
 
-## Part 37 — اسکریپت `_build-android-web.ps1`
+## Part 37 — اسکریپت `_build-flutter-android.ps1`
 
 ### دستور
 ```json
 {
   "kind": "json-prompt",
-  "task": "اسکریپت PowerShell برای بیلد Flutter Android (APK/AAB) و Web + publish + ZIP"
+  "task": "اسکریپت PowerShell برای بیلد Flutter Android (APK/AAB) + publish + ZIP (فقط اندروید)"
 }
 ```
 
 ### Result 37
-- ✅ `_build-android-web.ps1`: `flutter pub get` (آینه خودکار)، analyze/test اختیاری، `build apk` / `appbundle` / `build web`
-- ✅ خروجی: `publish\flutter\android\`, `publish\flutter\web\`, ZIP اختیاری
-- ✅ پارامترها: `-AndroidArtifact Apk|AppBundle|Both`, `-SplitPerAbi`, `-SkipAndroid`, `-SkipWeb`, `-UseFlutterIoCnMirror`
+- ✅ `_build-flutter-android.ps1` (جایگزین `_build-android-web.ps1`): `flutter pub get` (آینه خودکار)، analyze/test اختیاری، `build apk` / `appbundle`
+- ✅ خروجی: `publish\flutter\android\` یا `-AndroidOutputDirectory` / `-ZipOutputDirectory`؛ ZIP: `KaraviThesis_AudioSteg_Android_*.zip`
+- ✅ پارامترها: `-AndroidArtifact Apk|AppBundle|Both`, `-SplitPerAbi`, `-SkipPackage`, `-PackageOnly`, `-UseFlutterIoCnMirror`
+- ℹ️ بیلد وب: `_build-flutter-web.ps1`
 
 ### Result 37b (اجرای publish)
 - ✅ `app-release.apk` (~52MB) در `D:\PublishKaravi\ThesisAudioSteg`
@@ -780,7 +781,7 @@
 ```
 
 ### Result 40
-- ✅ Flutter + WPF: `tel:09125210076` با برچسب «تماس»
+- ✅ Flutter + WPF: `tel:03133355555` با برچسب «تماس»
 - ✅ `mailto:karavi@ntk.ir` در بخش تماس
 - ✅ حذف `03133355555` (تلفن ثابت)
 

@@ -6,6 +6,6 @@ abstract final class AboutConstants {
       'https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping';
   static const personalSite = 'https://alikaravi.com';
   static const companySite = 'https://ntk.ir';
-  static const phoneMobile = '09125210076';
+  static const phoneNumber = '03133355555';
   static const email = 'karavi@ntk.ir';
 }

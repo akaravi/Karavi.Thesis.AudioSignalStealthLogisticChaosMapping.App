@@ -104,8 +104,8 @@ class AboutScreen extends StatelessWidget {
             _LinkTile(
               icon: Icons.phone_in_talk_outlined,
               label: s.aboutCall,
-              subtitle: AboutConstants.phoneMobile,
-              url: 'tel:${AboutConstants.phoneMobile}',
+              subtitle: AboutConstants.phoneNumber,
+              url: 'tel:${AboutConstants.phoneNumber}',
               errorMessage: s.aboutOpenLinkFailed,
             ),
             _LinkTile(

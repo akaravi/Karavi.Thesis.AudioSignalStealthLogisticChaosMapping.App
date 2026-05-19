@@ -121,8 +121,9 @@
 | 2026-05-19 | 24:45 | build | رفع `flutter pub get` exit 69: آینه Tsinghua پس از flutter-io.cn؛ نادیده symlink اگر پکیج‌ها resolve شدند؛ حذف `test` تکراری از pubspec | `_build-flutter-web.ps1`, `_build-all-projects.ps1`, `pubspec.yaml` |
 | 2026-05-19 | 25:00 | rule | قانون پروژه: ممنوعیت CDN برای فونت/CSS/JS در زمان اجرا — دارایی‌ها فقط از داخل repo | `.cursor/rules/no-external-cdn-assets.mdc`, `Cursor.01.plan.md` Part 36 |
 | 2026-05-19 | 25:30 | fix | رفع دکمه اشتراک‌گذاری: فایل WAV موقت روی دسکتاپ؛ وب → دانلود؛ متن → کلیپبورد | `stego_share.dart`, `wav_xfile*.dart`, `embed_screen.dart`, `app_strings.dart` |
-| 2026-05-19 | 26:00 | build | اسکریپت `_build-android-web.ps1`: بیلد APK/AAB اندروید + وب، publish و ZIP | `_build-android-web.ps1`, `publish\flutter\android`, `publish\flutter\web` |
-| 2026-05-19 | 19:54 | fix | بیلد اندروید: URL صحیح `download.flutter.io/` (بدون `/maven2/`) + `settingsEvaluated` برای آینه Aliyun؛ خروجی در `D:\PublishKaravi\ThesisAudioSteg` | `android/settings.gradle.kts`, `android/build.gradle.kts`, `_build-android-web.ps1` |
+| 2026-05-19 | 26:00 | build | اسکریپت `_build-android-web.ps1` (قدیمی): بیلد APK/AAB اندروید + وب — جایگزین شد | — |
+| 2026-05-19 | 19:54 | fix | بیلد اندروید: URL صحیح `download.flutter.io/` (بدون `/maven2/`) + `settingsEvaluated` برای آینه Aliyun؛ خروجی در `D:\PublishKaravi\ThesisAudioSteg` | `android/settings.gradle.kts`, `android/build.gradle.kts` |
+| 2026-05-19 | 22:00 | build | تغییر نام و محدودسازی: `_build-flutter-android.ps1` — فقط Android (APK/AAB)، بدون وب؛ ZIP `KaraviThesis_AudioSteg_Android_*` | `_build-flutter-android.ps1` (حذف `_build-android-web.ps1`) |
 | 2026-05-19 | 20:15 | fix | اشتراک در دیالوگ recovery: فایل WAV استگانو (نه متن طول پیام) — `shareStegoWavBytes` | `embed_screen.dart`, `stego_share.dart` |
 | 2026-05-19 | 20:45 | feat | دکمه شناور «نهان‌نگاری جدید» بالای صفحه Embed — بازنشانی برای ساخت فایل تازه | `embed_screen.dart`, `app_strings.dart` |
 | 2026-05-19 | 21:00 | content | تماس: موبایل با `tel:` و برچسب «تماس»؛ حذف تلفن ثابت؛ ایمیل `karavi@ntk.ir` | `about_constants.dart`, `about_screen.dart`, `AboutView.*`, `AppStrings.cs` |

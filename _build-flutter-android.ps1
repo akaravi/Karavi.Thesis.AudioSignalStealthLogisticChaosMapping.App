@@ -1,20 +1,18 @@
 <#
 .SYNOPSIS
-  Build Flutter Android (APK/AAB) and Web release for audio_steg_app.
+  Build Flutter Android release (APK and/or App Bundle) for audio_steg_app.
 
 .EXAMPLE
-  .\_build-android-web.ps1 -ZipOutputDirectory D:\PublishKaravi\ThesisAudioSteg
+  .\_build-flutter-android.ps1 -ZipOutputDirectory D:\PublishKaravi\ThesisAudioSteg
 
 .EXAMPLE
-  .\_build-android-web.ps1 -SkipPackage -AndroidArtifact AppBundle -UseFlutterIoCnMirror
+  .\_build-flutter-android.ps1 -SkipPackage -AndroidArtifact AppBundle -UseFlutterIoCnMirror
 #>
 param(
     [switch]$SkipRestore,
     [switch]$SkipPackage,
     [string]$ZipOutputDirectory = "",
     [switch]$PackageOnly,
-    [switch]$SkipAndroid,
-    [switch]$SkipWeb,
     [ValidateSet("Apk", "AppBundle", "Both")]
     [string]$AndroidArtifact = "Apk",
     [switch]$SplitPerAbi,
@@ -26,8 +24,6 @@ param(
     [switch]$OpenDeveloperSettings,
     [switch]$SkipTests,
     [switch]$SkipFlutterAnalyze,
-    [string]$WebBaseHref = "/",
-    [string]$WebOutputDirectory = "",
     [string]$AndroidOutputDirectory = ""
 )
 
@@ -38,7 +34,6 @@ $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOr
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $flutterAppPath = Join-Path $root "src\audio_steg_app"
-$defaultWebPublishDir = Join-Path $root "publish\flutter\web"
 $defaultAndroidPublishDir = Join-Path $root "publish\flutter\android"
 
 function Resolve-CommandPath {
@@ -74,15 +69,6 @@ function Resolve-ExistingOrNewDirectory {
         return (New-Item -ItemType Directory -Path $Path -Force).FullName
     }
     return (Resolve-Path -LiteralPath $Path).Path
-}
-
-function Normalize-WebBaseHref {
-    param([string]$BaseHref)
-    $normalized = $BaseHref.Trim()
-    if ([string]::IsNullOrWhiteSpace($normalized)) { $normalized = "/" }
-    if (-not $normalized.EndsWith("/")) { $normalized = "$normalized/" }
-    if (-not $normalized.StartsWith("/")) { $normalized = "/$normalized" }
-    return $normalized
 }
 
 function Write-PubGet403Hints {
@@ -254,52 +240,35 @@ function Copy-AndroidArtifactsToPublish {
     }
 }
 
-function Copy-FlutterWebToPublish {
-    param(
-        [Parameter(Mandatory = $true)][string]$SourceDir,
-        [Parameter(Mandatory = $true)][string]$DestinationDir
-    )
-    if (Test-Path $DestinationDir) { Remove-Item -Recurse -Force $DestinationDir }
-    New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
-    Copy-Item -Recurse -Force (Join-Path $SourceDir "*") $DestinationDir
-    Write-Host "  web build -> $SourceDir" -ForegroundColor Yellow
-    Write-Host "  web copy  -> $DestinationDir" -ForegroundColor Yellow
-}
-
-function Invoke-AndroidWebZip {
+function Invoke-AndroidZip {
     param(
         [Parameter(Mandatory = $true)][string]$ZipDirectory,
-        [Parameter(Mandatory = $true)][string]$AndroidPublishDir,
-        [Parameter(Mandatory = $true)][string]$WebPublishDir,
-        [switch]$IncludeWeb,
-        [switch]$IncludeAndroid
+        [Parameter(Mandatory = $true)][string]$AndroidPublishDir
     )
+
+    if (-not (Test-Path $AndroidPublishDir)) {
+        throw "Android publish folder not found: $AndroidPublishDir"
+    }
+
+    $artifacts = @(
+        Get-ChildItem -Path $AndroidPublishDir -File -Filter "*.apk" -ErrorAction SilentlyContinue
+        Get-ChildItem -Path $AndroidPublishDir -File -Filter "*.aab" -ErrorAction SilentlyContinue
+    )
+    if ($artifacts.Count -eq 0) {
+        throw "No APK/AAB files in $AndroidPublishDir for ZIP."
+    }
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $resolvedZipDir = Resolve-ExistingOrNewDirectory -Path $ZipDirectory
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $zipName = "KaraviThesis_AudioSteg_AndroidWeb_$stamp.zip"
+    $zipName = "KaraviThesis_AudioSteg_Android_$stamp.zip"
     $zipFullPath = Join-Path $resolvedZipDir $zipName
-    $stageRoot = Join-Path $root "publish\android-web-staging"
+    $stageRoot = Join-Path $root "publish\android-staging"
     if (Test-Path $stageRoot) { Remove-Item -Recurse -Force $stageRoot }
     New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
 
-    if ($IncludeAndroid -and (Test-Path $AndroidPublishDir)) {
-        $stageAndroid = Join-Path $stageRoot "android"
-        New-Item -ItemType Directory -Path $stageAndroid -Force | Out-Null
-        $artifacts = @(
-            Get-ChildItem -Path $AndroidPublishDir -File -Filter "*.apk" -ErrorAction SilentlyContinue
-            Get-ChildItem -Path $AndroidPublishDir -File -Filter "*.aab" -ErrorAction SilentlyContinue
-        )
-        if ($artifacts.Count -eq 0) {
-            throw "No APK/AAB files in $AndroidPublishDir for ZIP staging."
-        }
-        foreach ($f in $artifacts) {
-            Copy-Item -Force $f.FullName (Join-Path $stageAndroid $f.Name)
-        }
-    }
-    if ($IncludeWeb -and (Test-Path $WebPublishDir)) {
-        Copy-Item -Recurse -Force $WebPublishDir (Join-Path $stageRoot "web")
+    foreach ($f in $artifacts) {
+        Copy-Item -Force $f.FullName (Join-Path $stageRoot $f.Name)
     }
 
     if (Test-Path $zipFullPath) { Remove-Item -Force $zipFullPath }
@@ -338,14 +307,6 @@ if ($OfflinePubGet) { $flutterPubGetArgs += "--offline" }
 Assert-PathExists -PathToCheck $flutterAppPath -Label "Flutter project"
 Assert-PathExists -PathToCheck (Join-Path $flutterAppPath "android") -Label "Android module"
 
-if ($SkipAndroid -and $SkipWeb) {
-    throw "Both -SkipAndroid and -SkipWeb are set; nothing to build."
-}
-
-$webPublishDir = $defaultWebPublishDir
-if (-not [string]::IsNullOrWhiteSpace($WebOutputDirectory)) {
-    $webPublishDir = Resolve-ExistingOrNewDirectory -Path $WebOutputDirectory
-}
 if (-not [string]::IsNullOrWhiteSpace($AndroidOutputDirectory)) {
     $androidPublishDir = Resolve-ExistingOrNewDirectory -Path $AndroidOutputDirectory
 }
@@ -358,12 +319,24 @@ else {
 
 if (-not $SkipPackage) {
     if ([string]::IsNullOrWhiteSpace($ZipOutputDirectory)) {
-        Write-Host 'مسیر پوشه برای ZIP خروجی Android + Web را وارد کنید:' -ForegroundColor Cyan
+        Write-Host 'مسیر پوشه برای ZIP خروجی Android را وارد کنید:' -ForegroundColor Cyan
         $ZipOutputDirectory = Read-Host 'ZIP output folder path'
     }
     if ([string]::IsNullOrWhiteSpace($ZipOutputDirectory)) {
         throw "ZIP folder required. Use -ZipOutputDirectory or -SkipPackage."
     }
+}
+
+if ($PackageOnly) {
+    if ($SkipPackage) {
+        throw "-PackageOnly requires ZIP output; do not combine with -SkipPackage."
+    }
+    Write-Host "Packaging existing Android artifacts (no build)..." -ForegroundColor Cyan
+    Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir
+    Write-Host ""
+    Write-Host "Done." -ForegroundColor Green
+    Write-Host "  Android publish: $androidPublishDir" -ForegroundColor Yellow
+    exit 0
 }
 
 if (-not $SkipRestore) {
@@ -381,68 +354,39 @@ if (-not $SkipTests) {
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("test")
 }
 
+Assert-AndroidSdkAvailable
+Write-Host "Flutter precache (android)..." -ForegroundColor Cyan
+Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("precache", "--android")
+
 $builtAndroidFiles = @()
+$buildApk = $AndroidArtifact -in @("Apk", "Both")
+$buildBundle = $AndroidArtifact -in @("AppBundle", "Both")
 
-if (-not $SkipAndroid) {
-    Assert-AndroidSdkAvailable
-    Write-Host "Flutter precache (android)..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("precache", "--android")
-    $buildApk = $AndroidArtifact -in @("Apk", "Both")
-    $buildBundle = $AndroidArtifact -in @("AppBundle", "Both")
-
-    if ($buildApk) {
-        $apkArgs = @("build", "apk", "--release")
-        if ($SplitPerAbi) { $apkArgs += "--split-per-abi" }
-        Write-Host "Building Android APK (release$(if ($SplitPerAbi) { ', split-per-abi' }))..." -ForegroundColor Cyan
-        Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList $apkArgs
-        $builtAndroidFiles += Resolve-FlutterApkOutputs -FlutterRoot $flutterAppPath
-    }
-
-    if ($buildBundle) {
-        Write-Host "Building Android App Bundle (release)..." -ForegroundColor Cyan
-        Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("build", "appbundle", "--release")
-        $builtAndroidFiles += Resolve-FlutterAppBundleOutput -FlutterRoot $flutterAppPath
-    }
-
-    Write-Host "Publishing Android artifacts..." -ForegroundColor Cyan
-    Copy-AndroidArtifactsToPublish -SourceFiles $builtAndroidFiles -DestinationDir $androidPublishDir
+if ($buildApk) {
+    $apkArgs = @("build", "apk", "--release")
+    if ($SplitPerAbi) { $apkArgs += "--split-per-abi" }
+    Write-Host "Building Android APK (release$(if ($SplitPerAbi) { ', split-per-abi' }))..." -ForegroundColor Cyan
+    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList $apkArgs
+    $builtAndroidFiles += Resolve-FlutterApkOutputs -FlutterRoot $flutterAppPath
 }
 
-if (-not $SkipWeb) {
-    $normalizedWebBaseHref = Normalize-WebBaseHref -BaseHref $WebBaseHref
-    Write-Host "Building Flutter web (release, base-href=$normalizedWebBaseHref)..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
-        "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
-    )
-    $webRelease = Join-Path $flutterAppPath "build\web"
-    $indexPath = Join-Path $webRelease "index.html"
-    if (-not (Test-Path $indexPath)) {
-        throw "Web build output missing: $indexPath"
-    }
-    Write-Host "Publishing web..." -ForegroundColor Cyan
-    Copy-FlutterWebToPublish -SourceDir $webRelease -DestinationDir $webPublishDir
+if ($buildBundle) {
+    Write-Host "Building Android App Bundle (release)..." -ForegroundColor Cyan
+    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("build", "appbundle", "--release")
+    $builtAndroidFiles += Resolve-FlutterAppBundleOutput -FlutterRoot $flutterAppPath
 }
+
+Write-Host "Publishing Android artifacts..." -ForegroundColor Cyan
+Copy-AndroidArtifactsToPublish -SourceFiles $builtAndroidFiles -DestinationDir $androidPublishDir
 
 if (-not $SkipPackage) {
-    Invoke-AndroidWebZip `
-        -ZipDirectory $ZipOutputDirectory `
-        -AndroidPublishDir $androidPublishDir `
-        -WebPublishDir $webPublishDir `
-        -IncludeAndroid:(-not $SkipAndroid) `
-        -IncludeWeb:(-not $SkipWeb)
+    Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir
 }
 
 Write-Host ""
 Write-Host "Done." -ForegroundColor Green
-if (-not $SkipAndroid) {
-    Write-Host "  Android publish: $androidPublishDir" -ForegroundColor Yellow
-}
-if (-not $SkipWeb) {
-    Write-Host "  Web publish:     $webPublishDir" -ForegroundColor Yellow
-}
+Write-Host "  Android publish: $androidPublishDir" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Tips:" -ForegroundColor DarkYellow
-Write-Host "  -AndroidArtifact Apk|AppBundle|Both  -SplitPerAbi  -SkipWeb  -SkipAndroid" -ForegroundColor DarkYellow
-Write-Host "  -SkipPackage  -UseFlutterIoCnMirror  -ZipOutputDirectory <path>" -ForegroundColor DarkYellow
-
-if ($PackageOnly) { exit 0 }
+Write-Host "  -AndroidArtifact Apk|AppBundle|Both  -SplitPerAbi  -SkipPackage" -ForegroundColor DarkYellow
+Write-Host "  -UseFlutterIoCnMirror  -ZipOutputDirectory <path>  -PackageOnly (ZIP only)" -ForegroundColor DarkYellow
