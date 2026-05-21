@@ -20,7 +20,7 @@
     <ProjectReference Include="..\AudioSteg.Core\AudioSteg.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="appsettings.json">
+    <None Include="..\..\..\..\appsettings.json" Link="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Resource Include="Assets\app.ico" />

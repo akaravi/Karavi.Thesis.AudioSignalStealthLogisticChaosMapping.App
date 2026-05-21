@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-/// Deploy-time configuration from [assets/app-config.json] (not user preferences).
+/// Deploy-time configuration from repo-root [appsettings.json] (not user preferences).
 class AppConfig {
   final bool showEmbedLoadFileButton;
   final bool showEmbedRecoveryDialog;
@@ -13,13 +13,13 @@ class AppConfig {
   });
 
   static const AppConfig defaults = AppConfig(
-    showEmbedLoadFileButton: true,
+    showEmbedLoadFileButton: false,
     showEmbedRecoveryDialog: true,
   );
 
   static Future<AppConfig> load() async {
     try {
-      final raw = await rootBundle.loadString('assets/app-config.json');
+      final raw = await rootBundle.loadString('../../appsettings.json');
       final map = jsonDecode(raw) as Map<String, dynamic>;
       return AppConfig(
         showEmbedLoadFileButton:

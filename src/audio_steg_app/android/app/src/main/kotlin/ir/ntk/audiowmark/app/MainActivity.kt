@@ -1,4 +1,4 @@
-package com.karavi.thesis.audio_steg_app
+package ir.ntk.audiowmark.app
 
 import io.flutter.embedding.android.FlutterActivity
 

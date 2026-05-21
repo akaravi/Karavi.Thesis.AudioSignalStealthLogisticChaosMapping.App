@@ -9,7 +9,7 @@ namespace AudioSteg.Desktop;
 public sealed class AppConfig
 {
     /// <summary>When false, hides the upload-file button on the embed (steganography) tab.</summary>
-    public bool ShowEmbedLoadFileButton { get; set; } = true;
+    public bool ShowEmbedLoadFileButton { get; set; } = false;
 
     /// <summary>When true, shows recovery message-length dialog after embed.</summary>
     public bool ShowEmbedRecoveryDialog { get; set; } = true;

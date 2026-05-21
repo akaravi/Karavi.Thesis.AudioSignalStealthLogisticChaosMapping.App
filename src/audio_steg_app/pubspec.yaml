@@ -92,7 +92,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/app-config.json
+    - ../../appsettings.json
     - assets/images/about_profile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

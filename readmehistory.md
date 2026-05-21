@@ -133,3 +133,5 @@
 | 2026-05-19 | 21:15 | ui | نصف ارتفاع بخش ضبط و بارگذاری فایل — Flutter `CircleActionButton`/`AudioSourceActionsPanel`؛ WPF کنترل‌ها | `circle_action_button.dart`, `RecordButtonControl.*`, `LoadFileButtonControl.xaml` |
 | 2026-05-19 | 21:30 | fix | MP3: decode از مسیر فایل (نه فقط bytes)؛ رفع «failed to instantiate extractor» روی اندروید؛ `errorMp3Decode` | `audio_mp3_decoder.dart`, `audio_input_loader_io.dart`, embed/extract |
 | 2026-05-19 | 21:00 | branding | آیکن برند: موج صوتی + قفل (`#00B4B7` روی `#121212`) — PWA `web/icons/*`، Android adaptive، Flutter Windows `.ico`، WPF `Assets/app.ico` + `ApplicationIcon` | `assets/branding/app_icon.png`, `pubspec.yaml`, `flutter_launcher_icons`, `AudioSteg.Desktop.csproj`, `MainWindow.xaml` |
+| 2026-05-21 | — | config | Android: `applicationId` و `namespace` → `ir.ntk.audiowmark.app`؛ انتقال `MainActivity` | `android/app/build.gradle.kts`, `kotlin/ir/ntk/audiowmark/app/MainActivity.kt` |
+| 2026-05-21 | — | config | یک منبع `appsettings.json` در ریشه repo؛ حذف `app-config.json`؛ Flutter asset + WPF Link از ریشه | `appsettings.json`, `pubspec.yaml`, `app_config.dart`, `AudioSteg.Desktop.csproj` |

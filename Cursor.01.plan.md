@@ -726,6 +726,7 @@
 - ✅ `_build-flutter-android.ps1` (جایگزین `_build-android-web.ps1`): `flutter pub get` (آینه خودکار)، analyze/test اختیاری، `build apk` / `appbundle`
 - ✅ خروجی: `publish\flutter\android\` یا `-AndroidOutputDirectory` / `-ZipOutputDirectory`؛ ZIP: `KaraviThesis_AudioSteg_Android_*.zip`
 - ✅ پارامترها: `-AndroidArtifact Apk|AppBundle|Both`, `-SplitPerAbi`, `-SkipPackage`, `-PackageOnly`, `-UseFlutterIoCnMirror`
+- ✅ نام خروجی publish از `pubspec.yaml`: `AudioSteg_1.0.0_1.apk` (و `_arm64-v8a` برای split)؛ ZIP: `KaraviThesis_AudioSteg_Android_1.0.0_1_*.zip`
 - ℹ️ بیلد وب: `_build-flutter-web.ps1`
 
 ### Result 37b (اجرای publish)
@@ -855,3 +856,38 @@
 - ✅ اسپلش اول (`SplashFlowScreen` صفحه ۰): `نسخه: 1.0.0+1` پایین صفحه
 - ✅ Flutter درباره: زیر عنوان پایان‌نامه در کارت پروفایل
 - ✅ WPF: `InformationalVersion` در `AudioSteg.Desktop.csproj`؛ `AppVersion.Display` در `AboutView`
+
+---
+
+## Part 44 — Android package name
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "تغییر package name اندروید برای بیلد APK/AAB به ir.ntk.audiowmark.app"
+}
+```
+
+### Result 44
+- ✅ `android/app/build.gradle.kts`: `namespace` و `applicationId` = `ir.ntk.audiowmark.app`
+- ✅ `MainActivity.kt` منتقل به `kotlin/ir/ntk/audiowmark/app/` با `package ir.ntk.audiowmark.app`
+- ✅ حذف مسیر قدیمی `com/karavi/thesis/audio_steg_app/`
+
+---
+
+## Part 45 — یکپارچه‌سازی appsettings.json در ریشه مخزن
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "تغییر app-config.json به appsettings.json و قرار دادن در شاخه اصلی (ریشه repo) — Flutter + WPF از همان منبع"
+}
+```
+
+### Result 45
+- ✅ `appsettings.json` در ریشه workspace (جایگزین `app-config.json`)
+- ✅ Flutter: `pubspec.yaml` asset `../../appsettings.json`؛ `AppConfig.load()` همان مسیر
+- ✅ WPF: `AudioSteg.Desktop.csproj` — `Include` از `../../../../appsettings.json` با `Link` + کپی به خروجی
+- ✅ حذف تکراری: `assets/app-config.json`، `app-config.json` ریشه، `AudioSteg.Desktop/appsettings.json` محلی
