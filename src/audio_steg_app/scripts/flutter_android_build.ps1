@@ -48,7 +48,10 @@ function Assert-AndroidSdkAvailable {
 }
 
 function Resolve-FlutterApkOutputs {
-    param([Parameter(Mandatory = $true)][string]$FlutterRoot)
+    param(
+        [Parameter(Mandatory = $true)][string]$FlutterRoot,
+        [switch]$SplitPerAbi
+    )
 
     $apkDir = Join-Path $FlutterRoot "build\app\outputs\flutter-apk"
     if (-not (Test-Path $apkDir)) {
@@ -58,6 +61,15 @@ function Resolve-FlutterApkOutputs {
     if ($apks.Count -eq 0) {
         throw "No APK files under $apkDir"
     }
+
+    if ($SplitPerAbi) {
+        $arm64 = @($apks | Where-Object { $_.Name -match 'arm64-v8a' })
+        if ($arm64.Count -gt 0) {
+            Write-Host "APK publish: using arm64-v8a split (smallest for modern phones)." -ForegroundColor DarkGray
+            return $arm64
+        }
+    }
+
     return $apks
 }
 
@@ -99,7 +111,7 @@ function Invoke-FlutterAndroidReleaseBuild {
         [Parameter(Mandatory = $true)][string]$AndroidPublishDir,
         [ValidateSet("Apk", "AppBundle", "Both")]
         [string]$AndroidArtifact = "Apk",
-        [switch]$SplitPerAbi,
+        [switch]$FatApk,
         [Parameter(Mandatory = $true)][scriptblock]$InvokeFlutterInProject
     )
 
@@ -122,11 +134,12 @@ function Invoke-FlutterAndroidReleaseBuild {
     $buildBundle = $AndroidArtifact -in @("AppBundle", "Both")
 
     if ($buildApk) {
-        $apkArgs = @("build", "apk", "--release")
-        if ($SplitPerAbi) { $apkArgs += "--split-per-abi" }
-        Write-Host "Building Android APK (release$(if ($SplitPerAbi) { ', split-per-abi' }))..." -ForegroundColor Cyan
+        $useSplitAbi = -not $FatApk
+        $apkArgs = @("build", "apk", "--release", "--tree-shake-icons")
+        if ($useSplitAbi) { $apkArgs += "--split-per-abi" }
+        Write-Host "Building Android APK (release$(if ($useSplitAbi) { ', split-per-abi arm64' } else { ', universal' }))..." -ForegroundColor Cyan
         & $InvokeFlutterInProject $FlutterProjectPath $apkArgs
-        $builtAndroidFiles += Resolve-FlutterApkOutputs -FlutterRoot $FlutterProjectPath
+        $builtAndroidFiles += Resolve-FlutterApkOutputs -FlutterRoot $FlutterProjectPath -SplitPerAbi:$useSplitAbi
     }
 
     if ($buildBundle) {

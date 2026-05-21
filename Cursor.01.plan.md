@@ -943,4 +943,21 @@
 - ✅ `scripts/flutter_android_build.ps1` — بیلد APK/AAB مشترک با `_build-flutter-android.ps1`
 - ✅ `_build-all-projects.ps1`: بیلد Android پس از web/windows؛ خروجی در `publish/flutter/android/`
 - ✅ ZIP استقرار: پوشه `audio_steg_app_android/` (فایل‌های `AudioSteg_<version>.apk`)
-- ✅ پارامترها: `-SkipFlutterAndroid`، `-AndroidArtifact Apk|AppBundle|Both`، `-SplitPerAbi`
+- ✅ پارامترها: `-SkipFlutterAndroid`، `-AndroidArtifact Apk|AppBundle|Both`، `-FatAndroidApk`
+
+---
+
+## Part 49 — UI اکولایزر + کاهش حجم APK
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "حذف عبارت اکولایزر صدا از بالای کادر Flutter؛ کاهش حجم فایل اندروید"
+}
+```
+
+### Result 49
+- ✅ `embed_screen.dart`: حذف `Text(s.audioEqualizer)` بالای `AudioEqualizerView`
+- ✅ Android release: `isMinifyEnabled`، `isShrinkResources`، `proguard-rules.pro`، `ndk.abiFilters` (arm فقط)
+- ✅ بیلد APK پیش‌فرض: `--split-per-abi` + انتشار فقط `arm64-v8a`؛ `-FatAndroidApk` برای universal

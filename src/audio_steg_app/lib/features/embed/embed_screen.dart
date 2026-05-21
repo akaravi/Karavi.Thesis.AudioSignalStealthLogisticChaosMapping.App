@@ -697,14 +697,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                 ),
                 child: Column(
                   children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        s.audioEqualizer,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
                     AudioEqualizerView(
                       bands: _eqBands,
                       active: eqActive,

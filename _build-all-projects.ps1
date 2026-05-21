@@ -18,7 +18,7 @@ param(
     [switch]$SkipFlutterAndroid,
     [ValidateSet("Apk", "AppBundle", "Both")]
     [string]$AndroidArtifact = "Apk",
-    [switch]$SplitPerAbi,
+    [switch]$FatAndroidApk,
     [switch]$SkipDevServers,
     [string]$WebBaseHref = "/"
 )
@@ -564,7 +564,7 @@ if (-not $SkipPackage) {
             -FlutterExecutable $flutterCommand `
             -AndroidPublishDir $androidPublishDir `
             -AndroidArtifact $AndroidArtifact `
-            -SplitPerAbi:$SplitPerAbi `
+            -FatApk:$FatAndroidApk `
             -InvokeFlutterInProject $flutterInvokeSb
         Write-Host "Android publish: $androidPublishDir" -ForegroundColor Green
     }
@@ -609,5 +609,5 @@ if (-not $SkipDevServers) {
 
 Write-Host "`nDone." -ForegroundColor Yellow
 Write-Host "Tip: -SkipPackage for deps-only / skip release ZIP; -PackageOnly ends before dev servers; -SkipDevServers to skip spawning terminals." -ForegroundColor DarkYellow
-Write-Host "Android: default APK in ZIP under audio_steg_app_android/; -AndroidArtifact AppBundle|Both -SplitPerAbi -SkipFlutterAndroid" -ForegroundColor DarkYellow
+Write-Host "Android: default arm64 split APK (smaller); -FatAndroidApk for universal; -AndroidArtifact AppBundle|Both -SkipFlutterAndroid" -ForegroundColor DarkYellow
 Write-Host "Pub get auto-retries with flutter-io.cn once on failure unless -DisableAutoMirrorRetry or mirror env/param already set." -ForegroundColor DarkYellow

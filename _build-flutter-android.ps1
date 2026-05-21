@@ -15,7 +15,7 @@ param(
     [switch]$PackageOnly,
     [ValidateSet("Apk", "AppBundle", "Both")]
     [string]$AndroidArtifact = "Apk",
-    [switch]$SplitPerAbi,
+    [switch]$FatApk,
     [switch]$OfflinePubGet,
     [string]$PubHostedUrl = "",
     [string]$FlutterStorageBaseUrl = "",
@@ -330,7 +330,7 @@ $androidBuildResult = Invoke-FlutterAndroidReleaseBuild `
     -FlutterExecutable $flutterCommand `
     -AndroidPublishDir $androidPublishDir `
     -AndroidArtifact $AndroidArtifact `
-    -SplitPerAbi:$SplitPerAbi `
+    -FatApk:$FatApk `
     -InvokeFlutterInProject $flutterInvokeSb
 $appVersionFileToken = $androidBuildResult.VersionToken
 
@@ -343,5 +343,5 @@ Write-Host "Done." -ForegroundColor Green
 Write-Host "  Android publish: $androidPublishDir" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Tips:" -ForegroundColor DarkYellow
-Write-Host "  -AndroidArtifact Apk|AppBundle|Both  -SplitPerAbi  -SkipPackage" -ForegroundColor DarkYellow
+Write-Host "  -AndroidArtifact Apk|AppBundle|Both  -FatApk (universal, larger)  -SkipPackage" -ForegroundColor DarkYellow
 Write-Host "  -UseFlutterIoCnMirror  -ZipOutputDirectory <path>  -PackageOnly (ZIP only)" -ForegroundColor DarkYellow

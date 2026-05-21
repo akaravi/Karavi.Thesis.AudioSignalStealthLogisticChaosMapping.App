@@ -138,3 +138,5 @@
 | 2026-05-21 | — | build | رفع `flutter build windows` — symlink: junction + بیلد elevated (UAC)؛ `-SkipFlutterWindows` | `invoke_flutter_windows_build.ps1`, `_build-all-projects.ps1`, `restart_all.ps1` |
 | 2026-05-21 | — | config | کپی `appsettings.json` به خروجی Flutter web/Windows؛ بارگذاری از فایل استقرار (IO/وب) | `copy_appsettings_to_flutter_outputs.ps1`, `app_config_loader*.dart`, `app_config.dart` |
 | 2026-05-21 | — | build | `_build-all-projects.ps1`: بیلد Android APK + پوشه `audio_steg_app_android` در ZIP استقرار | `flutter_android_build.ps1`, `_build-all-projects.ps1`, `_build-flutter-android.ps1` |
+| 2026-05-21 | — | ui | حذف برچسب «اکولایزر صدا» بالای کادر در Embed | `embed_screen.dart` |
+| 2026-05-21 | — | build | کاهش حجم APK اندروید: split-per-abi arm64، minify/shrink، ABI فیلتر arm، tree-shake-icons | `build.gradle.kts`, `proguard-rules.pro`, `flutter_android_build.ps1` |
