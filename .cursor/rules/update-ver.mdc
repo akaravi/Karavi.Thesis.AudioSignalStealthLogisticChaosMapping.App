@@ -1,0 +1,57 @@
+---
+description: Bump all app versions when the user says "update ver"
+alwaysApply: true
+---
+
+# update ver — افزایش نسخه فرعی
+
+## Trigger (must)
+
+When the user says **update ver**, **update version**, or **افزایش ورژن** / **آپدیت ورژن**, run the repo script and sync every app version source. Do not hand-edit version strings in only one file.
+
+## Command
+
+From repository root:
+
+```powershell
+.\_update-ver.ps1
+```
+
+Preview without writing files:
+
+```powershell
+.\_update-ver.ps1 -WhatIf
+```
+
+## Version bump rule (must)
+
+Single logical step per invocation:
+
+| Field | Change |
+|-------|--------|
+| Semver **minor** (نسخه فرعی) | `+1` |
+| Semver **patch** | reset to `0` |
+| Flutter **build** (`+N`) | `+1` (required for Android `versionCode` / store uploads) |
+
+Example: `1.0.0+1` → `1.1.0+2`
+
+## Files updated (must)
+
+| Client | File | Fields |
+|--------|------|--------|
+| Flutter | `src/audio_steg_app/pubspec.yaml` | `version: MAJOR.MINOR.PATCH+BUILD` |
+| WPF | `src/audio_steg_desktop/src/AudioSteg.Desktop/AudioSteg.Desktop.csproj` | `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion` |
+
+`pubspec.yaml` is the source of truth. WPF `InformationalVersion` must match Flutter (`name+build`). Runtime UI reads version from package metadata / assembly — no hard-coded version strings in Dart/C# UI.
+
+## After bump (should)
+
+1. Record the change in `readmehistory.md` (date/time, old → new).
+2. Append **Part** + **Result** to `Cursor.01.plan.md` (JSON Prompt).
+3. If preparing Cafe Bazaar upload, rebuild with `.\_build-cafebazaar-release.ps1` so artifacts use the new version token.
+
+## Do not bump
+
+- NuGet `PackageReference Version="..."` in csproj
+- Gradle plugin versions in `settings.gradle.kts`
+- XML `version="1.0"` in Android drawables / manifests (encoding declaration, not app version)

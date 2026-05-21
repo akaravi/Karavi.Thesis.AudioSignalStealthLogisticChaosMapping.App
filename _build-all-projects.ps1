@@ -20,7 +20,8 @@ param(
     [string]$AndroidArtifact = "Apk",
     [switch]$FatAndroidApk,
     [switch]$SkipDevServers,
-    [string]$WebBaseHref = "/"
+    [string]$WebBaseHref = "/",
+    [switch]$NonInteractive
 )
 
 $ErrorActionPreference = "Stop"
@@ -478,8 +479,14 @@ Assert-PathExists -PathToCheck $flutterAppPath -Label "Flutter project folder"
 
 if (-not $SkipPackage) {
     if ([string]::IsNullOrWhiteSpace($ZipOutputDirectory)) {
-        Write-Host "مسیر پوشه برای ذخیره فایل ZIP خروجی استقرار را وارد کنید:" -ForegroundColor Cyan
-        $ZipOutputDirectory = Read-Host "ZIP output folder path"
+        if ($NonInteractive) {
+            $ZipOutputDirectory = Join-Path $root "publish\github-release"
+            Write-Host "Non-interactive: ZIP output -> $ZipOutputDirectory" -ForegroundColor DarkGray
+        }
+        else {
+            Write-Host "مسیر پوشه برای ذخیره فایل ZIP خروجی استقرار را وارد کنید:" -ForegroundColor Cyan
+            $ZipOutputDirectory = Read-Host "ZIP output folder path"
+        }
     }
 
     if ([string]::IsNullOrWhiteSpace($ZipOutputDirectory)) {

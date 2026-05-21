@@ -90,15 +90,12 @@ function Copy-AndroidArtifactsToPublish {
         [Parameter(Mandatory = $true)][string]$VersionToken
     )
 
-    if (Test-Path $DestinationDir) {
-        Get-ChildItem -Path $DestinationDir -File -Filter "AudioSteg_*" -ErrorAction SilentlyContinue |
-            Remove-Item -Force
-    }
     New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
     foreach ($src in $SourceFiles) {
         $item = if ($src -is [System.IO.FileInfo]) { $src } else { Get-Item $src.FullName }
         $destName = Get-PublishedAndroidArtifactFileName -SourceFileName $item.Name -VersionToken $VersionToken
         $dest = Join-Path $DestinationDir $destName
+        if (Test-Path -LiteralPath $dest) { Remove-Item -Force $dest }
         Copy-Item -Force $item.FullName $dest
         Write-Host "  android -> $dest" -ForegroundColor Yellow
     }

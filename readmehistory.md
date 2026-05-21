@@ -140,3 +140,8 @@
 | 2026-05-21 | — | build | `_build-all-projects.ps1`: بیلد Android APK + پوشه `audio_steg_app_android` در ZIP استقرار | `flutter_android_build.ps1`, `_build-all-projects.ps1`, `_build-flutter-android.ps1` |
 | 2026-05-21 | — | ui | حذف برچسب «اکولایزر صدا» بالای کادر در Embed | `embed_screen.dart` |
 | 2026-05-21 | — | build | کاهش حجم APK اندروید: split-per-abi arm64، minify/shrink، ABI فیلتر arm، tree-shake-icons | `build.gradle.kts`, `proguard-rules.pro`, `flutter_android_build.ps1` |
+| 2026-05-21 | — | release | آماده‌سازی کافه‌بازار: امضای release، `_build-cafebazaar-release.ps1`، `LISTING.fa.md` | `key.properties.example`, `publish/cafebazaar/`, `AndroidManifest.xml` |
+| 2026-05-21 | — | docs | راهنمای کامل انتشار کافه‌بازار | `memo/cafebazaar-publish-guide.md` |
+| 2026-05-21 | — | ci | GitHub Actions: تگ `publish` / `publish/**` → Release همه پلتفرم‌ها | `.github/workflows/release-on-publish-tag.yml`, `_build-github-release.ps1`, `docs/GITHUB_RELEASE.md` |
+| 2026-05-21 | — | ci | امضای Android در CI از secrets؛ `-NonInteractive` در `_build-all-projects.ps1` | `scripts/ci/Prepare-AndroidReleaseSigning.ps1` |
+| 2026-05-21 | — | rule | دستور `update ver`: اسکریپت `_update-ver.ps1` + قانون `.cursor/rules/update-ver.mdc` — bump minor+build در `pubspec.yaml` و `AudioSteg.Desktop.csproj` | `_update-ver.ps1`, `update-ver.mdc`, `README.md`, `Cursor.01.plan.md` Part 52 |

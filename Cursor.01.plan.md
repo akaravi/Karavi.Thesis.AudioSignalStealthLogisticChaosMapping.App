@@ -961,3 +961,61 @@
 - ✅ `embed_screen.dart`: حذف `Text(s.audioEqualizer)` بالای `AudioEqualizerView`
 - ✅ Android release: `isMinifyEnabled`، `isShrinkResources`، `proguard-rules.pro`، `ndk.abiFilters` (arm فقط)
 - ✅ بیلد APK پیش‌فرض: `--split-per-abi` + انتشار فقط `arm64-v8a`؛ `-FatAndroidApk` برای universal
+
+---
+
+## Part 50 — آماده‌سازی انتشار کافه‌بازار
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "آماده‌سازی انتشار اپ در https://cafebazaar.ir/ — امضای release، AAB/APK، مستندات فارسی"
+}
+```
+
+### Result 50
+- ✅ `ir.ntk.audiowmark.app` — release signing از `android/key.properties` + `upload-keystore.jks` (خارج Git)
+- ✅ `key.properties.example`، `create_release_keystore.ps1`، `_build-cafebazaar-release.ps1` → `publish/cafebazaar/`
+- ✅ خروجی: `AudioSteg_<ver>.aab` (آپلود پیشنهادی) + APK arm64 + `mapping_*.txt` + `LISTING.fa.md`
+- ✅ Manifest: `READ_MEDIA_AUDIO`، `allowBackup=false`؛ چک‌لیست و متن فروشگاه فارسی
+
+---
+
+## Part 51 — GitHub Release با تگ publish
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "با push تگ publish روی GitHub، release خودکار برای Flutter Android/Web/Windows و .NET Desktop"
+}
+```
+
+### Result 51
+- ✅ `.github/workflows/release-on-publish-tag.yml` — trigger: `publish`, `publish**`, `publish-*`
+- ✅ `_build-github-release.ps1` + `scripts/ci/Prepare-AndroidReleaseSigning.ps1`
+- ✅ `_build-all-projects.ps1`: سوئیچ `-NonInteractive` و مسیر پیش‌فرض `publish/github-release`
+- ✅ خروجی Release: ZIPهای جدا (Web, Flutter Windows, .NET) + APK/AAB + ZIP ترکیبی + `RELEASE_MANIFEST.txt`
+- ✅ Secrets اختیاری: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`
+- ✅ مستندات: `docs/GITHUB_RELEASE.md`, بخش README
+
+---
+
+## Part 52 — دستور update ver (افزایش نسخه فرعی)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "promptSpecVersion": "1.1.0",
+  "task": "افزودن قانون و اسکریپت update ver — افزایش یک‌پارچه نسخه فرعی (minor) و build در Flutter و WPF"
+}
+```
+
+### Result 52
+- ✅ اسکریپت ریشه: `_update-ver.ps1` — منبع حقیقت `pubspec.yaml`؛ مثال `1.0.0+1` → `1.1.0+2` (minor +1، patch→0، build +1)
+- ✅ همگام‌سازی WPF: `AudioSteg.Desktop.csproj` — `Version`، `AssemblyVersion`، `FileVersion`، `InformationalVersion`
+- ✅ قانون Cursor: `.cursor/rules/update-ver.mdc` (alwaysApply) — تریگر: `update ver` / `آپدیت ورژن`
+- ✅ پیش‌نمایش: `.\_update-ver.ps1 -WhatIf`
+- ℹ️ NuGet/Gradle/XML encoding — خارج از دامنه bump
