@@ -122,4 +122,4 @@ Write-Host "Cafe Bazaar release artifacts:" -ForegroundColor Green
 Get-ChildItem -Path $outDir -File | ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Yellow }
 Write-Host ""
 Write-Host "Upload the .aab (or signed APK) at https://developers.cafebazaar.ir/" -ForegroundColor Cyan
-Write-Host "See LISTING.fa.md for Persian store text and checklist." -ForegroundColor DarkYellow
+Write-Host "See docs/cafebazaar-publish-guide.md and LISTING.fa.md in the output folder." -ForegroundColor DarkYellow

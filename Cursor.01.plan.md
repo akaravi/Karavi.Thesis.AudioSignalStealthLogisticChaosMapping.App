@@ -1002,6 +1002,30 @@
 
 ---
 
+## Part 52 — رفع خطای Billing Actions
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع The job was not started because recent account payments have failed / spending limit"
+}
+```
+
+### Result 52
+- ✅ workflow: `runs-on: [self-hosted, Windows, X64]` — بدون مصرف دقیقهٔ runner ابری GitHub
+- ✅ `scripts/ci/Setup-GitHubSelfHostedRunner.ps1` — نصب actions-runner محلی
+- ✅ `_publish-local-github-release.ps1` + `Publish-GitHubReleaseAssets.ps1` — انتشار با `GITHUB_TOKEN` بدون gh و بدون Actions
+- ✅ `workflow_dispatch` برای اجرای دستی از Actions
+
+### Result 52b (اصلاح workflow)
+- ✅ تگ `publish/**` (رفع عدم تریگر `publish/1.0.0+1`)
+- ✅ `runs-on: self-hosted`؛ شرط `SELF_HOSTED_RUNNER_READY` برای push تگ
+- ✅ آپلود Release در workflow با `Invoke-WorkflowReleaseUpload.ps1` (بدون softprops)
+- ✅ `.github/workflows/README.md`، `Enable-ReleaseWorkflowRepository.ps1`
+
+---
+
 ## Part 52 — دستور update ver (افزایش نسخه فرعی)
 
 ### دستور

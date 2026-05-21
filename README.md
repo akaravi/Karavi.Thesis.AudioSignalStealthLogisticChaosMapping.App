@@ -25,9 +25,11 @@ flutter run -d windows
 
 ### انتشار در کافه‌بازار (Android)
 
+راهنمای کامل: [`docs/cafebazaar-publish-guide.md`](docs/cafebazaar-publish-guide.md)
+
 1. یک‌بار: `.\src\audio_steg_app\android\scripts\create_release_keystore.ps1` و `android\key.properties` از `key.properties.example`
 2. بیلد امضا‌شده: `.\_build-cafebazaar-release.ps1` → خروجی در `publish/cafebazaar/`
-3. متن فروشگاه: `publish/cafebazaar/LISTING.fa.md` — آپلود در https://developers.cafebazaar.ir/
+3. آپلود در https://developers.cafebazaar.ir/
 
 ### دسکتاپ .NET
 
@@ -48,11 +50,18 @@ git push origin publish/1.0.0+1
 
 جزئیات secrets اندروید و فهرست فایل‌ها: [`docs/GITHUB_RELEASE.md`](docs/GITHUB_RELEASE.md).
 
-بیلد محلی همان منطق CI:
+اگر Actions به‌خاطر **Billing / spending limit** اجرا نشد، انتشار کامل از PC:
+
+```powershell
+.\_publish-local-github-release.ps1 -TagName publish/1.0.0+1
+```
+
+بیلد محلی (بدون آپلود Release):
 
 ```powershell
 .\_build-github-release.ps1 -TagName publish
 ```
+
 
 ## نسخه برنامه (`update ver`)
 

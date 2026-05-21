@@ -16,6 +16,7 @@
 !**/test/**/fixtures/**
 **/publish/
 publish/
+.github-runner/
 **/out/
 **/.vs/
 *.user

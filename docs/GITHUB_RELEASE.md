@@ -1,5 +1,30 @@
 # GitHub Release (tag `publish`)
 
+## خطای Billing در Actions
+
+اگر job با این پیام متوقف شد:
+
+> *The job was not started because recent account payments have failed or your spending limit needs to be increased*
+
+یعنی **اعتبار GitHub Actions** (پرداخت، سقف Spending limit، یا پایان دقیقهٔ رایگان در repo خصوصی) تمام شده — نه خطای اسکریپت پروژه.
+
+**راه‌حل‌ها (یکی را انتخاب کنید):**
+
+1. **Self-hosted runner (پیشنهادی، رایگان)** — workflow روی PC شما اجرا می‌شود، نه `windows-latest`:
+   ```powershell
+   .\scripts\ci\Setup-GitHubSelfHostedRunner.ps1
+   cd .github-runner
+   .\config.cmd --url https://github.com/OWNER/REPO --token TOKEN
+   .\run.cmd
+   .\scripts\ci\Enable-ReleaseWorkflowRepository.ps1 -SetVariable
+   git push origin publish
+   ```
+   تا وقتی `SELF_HOSTED_RUNNER_READY=true` نشود، push تگ **job را skip** می‌کند (صف بی‌پایان نمی‌ماند).
+2. **انتشار کامل محلی** — بدون Actions (پایین).
+3. **Billing** — GitHub.com → Settings → Billing & plans (فقط اگر بخواهید runner ابری GitHub را دوباره فعال کنید).
+
+---
+
 وقتی روی مخزن **tag** با نام `publish` (یا با پسوند نسخه) push می‌کنید، workflow
 [`.github/workflows/release-on-publish-tag.yml`](../.github/workflows/release-on-publish-tag.yml)
 همهٔ خروجی‌های انتشار را می‌سازد و یک **GitHub Release** با فایل‌های پیوست ایجاد می‌کند.
@@ -70,6 +95,37 @@ git push origin publish
 ```
 
 خروجی: `publish/github-release/`
+
+## انتشار محلی (بدون Actions — فوری)
+
+توکن با دسترسی **repo** (یک‌بار):
+
+```powershell
+$env:GITHUB_TOKEN = "ghp_YOUR_PAT"
+# یا: gh auth login
+# یا فایل: %USERPROFILE%\.github-token
+```
+
+بیلد + تگ + Release + آپلود (بدون `gh` — از REST API):
+
+```powershell
+.\_publish-local-github-release.ps1 -TagName publish/1.0.0+2
+```
+
+فقط آپلود:
+
+```powershell
+.\_build-github-release.ps1 -TagName publish/1.0.0+2
+.\_publish-local-github-release.ps1 -TagName publish/1.0.0+2 -SkipBuild -SkipPushTag
+```
+
+نصب اختیاری GitHub CLI:
+
+```powershell
+.\_publish-local-github-release.ps1 -TagName publish -InstallGhCli
+```
+
+امضای اندروید: همان `android\key.properties` محلی.
 
 ## Actions
 

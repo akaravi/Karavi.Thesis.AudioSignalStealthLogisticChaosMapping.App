@@ -141,7 +141,10 @@
 | 2026-05-21 | — | ui | حذف برچسب «اکولایزر صدا» بالای کادر در Embed | `embed_screen.dart` |
 | 2026-05-21 | — | build | کاهش حجم APK اندروید: split-per-abi arm64، minify/shrink، ABI فیلتر arm، tree-shake-icons | `build.gradle.kts`, `proguard-rules.pro`, `flutter_android_build.ps1` |
 | 2026-05-21 | — | release | آماده‌سازی کافه‌بازار: امضای release، `_build-cafebazaar-release.ps1`، `LISTING.fa.md` | `key.properties.example`, `publish/cafebazaar/`, `AndroidManifest.xml` |
-| 2026-05-21 | — | docs | راهنمای کامل انتشار کافه‌بازار | `memo/cafebazaar-publish-guide.md` |
+| 2026-05-21 | — | docs | راهنمای کامل انتشار کافه‌بازار | `docs/cafebazaar-publish-guide.md` |
 | 2026-05-21 | — | ci | GitHub Actions: تگ `publish` / `publish/**` → Release همه پلتفرم‌ها | `.github/workflows/release-on-publish-tag.yml`, `_build-github-release.ps1`, `docs/GITHUB_RELEASE.md` |
 | 2026-05-21 | — | ci | امضای Android در CI از secrets؛ `-NonInteractive` در `_build-all-projects.ps1` | `scripts/ci/Prepare-AndroidReleaseSigning.ps1` |
+| 2026-05-21 | — | ci | انتشار محلی بدون Actions (خطای Billing): `_publish-local-github-release.ps1` + بخش Billing در `docs/GITHUB_RELEASE.md` | `_publish-local-github-release.ps1`, `docs/GITHUB_RELEASE.md` |
+| 2026-05-21 | — | ci | رفع Billing: workflow → self-hosted Windows؛ آپلود Release با REST API (`Publish-GitHubReleaseAssets.ps1`)؛ `Setup-GitHubSelfHostedRunner.ps1` | `.github/workflows/release-on-publish-tag.yml`, `scripts/ci/*` |
+| 2026-05-21 | — | ci | اصلاح workflow: تگ `publish/**`؛ `runs-on: self-hosted`؛ skip بدون runner؛ آپلود با `Invoke-WorkflowReleaseUpload.ps1`؛ متغیر `SELF_HOSTED_RUNNER_READY` | `.github/workflows/release-on-publish-tag.yml`, `Enable-ReleaseWorkflowRepository.ps1` |
 | 2026-05-21 | — | rule | دستور `update ver`: اسکریپت `_update-ver.ps1` + قانون `.cursor/rules/update-ver.mdc` — bump minor+build در `pubspec.yaml` و `AudioSteg.Desktop.csproj` | `_update-ver.ps1`, `update-ver.mdc`, `README.md`, `Cursor.01.plan.md` Part 52 |

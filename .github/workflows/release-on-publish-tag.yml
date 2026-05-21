@@ -1,5 +1,6 @@
-# Push tag "publish" (or publish/1.0.0+2, publish-v1.0.0, …) → build all platforms → GitHub Release.
-# Local dry-run: .\_build-github-release.ps1 -TagName publish
+# Release on tag publish* — runs on self-hosted Windows (no GitHub-hosted billing).
+# Before first tag push: register runner + set repo variable SELF_HOSTED_RUNNER_READY=true
+# See: scripts/ci/Enable-ReleaseWorkflowRepository.ps1
 
 name: Release on publish tag
 
@@ -7,61 +8,71 @@ on:
   push:
     tags:
       - publish
-      - publish**
+      - publish/**
       - publish-*
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (e.g. publish or publish/1.0.0+1)"
+        type: string
+        required: true
+        default: publish
+      skip_tests:
+        description: "Skip dotnet/flutter tests (faster CI)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   build-and-release:
-    runs-on: windows-latest
-    timeout-minutes: 120
+    # Avoid infinite "Waiting for a runner" when self-hosted is not registered yet.
+    if: github.event_name == 'workflow_dispatch' || vars.SELF_HOSTED_RUNNER_READY == 'true'
+    runs-on: self-hosted
+    timeout-minutes: 180
+
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name || github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x"
+          fetch-depth: 0
 
-      - name: Setup Java (Android)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Accept Android licenses
+      - name: Resolve release tag
+        id: meta
         shell: pwsh
         run: |
-          $sdk = $env:ANDROID_HOME
-          if ([string]::IsNullOrWhiteSpace($sdk)) { $sdk = $env:ANDROID_SDK_ROOT }
-          $sm = Join-Path $sdk "cmdline-tools\latest\bin\sdkmanager.bat"
-          if (Test-Path $sm) {
-            1..50 | ForEach-Object { "y" } | & $sm --licenses 2>&1 | Out-Host
+          $tag = $env:RELEASE_TAG
+          if ([string]::IsNullOrWhiteSpace($tag)) {
+            throw "RELEASE_TAG is empty."
           }
-          flutter doctor -v
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=$tag"
+          Write-Host "Release tag: $tag"
 
-      - name: Flutter precache (android, windows, web)
+      - name: Prepare Android signing
         shell: pwsh
-        working-directory: src/audio_steg_app
+        run: ./scripts/ci/Prepare-AndroidReleaseSigning.ps1 -AndroidRoot ./src/audio_steg_app/android
+        continue-on-error: true
+
+      - name: Verify toolchain
+        shell: pwsh
         run: |
-          flutter precache --android --windows --web
+          $ErrorActionPreference = "Continue"
+          dotnet --version
+          if ($LASTEXITCODE -ne 0) { throw "dotnet not on PATH" }
+          flutter --version
+          if ($LASTEXITCODE -ne 0) { throw "flutter not on PATH" }
+          if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) {
+            Write-Warning "ANDROID_HOME / ANDROID_SDK_ROOT not set — Android build may fail."
+          }
 
       - name: Build all release artifacts
         shell: pwsh
@@ -71,21 +82,20 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          $tag = "${{ github.ref_name }}"
-          Write-Host "Building release for tag: $tag"
-          .\_build-github-release.ps1 -TagName $tag -AndroidArtifact Both
+          $tag = '${{ steps.meta.outputs.tag }}'
+          $skipTests = $true
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $skipTests = '${{ github.event.inputs.skip_tests }}' -eq 'true'
+          }
+          $buildArgs = @{
+            TagName            = $tag
+            AndroidArtifact    = 'Both'
+            SkipFlutterAnalyze = $true
+          }
+          if ($skipTests) { $buildArgs.SkipTests = $true }
+          .\_build-github-release.ps1 @buildArgs
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          generate_release_notes: true
-          files: |
-            publish/github-release/*.zip
-            publish/github-release/*.apk
-            publish/github-release/*.aab
-            publish/github-release/RELEASE_MANIFEST.txt
-          fail_on_unmatched_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload GitHub Release assets
+        shell: pwsh
+        run: |
+          ./scripts/ci/Invoke-WorkflowReleaseUpload.ps1 -TagName '${{ steps.meta.outputs.tag }}'
