@@ -135,3 +135,6 @@
 | 2026-05-19 | 21:00 | branding | آیکن برند: موج صوتی + قفل (`#00B4B7` روی `#121212`) — PWA `web/icons/*`، Android adaptive، Flutter Windows `.ico`، WPF `Assets/app.ico` + `ApplicationIcon` | `assets/branding/app_icon.png`, `pubspec.yaml`, `flutter_launcher_icons`, `AudioSteg.Desktop.csproj`, `MainWindow.xaml` |
 | 2026-05-21 | — | config | Android: `applicationId` و `namespace` → `ir.ntk.audiowmark.app`؛ انتقال `MainActivity` | `android/app/build.gradle.kts`, `kotlin/ir/ntk/audiowmark/app/MainActivity.kt` |
 | 2026-05-21 | — | config | یک منبع `appsettings.json` در ریشه repo؛ حذف `app-config.json`؛ Flutter asset + WPF Link از ریشه | `appsettings.json`, `pubspec.yaml`, `app_config.dart`, `AudioSteg.Desktop.csproj` |
+| 2026-05-21 | — | build | رفع `flutter build windows` — symlink: junction + بیلد elevated (UAC)؛ `-SkipFlutterWindows` | `invoke_flutter_windows_build.ps1`, `_build-all-projects.ps1`, `restart_all.ps1` |
+| 2026-05-21 | — | config | کپی `appsettings.json` به خروجی Flutter web/Windows؛ بارگذاری از فایل استقرار (IO/وب) | `copy_appsettings_to_flutter_outputs.ps1`, `app_config_loader*.dart`, `app_config.dart` |
+| 2026-05-21 | — | build | `_build-all-projects.ps1`: بیلد Android APK + پوشه `audio_steg_app_android` در ZIP استقرار | `flutter_android_build.ps1`, `_build-all-projects.ps1`, `_build-flutter-android.ps1` |

@@ -14,6 +14,11 @@ param(
     [switch]$OpenDeveloperSettings,
     [switch]$SkipTests,
     [switch]$SkipFlutterAnalyze,
+    [switch]$SkipFlutterWindows,
+    [switch]$SkipFlutterAndroid,
+    [ValidateSet("Apk", "AppBundle", "Both")]
+    [string]$AndroidArtifact = "Apk",
+    [switch]$SplitPerAbi,
     [switch]$SkipDevServers,
     [string]$WebBaseHref = "/"
 )
@@ -32,6 +37,7 @@ $flutterAppPath = Join-Path $root "src\audio_steg_app"
 $runtime = "win-x64"
 $publishRoot = Join-Path $root "publish\dotnet\$runtime"
 $dotnetPublishOutput = Join-Path $publishRoot "AudioSteg.Desktop"
+$androidPublishDir = Join-Path $root "publish\flutter\android"
 
 function Resolve-CommandPath {
     param(
@@ -182,8 +188,10 @@ function Invoke-DeployZip {
     $zipName = "KaraviThesis_AudioSteg_Build_$stamp.zip"
     $zipFullPath = Join-Path $resolvedZipDir $zipName
 
-    $flutterWindowsRelease = Resolve-FlutterWindowsReleasePath -FlutterRoot $flutterAppPath
     $flutterWebRelease = Resolve-FlutterWebReleasePath -FlutterRoot $flutterAppPath
+    if (-not $SkipFlutterWindows) {
+        $flutterWindowsRelease = Resolve-FlutterWindowsReleasePath -FlutterRoot $flutterAppPath
+    }
 
     $stageRoot = Join-Path $root "publish\deploy-staging"
     if (Test-Path $stageRoot) {
@@ -193,8 +201,39 @@ function Invoke-DeployZip {
 
     Write-Host "Staging deploy folder under $stageRoot ..." -ForegroundColor Cyan
     Copy-Item -Recurse -Force $dotnetPublishOutput (Join-Path $stageRoot "AudioSteg.Desktop")
-    Copy-Item -Recurse -Force $flutterWindowsRelease (Join-Path $stageRoot "audio_steg_app_windows_release")
+    if (-not $SkipFlutterWindows) {
+        Copy-Item -Recurse -Force $flutterWindowsRelease (Join-Path $stageRoot "audio_steg_app_windows_release")
+    }
+    else {
+        Write-Host "ZIP: skipped audio_steg_app_windows_release (-SkipFlutterWindows)." -ForegroundColor DarkYellow
+    }
     Copy-Item -Recurse -Force $flutterWebRelease (Join-Path $stageRoot "audio_steg_app_web")
+
+    if (-not $SkipFlutterAndroid) {
+        if (Test-Path -LiteralPath $androidPublishDir) {
+            $androidFiles = @(
+                Get-ChildItem -Path $androidPublishDir -File -Filter "*.apk" -ErrorAction SilentlyContinue
+                Get-ChildItem -Path $androidPublishDir -File -Filter "*.aab" -ErrorAction SilentlyContinue
+            )
+            if ($androidFiles.Count -gt 0) {
+                $androidStage = Join-Path $stageRoot "audio_steg_app_android"
+                New-Item -ItemType Directory -Path $androidStage -Force | Out-Null
+                foreach ($f in $androidFiles) {
+                    Copy-Item -Force $f.FullName (Join-Path $androidStage $f.Name)
+                }
+                Write-Host "ZIP: included audio_steg_app_android ($($androidFiles.Count) file(s))." -ForegroundColor DarkCyan
+            }
+            else {
+                Write-Warning "ZIP: no APK/AAB in $androidPublishDir — Android folder omitted."
+            }
+        }
+        else {
+            Write-Warning "ZIP: Android publish folder not found: $androidPublishDir"
+        }
+    }
+    else {
+        Write-Host "ZIP: skipped audio_steg_app_android (-SkipFlutterAndroid)." -ForegroundColor DarkYellow
+    }
 
     if (Test-Path $zipFullPath) {
         Remove-Item -Force $zipFullPath
@@ -223,6 +262,26 @@ $flutterCommand = Resolve-CommandPath -CommandName "flutter" -CandidatePaths $fl
 
 if (-not $flutterCommand) {
     throw "Flutter was not found. Add Flutter to PATH or set FLUTTER_HOME/FLUTTER_ROOT, then run again."
+}
+
+$flutterWindowsBuildHelper = Join-Path $flutterAppPath "scripts\invoke_flutter_windows_build.ps1"
+if (-not (Test-Path -LiteralPath $flutterWindowsBuildHelper)) {
+    throw "Flutter Windows build helper was not found: $flutterWindowsBuildHelper"
+}
+. $flutterWindowsBuildHelper
+
+$flutterAndroidBuildHelper = Join-Path $flutterAppPath "scripts\flutter_android_build.ps1"
+if (-not (Test-Path -LiteralPath $flutterAndroidBuildHelper)) {
+    throw "Flutter Android build helper was not found: $flutterAndroidBuildHelper"
+}
+. $flutterAndroidBuildHelper
+
+$flutterInvokeSb = {
+    param(
+        [Parameter(Mandatory = $true)][string]$ProjectDirectory,
+        [Parameter(Mandatory = $true)][string[]]$ArgumentList
+    )
+    Invoke-FlutterInProject -ProjectDirectory $ProjectDirectory -ArgumentList $ArgumentList
 }
 
 $effectivePubHostedUrl = $PubHostedUrl
@@ -483,9 +542,35 @@ if (-not $SkipPackage) {
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
         "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
     )
+    . (Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1")
+    Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
 
-    Write-Host "Building Flutter Windows ($flutterAppPath, release) ..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("build", "windows", "--release")
+    if (-not $SkipFlutterWindows) {
+        Write-Host "Building Flutter Windows ($flutterAppPath, release) ..." -ForegroundColor Cyan
+        Invoke-FlutterWindowsReleaseBuild `
+            -ProjectDirectory $flutterAppPath `
+            -FlutterExecutable $flutterCommand `
+            -LaunchDeveloperSettingsPage:$OpenDeveloperSettings
+        Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWindows
+    }
+    else {
+        Write-Host "Skipping Flutter Windows build (-SkipFlutterWindows)." -ForegroundColor Yellow
+    }
+
+    if (-not $SkipFlutterAndroid) {
+        Write-Host "Building Flutter Android ($flutterAppPath, $AndroidArtifact) ..." -ForegroundColor Cyan
+        $null = Invoke-FlutterAndroidReleaseBuild `
+            -FlutterProjectPath $flutterAppPath `
+            -FlutterExecutable $flutterCommand `
+            -AndroidPublishDir $androidPublishDir `
+            -AndroidArtifact $AndroidArtifact `
+            -SplitPerAbi:$SplitPerAbi `
+            -InvokeFlutterInProject $flutterInvokeSb
+        Write-Host "Android publish: $androidPublishDir" -ForegroundColor Green
+    }
+    else {
+        Write-Host "Skipping Flutter Android build (-SkipFlutterAndroid)." -ForegroundColor Yellow
+    }
 
     Invoke-DeployZip -ZipDirectory $ZipOutputDirectory
 }
@@ -524,4 +609,5 @@ if (-not $SkipDevServers) {
 
 Write-Host "`nDone." -ForegroundColor Yellow
 Write-Host "Tip: -SkipPackage for deps-only / skip release ZIP; -PackageOnly ends before dev servers; -SkipDevServers to skip spawning terminals." -ForegroundColor DarkYellow
+Write-Host "Android: default APK in ZIP under audio_steg_app_android/; -AndroidArtifact AppBundle|Both -SplitPerAbi -SkipFlutterAndroid" -ForegroundColor DarkYellow
 Write-Host "Pub get auto-retries with flutter-io.cn once on failure unless -DisableAutoMirrorRetry or mirror env/param already set." -ForegroundColor DarkYellow

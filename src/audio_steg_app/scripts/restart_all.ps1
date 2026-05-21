@@ -27,8 +27,11 @@ Get-Process -Name 'audio_steg_app' -ErrorAction SilentlyContinue |
     ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
 
 if (-not (Test-Path $Exe)) {
-    Write-Host "Release build missing — running 'flutter build windows --release'..."
-    flutter build windows --release | Out-Null
+    Write-Host "Release build missing — running flutter build windows --release ..."
+    $flutterCmd = (Get-Command flutter -ErrorAction SilentlyContinue).Source
+    if (-not $flutterCmd) { throw "Flutter not found on PATH." }
+    . (Join-Path $PSScriptRoot "invoke_flutter_windows_build.ps1")
+    Invoke-FlutterWindowsReleaseBuild -ProjectDirectory $ProjectRoot -FlutterExecutable $flutterCmd
 }
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null

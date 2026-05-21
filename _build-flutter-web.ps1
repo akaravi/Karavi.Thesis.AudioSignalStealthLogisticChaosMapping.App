@@ -425,6 +425,9 @@ Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
     "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
 )
 
+. (Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1")
+Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
+
 $webRelease = Resolve-FlutterWebReleasePath -FlutterRoot $flutterAppPath
 Copy-FlutterWebToPublish -SourceDir $webRelease -DestinationDir $publishOutputDir
 

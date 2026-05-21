@@ -891,3 +891,56 @@
 - ✅ Flutter: `pubspec.yaml` asset `../../appsettings.json`؛ `AppConfig.load()` همان مسیر
 - ✅ WPF: `AudioSteg.Desktop.csproj` — `Include` از `../../../../appsettings.json` با `Link` + کپی به خروجی
 - ✅ حذف تکراری: `assets/app-config.json`، `app-config.json` ریشه، `AudioSteg.Desktop/appsettings.json` محلی
+
+---
+
+## Part 46 — رفع خطای flutter build windows (symlink)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع شکست _build-all-projects.ps1 روی flutter build windows — Building with plugins requires symlink support"
+}
+```
+
+### Result 46
+- ✅ علت: Windows اجازه ساخت symlink نمی‌دهد (حتی با DeveloperModeEnabled=1 گاهی تا restart/UAC لازم است)
+- ✅ `scripts/invoke_flutter_windows_build.ps1`: junction پلاگین‌ها + بیلد عادی + retry با RunAs (UAC)
+- ✅ `_build-all-projects.ps1`: فراخوانی helper؛ سوییچ `-SkipFlutterWindows` برای ZIP بدون exe ویندوز
+- ✅ `restart_all.ps1` از همان helper استفاده می‌کند
+
+---
+
+## Part 47 — appsettings.json در خروجی Flutter وب/ویندوز
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "فایل appsettings.json در شاخه اصلی پوشه بیلد Flutter web و Windows قابل مشاهده و ویرایش باشد"
+}
+```
+
+### Result 47
+- ✅ پس از بیلد: کپی `appsettings.json` ریشه → `build/web/` و `build/windows/x64/runner/Release/`
+- ✅ `copy_appsettings_to_flutter_outputs.ps1` در `_build-all-projects.ps1` و `_build-flutter-web.ps1`
+- ✅ Flutter: اولویت خواندن فایل کنار exe (IO) یا fetch `/appsettings.json` (وب)، سپس asset bundle
+
+---
+
+## Part 48 — Android در _build-all-projects.ps1
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "_build-all-projects.ps1 باید خروجی اندروید (APK) هم تولید و در ZIP استقرار بگذارد"
+}
+```
+
+### Result 48
+- ✅ `scripts/flutter_android_build.ps1` — بیلد APK/AAB مشترک با `_build-flutter-android.ps1`
+- ✅ `_build-all-projects.ps1`: بیلد Android پس از web/windows؛ خروجی در `publish/flutter/android/`
+- ✅ ZIP استقرار: پوشه `audio_steg_app_android/` (فایل‌های `AudioSteg_<version>.apk`)
+- ✅ پارامترها: `-SkipFlutterAndroid`، `-AndroidArtifact Apk|AppBundle|Both`، `-SplitPerAbi`

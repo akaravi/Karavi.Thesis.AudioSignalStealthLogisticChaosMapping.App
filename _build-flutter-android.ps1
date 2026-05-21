@@ -71,44 +71,6 @@ function Resolve-ExistingOrNewDirectory {
     return (Resolve-Path -LiteralPath $Path).Path
 }
 
-function Get-FlutterPubspecVersionLabel {
-    param([Parameter(Mandatory = $true)][string]$FlutterProjectPath)
-
-    $pubspec = Join-Path $FlutterProjectPath "pubspec.yaml"
-    foreach ($line in Get-Content -LiteralPath $pubspec) {
-        if ($line -match '^\s*version:\s*(.+?)\s*(?:#.*)?$') {
-            return $Matches[1].Trim()
-        }
-    }
-    throw "Could not read version from $pubspec"
-}
-
-function Get-SafeVersionFileToken {
-    param([Parameter(Mandatory = $true)][string]$VersionLabel)
-    return ($VersionLabel -replace '\+', '_' -replace '[^\w\.\-]', '_')
-}
-
-function Get-PublishedAndroidArtifactFileName {
-    param(
-        [Parameter(Mandatory = $true)][string]$SourceFileName,
-        [Parameter(Mandatory = $true)][string]$VersionToken
-    )
-
-    if ($SourceFileName -eq 'app-release.apk') {
-        return "AudioSteg_${VersionToken}.apk"
-    }
-    if ($SourceFileName -match '^app-(.+)-release\.apk$') {
-        return "AudioSteg_${VersionToken}_$($Matches[1]).apk"
-    }
-    if ($SourceFileName -eq 'app-release.aab') {
-        return "AudioSteg_${VersionToken}.aab"
-    }
-
-    $base = [System.IO.Path]::GetFileNameWithoutExtension($SourceFileName)
-    $ext = [System.IO.Path]::GetExtension($SourceFileName)
-    return "${base}_${VersionToken}${ext}"
-}
-
 function Write-PubGet403Hints {
     Write-Host ""
     Write-Host "flutter pub get failed. Try VPN/proxy, -UseFlutterIoCnMirror, or -OfflinePubGet." -ForegroundColor Yellow
@@ -230,56 +192,6 @@ function Invoke-FlutterInProject {
     finally { Pop-Location }
 }
 
-function Assert-AndroidSdkAvailable {
-    $sdk = $env:ANDROID_HOME
-    if ([string]::IsNullOrWhiteSpace($sdk)) { $sdk = $env:ANDROID_SDK_ROOT }
-    if ([string]::IsNullOrWhiteSpace($sdk) -or -not (Test-Path $sdk)) {
-        throw "Android SDK not found. Set ANDROID_HOME or ANDROID_SDK_ROOT and install SDK via Android Studio."
-    }
-    Write-Host "Android SDK: $sdk" -ForegroundColor DarkGray
-}
-
-function Resolve-FlutterApkOutputs {
-    param([Parameter(Mandatory = $true)][string]$FlutterRoot)
-
-    $apkDir = Join-Path $FlutterRoot "build\app\outputs\flutter-apk"
-    if (-not (Test-Path $apkDir)) {
-        throw "APK output folder not found: $apkDir"
-    }
-    $apks = @(Get-ChildItem -Path $apkDir -Filter "*.apk" -File | Sort-Object LastWriteTime -Descending)
-    if ($apks.Count -eq 0) {
-        throw "No APK files under $apkDir"
-    }
-    return $apks
-}
-
-function Resolve-FlutterAppBundleOutput {
-    param([Parameter(Mandatory = $true)][string]$FlutterRoot)
-
-    $aab = Join-Path $FlutterRoot "build\app\outputs\bundle\release\app-release.aab"
-    if (-not (Test-Path $aab)) {
-        throw "App bundle not found. Expected '$aab'. Run 'flutter build appbundle --release'."
-    }
-    return (Get-Item $aab)
-}
-
-function Copy-AndroidArtifactsToPublish {
-    param(
-        [Parameter(Mandatory = $true)][object[]]$SourceFiles,
-        [Parameter(Mandatory = $true)][string]$DestinationDir,
-        [Parameter(Mandatory = $true)][string]$VersionToken
-    )
-
-    New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
-    foreach ($src in $SourceFiles) {
-        $item = if ($src -is [System.IO.FileInfo]) { $src } else { Get-Item $src.FullName }
-        $destName = Get-PublishedAndroidArtifactFileName -SourceFileName $item.Name -VersionToken $VersionToken
-        $dest = Join-Path $DestinationDir $destName
-        Copy-Item -Force $item.FullName $dest
-        Write-Host "  android -> $dest" -ForegroundColor Yellow
-    }
-}
-
 function Invoke-AndroidZip {
     param(
         [Parameter(Mandatory = $true)][string]$ZipDirectory,
@@ -332,6 +244,20 @@ $flutterCandidates = @(
 $flutterCommand = Resolve-CommandPath -CommandName "flutter" -CandidatePaths $flutterCandidates
 if (-not $flutterCommand) {
     throw "Flutter was not found. Add Flutter to PATH or set FLUTTER_HOME/FLUTTER_ROOT."
+}
+
+$flutterAndroidBuildHelper = Join-Path $flutterAppPath "scripts\flutter_android_build.ps1"
+if (-not (Test-Path -LiteralPath $flutterAndroidBuildHelper)) {
+    throw "Flutter Android build helper was not found: $flutterAndroidBuildHelper"
+}
+. $flutterAndroidBuildHelper
+
+$flutterInvokeSb = {
+    param(
+        [Parameter(Mandatory = $true)][string]$ProjectDirectory,
+        [Parameter(Mandatory = $true)][string[]]$ArgumentList
+    )
+    Invoke-FlutterInProject -ProjectDirectory $ProjectDirectory -ArgumentList $ArgumentList
 }
 
 if ($UseFlutterIoCnMirror) {
@@ -399,30 +325,14 @@ if (-not $SkipTests) {
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("test")
 }
 
-Assert-AndroidSdkAvailable
-Write-Host "Flutter precache (android)..." -ForegroundColor Cyan
-Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("precache", "--android")
-
-$builtAndroidFiles = @()
-$buildApk = $AndroidArtifact -in @("Apk", "Both")
-$buildBundle = $AndroidArtifact -in @("AppBundle", "Both")
-
-if ($buildApk) {
-    $apkArgs = @("build", "apk", "--release")
-    if ($SplitPerAbi) { $apkArgs += "--split-per-abi" }
-    Write-Host "Building Android APK (release$(if ($SplitPerAbi) { ', split-per-abi' }))..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList $apkArgs
-    $builtAndroidFiles += Resolve-FlutterApkOutputs -FlutterRoot $flutterAppPath
-}
-
-if ($buildBundle) {
-    Write-Host "Building Android App Bundle (release)..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("build", "appbundle", "--release")
-    $builtAndroidFiles += Resolve-FlutterAppBundleOutput -FlutterRoot $flutterAppPath
-}
-
-Write-Host "Publishing Android artifacts..." -ForegroundColor Cyan
-Copy-AndroidArtifactsToPublish -SourceFiles $builtAndroidFiles -DestinationDir $androidPublishDir -VersionToken $appVersionFileToken
+$androidBuildResult = Invoke-FlutterAndroidReleaseBuild `
+    -FlutterProjectPath $flutterAppPath `
+    -FlutterExecutable $flutterCommand `
+    -AndroidPublishDir $androidPublishDir `
+    -AndroidArtifact $AndroidArtifact `
+    -SplitPerAbi:$SplitPerAbi `
+    -InvokeFlutterInProject $flutterInvokeSb
+$appVersionFileToken = $androidBuildResult.VersionToken
 
 if (-not $SkipPackage) {
     Invoke-AndroidZip -ZipDirectory $ZipOutputDirectory -AndroidPublishDir $androidPublishDir -VersionToken $appVersionFileToken
