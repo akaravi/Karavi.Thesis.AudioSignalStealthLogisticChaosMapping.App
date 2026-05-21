@@ -4,6 +4,10 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-21 | — | 56 | متن جامع انتشار کافه‌بازار (نام، توضیح کوتاه/کامل، انگلیسی، مجوزها) | `publish/cafebazaar/LISTING.fa.md` |
+| 2026-05-21 | — | 56b | حذف اشاره به پایان‌نامه/پژوهش از متن فروشگاه کافه‌بازار | `publish/cafebazaar/LISTING.fa.md`, `docs/cafebazaar-publish-guide.md` |
+| 2026-05-21 | — | 56c | حذف «نگاشت آشوب» و اصطلاحات آشوب/لجستیک از متن فروشگاه؛ زبان عمومی‌تر | `publish/cafebazaar/LISTING.fa.md`, `docs/cafebazaar-publish-guide.md` |
+| 2026-05-21 | — | 57 | اسکرین‌شات 1080×1920 (۵ PNG) + تست طلایی + `Export-CafeBazaarScreenshots.ps1` | `publish/cafebazaar/screenshots/`, `test/store/cafebazaar_screenshots_test.dart` |
 | 2026-05-07 | 13:21 | 1 | ساخت پروژه Flutter چندسکویی | `audio_steg_app/` |
 | 2026-05-07 | 13:23 | 1 | افزودن 94 dependency (riverpod, record, just_audio, file_picker, ...) | `audio_steg_app/pubspec.yaml` |
 | 2026-05-07 | 13:24 | 1 | ساخت اسکفولد پوشه‌های Clean Architecture | `audio_steg_app/lib/{app,core,features,l10n}` |
@@ -150,3 +154,5 @@
 | 2026-05-21 | — | rule | دستور `update ver`: اسکریپت `_update-ver.ps1` + قانون `.cursor/rules/update-ver.mdc` — bump minor+build در `pubspec.yaml` و `AudioSteg.Desktop.csproj` | `_update-ver.ps1`, `update-ver.mdc`, `README.md`, `Cursor.01.plan.md` Part 52 |
 | 2026-05-21 | — | fix | رفع خطای `$using:flutterCmd` در `_build-cafebazaar-release.ps1` — closure معمولی `$flutterCmd` برای فراخوانی مستقیم scriptblock | `_build-cafebazaar-release.ps1` |
 | 2026-05-21 | — | fix | رفع تداخل Gradle: حذف `ndk.abiFilters` از `app/build.gradle.kts` هنگام `--split-per-abi` | `android/app/build.gradle.kts` |
+| 2026-05-21 | — | release | یکپارچه‌سازی Cafe Bazaar bundle-signer: `Invoke-CafeBazaarBundleSigner.ps1`، خروجی `.bin` در `_build-cafebazaar-release.ps1`، به‌روزرسانی راهنما | `android/scripts/`, `docs/cafebazaar-publish-guide.md`, `LISTING.fa.md` |
+| 2026-05-21 | — | build | حذف مسیر ثابت E: از جستجوی JAR؛ فقط `CAFEBAZAAR_BUNDLESIGNER_JAR` / `-BundleSignerJarPath` / `android/tools/` | `Invoke-CafeBazaarBundleSigner.ps1`, `cafebazaar-publish-guide.md` |

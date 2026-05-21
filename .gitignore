@@ -126,6 +126,7 @@ app.*.map.json
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
+**/android/tools/bundlesigner-*.jar
 **/android/app/release/
 **/android/app/debug/
 **/android/app/profile/

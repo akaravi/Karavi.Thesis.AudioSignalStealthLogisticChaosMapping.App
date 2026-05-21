@@ -13,9 +13,11 @@
 #>
 param(
     [string]$OutputDirectory = "",
+    [string]$BundleSignerJarPath = "",
     [switch]$SkipRestore,
     [switch]$ApkOnly,
     [switch]$AabOnly,
+    [switch]$SkipBundleSigner,
     [switch]$UseFlutterIoCnMirror,
     [switch]$OfflinePubGet
 )
@@ -104,6 +106,24 @@ $null = Invoke-FlutterAndroidReleaseBuild `
     -AndroidArtifact $artifact `
     -InvokeFlutterInProject $flutterInvokeSb
 
+$buildsAab = $artifact -in @("AppBundle", "Both")
+if ($buildsAab -and -not $SkipBundleSigner) {
+    $bundleSignerScript = Join-Path $androidRoot "scripts\Invoke-CafeBazaarBundleSigner.ps1"
+    $aabCandidates = @(Get-ChildItem -Path $outDir -Filter "AudioSteg_*.aab" -File | Sort-Object LastWriteTime -Descending)
+    if ($aabCandidates.Count -eq 0) {
+        throw "AAB expected in $outDir for Cafe Bazaar bundle-signer but none found."
+    }
+    Write-Host "Cafe Bazaar bundle-signer (upload .bin per Bazaar guidelines) ..." -ForegroundColor Cyan
+    $signerArgs = @{
+        BundlePath      = $aabCandidates[0].FullName
+        OutputDirectory = $outDir
+    }
+    if (-not [string]::IsNullOrWhiteSpace($BundleSignerJarPath)) {
+        $signerArgs["BundleSignerJarPath"] = $BundleSignerJarPath
+    }
+    $null = & $bundleSignerScript @signerArgs
+}
+
 $mappingSrc = Join-Path $flutterAppPath "build\app\outputs\mapping\release\mapping.txt"
 if (Test-Path -LiteralPath $mappingSrc) {
     $versionLabel = Get-FlutterPubspecVersionLabel -FlutterProjectPath $flutterAppPath
@@ -121,5 +141,6 @@ Write-Host ""
 Write-Host "Cafe Bazaar release artifacts:" -ForegroundColor Green
 Get-ChildItem -Path $outDir -File | ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Yellow }
 Write-Host ""
-Write-Host "Upload the .aab (or signed APK) at https://developers.cafebazaar.ir/" -ForegroundColor Cyan
+Write-Host "Upload the .bin from bundle-signer (AAB flow) or signed APK at https://developers.cafebazaar.ir/" -ForegroundColor Cyan
+Write-Host "Bundle-signer guide: https://developers.cafebazaar.ir/fa/guidelines/feature/app_bundle#Bundle-Signer" -ForegroundColor DarkGray
 Write-Host "See docs/cafebazaar-publish-guide.md and LISTING.fa.md in the output folder." -ForegroundColor DarkYellow

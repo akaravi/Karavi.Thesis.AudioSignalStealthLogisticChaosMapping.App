@@ -1077,3 +1077,65 @@
 - ✅ حذف `ndk { abiFilters }` از `android/app/build.gradle.kts`
 - ✅ علت: `flutter build apk --split-per-abi` با `abiFilters` ثابت arm در Gradle سازگار نیست
 - ✅ انتشار APK همچنان فقط `arm64-v8a` در `Resolve-FlutterApkOutputs`؛ AAB تحویل per-device توسط فروشگاه
+
+---
+
+## Part 55 — Cafe Bazaar Bundle Signer (.bin)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "مطالعه developers.cafebazaar.ir app_bundle#Bundle-Signer و یکپارچه‌سازی genbin در بیلد کافه‌بازار"
+}
+```
+
+### Result 55
+- ✅ `Invoke-CafeBazaarBundleSigner.ps1` — genbin با bundlesigner-0.1.13.jar (دانلود خودکار)، v2=true، v3=false، همان keystore از key.properties
+- ✅ `_build-cafebazaar-release.ps1` پس از AAB فایل `AudioSteg_<ver>.bin` می‌سازد؛ `-SkipBundleSigner` اختیاری
+- ✅ آپلود پنل: `.bin` (نه `.aab` خام) طبق راهنمای کافه‌بازار
+- ✅ `docs/cafebazaar-publish-guide.md` بخش ۴-الف + چک‌لیست؛ `LISTING.fa.md` به‌روز
+- ✅ تست موفق: `AudioSteg_1.0.0_1.bin` در `publish/cafebazaar/`
+
+---
+
+## Part 56 — متن جامع پنل اطلاعات برنامه کافه‌بازار
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "تهیه متن کامل نام، توضیح کوتاه و توضیح کامل فارسی/انگلیسی و justification مجوزها برای فرم اطلاعات برنامه"
+}
+```
+
+### Result 56
+- ✅ `publish/cafebazaar/LISTING.fa.md` — متن آماده کپی برای پنل (بدون FSK/OTA؛ مطابق قابلیت‌های فعلی Flutter)
+- ✅ توضیح کوتاه ~۷۲ کاراکتر؛ توضیح کامل با راهنما، حریم خصوصی، مجوزها، پشتیبانی
+- ✅ بخش‌های اختیاری انگلیسی و متن مجوزها برای فیلدهای جداگانه پنل
+
+### Result 56b
+- ✅ حذف «پایان‌نامه»، «پژوهش پایان‌نامه» و «thesis» از `LISTING.fa.md` و `docs/cafebazaar-publish-guide.md`
+- ✅ مخاطب و توجه: آموزشی/کاربردی بدون برچسب پژوهشی؛ کلیدواژه بدون «پایان‌نامه»
+
+### Result 56c
+- ✅ حذف «نگاشت آشوب»، «نقشه آشوب لجستیک»، «آشوب لجستیک» و `chaos mapping` از متن فروشگاه
+- ✅ جایگزین: «کلید نهان‌نگاری»، «تنظیمات»، «پنهان‌سازی پیام در صوت» — متن `LISTING.fa.md` منبع کپی پنل
+
+---
+
+## Part 57 — اسکرین‌شات کافه‌بازار
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "تولید اسکرین‌شات‌های 1080x1920 برای آپلود پنل کافه‌بازار"
+}
+```
+
+### Result 57
+- ✅ `test/store/cafebazaar_screenshots_test.dart` — golden 1080×1920 @ DPR 3 (چیدمان موبایل)
+- ✅ `publish/cafebazaar/screenshots/` — 01..05 (embed/extract/settings/about + embed dark)
+- ✅ `Export-CafeBazaarScreenshots.ps1` — بازتولید و کپی به publish
+- ✅ `LISTING.fa.md` بخش ۱۱

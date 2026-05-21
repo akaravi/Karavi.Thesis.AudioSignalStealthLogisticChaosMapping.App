@@ -17,11 +17,15 @@
 | نمونه تنظیمات کلید | `src/audio_steg_app/android/key.properties.example` |
 | ساخت keystore (یک‌بار) | `src/audio_steg_app/android/scripts/create_release_keystore.ps1` |
 | بیلد آماده بازار | `\_build-cafebazaar-release.ps1` (ریشه مخزن) |
+| bundle-signer (رسمی کافه‌بازار) | `src/audio_steg_app/android/scripts/Invoke-CafeBazaarBundleSigner.ps1` |
+| JAR ابزار bundle-signer | `CAFEBAZAAR_BUNDLESIGNER_JAR` یا `-BundleSignerJarPath`؛ وگرنه `android/tools/` (دانلود خودکار) |
 | خروجی بیلد | `publish/cafebazaar/` |
 | متن پیشنهادی فروشگاه | `publish/cafebazaar/LISTING.fa.md` |
 | ProGuard | `src/audio_steg_app/android/app/proguard-rules.pro` |
 
-**فرمت آپلود:** کافه‌بازار **AAB** و **APK** امضا‌شده release را می‌پذیرد. پیشنهاد: ابتدا فایل `.aab`.
+**فرمت آپلود (App Bundle):** برای انتشار با **Android App Bundle**، کافه‌بازار کلید امضای شما را نگه نمی‌دارد. طبق [راهنمای App Bundle و Bundle Signer](https://developers.cafebazaar.ir/fa/guidelines/feature/app_bundle#Bundle-Signer) باید پس از ساخت AAB امضا‌شده، با ابزار رسمی **bundle-signer** فایل **`.bin`** بسازید و **همان `.bin`** را در پنل آپلود کنید.
+
+**فرمت جایگزین:** **APK** امضا‌شده release (مثلاً arm64 برای تست) — بدون مرحله bundle-signer.
 
 ---
 
@@ -74,19 +78,58 @@ storeFile=upload-keystore.jks
 
 | فایل | کاربرد |
 |------|--------|
-| `AudioSteg_1.0.0_1.aab` | **آپلود اصلی** در پنل کافه‌بازار |
+| `AudioSteg_1.0.0_1.bin` | **آپلود اصلی در پنل** (خروجی bundle-signer برای App Bundle) |
+| `AudioSteg_1.0.0_1.aab` | باندل امضا‌شده مبنا (نگهداری محلی؛ آپلود مستقیم `.aab` در جریان bundle-signer لازم نیست) |
 | `AudioSteg_1.0.0_1_arm64-v8a.apk` | نصب تست روی گوشی arm64 |
 | `mapping_1.0.0_1.txt` | نگهداری برای رفع خطا (ProGuard / R8) |
 | `LISTING.fa.md` | متن فروشگاه (کپی در پنل) |
+
+**پیش‌نیاز bundle-signer:** Java 8 یا بالاتر (`JAVA_HOME` یا `java` در PATH).
+
+**مسیر JAR (اولویت جستجو):**
+
+1. پارامتر `-BundleSignerJarPath` در `\_build-cafebazaar-release.ps1`
+2. متغیر محیطی `CAFEBAZAAR_BUNDLESIGNER_JAR`
+3. `src/audio_steg_app/android/tools/bundlesigner-0.1.13.jar` (در صورت نبود، دانلود از GitHub)
 
 **سوییچ‌های اختیاری:**
 
 ```powershell
 .\_build-cafebazaar-release.ps1 -OutputDirectory D:\PublishKaravi\CafeBazaar
-.\_build-cafebazaar-release.ps1 -AabOnly          # فقط باندل
-.\_build-cafebazaar-release.ps1 -ApkOnly          # فقط APK
+.\_build-cafebazaar-release.ps1 -AabOnly          # فقط AAB + .bin
+.\_build-cafebazaar-release.ps1 -ApkOnly          # فقط APK (بدون bundle-signer)
+.\_build-cafebazaar-release.ps1 -SkipBundleSigner # AAB بدون ساخت .bin (فقط توسعه)
 .\_build-cafebazaar-release.ps1 -UseFlutterIoCnMirror
 ```
+
+---
+
+## ۴-الف. Bundle Signer (طبق کافه‌بازار)
+
+مرجع: [developers.cafebazaar.ir — App Bundle / Bundle Signer](https://developers.cafebazaar.ir/fa/guidelines/feature/app_bundle#Bundle-Signer)
+
+1. ابتدا AAB **release** با همان `upload-keystore.jks` بسازید (`flutter build appbundle` یا `\_build-cafebazaar-release.ps1`).
+2. اسکریپت مخزن به‌صورت خودکار `genbin` را اجرا می‌کند (یا دستی):
+
+```powershell
+.\src\audio_steg_app\android\scripts\Invoke-CafeBazaarBundleSigner.ps1 `
+  -BundlePath publish\cafebazaar\AudioSteg_1.0.0_1.aab `
+  -OutputDirectory publish\cafebazaar
+```
+
+3. در پنل توسعه‌دهنده فایل **`AudioSteg_<version>.bin`** را آپلود کنید.
+
+**پرچم‌های رسمی (مثال کافه‌بازار):** `--v2-signing-enabled true` ، `--v3-signing-enabled false` ، keystore همان `key.properties`.
+
+**عیب‌یابی keystore:** اگر `Invalid keystore format` دیدید، keystore را به PKCS12 تبدیل کنید:
+
+```powershell
+keytool -importkeystore -srckeystore src\audio_steg_app\android\upload-keystore.jks `
+  -destkeystore src\audio_steg_app\android\upload-keystore.pkcs12 `
+  -deststoretype PKCS12
+```
+
+سپس در `key.properties` مقدار `storeFile` را به فایل جدید تغییر دهید و در صورت نیاز `--ks-type PKCS12` در اسکریپت (پیش‌فرض JKS است).
 
 ---
 
@@ -94,7 +137,7 @@ storeFile=upload-keystore.jks
 
 1. ورود به پنل → افزودن / ویرایش اپ
 2. شناسه بسته: `ir.ntk.audiowmark.app` (باید با پروژه یکی باشد)
-3. آپلود `AudioSteg_<version>.aab` (یا APK امضا‌شده release)
+3. آپلود `AudioSteg_<version>.bin` (جریان App Bundle) **یا** APK امضا‌شده release
 4. پر کردن عنوان، توضیح کوتاه، توضیح کامل (فارسی)
 5. آپلود آیکن و اسکرین‌شات
 6. توضیح **دلیل مجوزها** (میکروفن، دسترسی فایل صوتی)
@@ -110,18 +153,19 @@ storeFile=upload-keystore.jks
 
 ### توضیح کوتاه
 
-پنهان‌سازی و استخراج متن داخل فایل صوتی با نهان‌نگاری LSB و نگاشت آشوب لجستیک.
+پنهان‌سازی و استخراج پیام متنی داخل فایل صوتی — نهان‌نگاری روی دستگاه شما.
 
 ### توضیح کامل
 
-**صوت‌نهان** ابزار پژوهشی/کاربردی برای **نهان‌نگاری پیام متنی در سیگنال صوتی** است (پایان‌نامه / NTK).
+متن به‌روز و آماده کپی: **`publish/cafebazaar/LISTING.fa.md`** (بدون اصطلاحات تخصصی پایان‌نامه یا نگاشت آشوب).
+
+خلاصه — **صوت‌نهان** ابزار کاربردی برای **نهان‌نگاری پیام متنی در سیگنال صوتی** است (NTK).
 
 **قابلیت‌ها:**
 
 - نهان‌نگاری (Embed): تایپ یا ضبط صدا، تولید فایل WAV استگانو
 - رمزگشایی (Extract): بازیابی پیام از فایل یا ضبط میکروفن
-- حالت دیجیتال و Over-the-Air (FSK)
-- تنظیم seed و پارامترهای آشوب لجستیک
+- تنظیم کلید نهان‌نگاری (seed و پارامترهای r و x0)
 - رابط فارسی/انگلیسی/عربی/فرانسوی، تم روشن و تاریک
 
 **مجوزها (دلیل استفاده):**
@@ -149,6 +193,8 @@ storeFile=upload-keystore.jks
 - [ ] حساب developers.cafebazaar.ir فعال و احراز هویت شده
 - [ ] `key.properties` و `upload-keystore.jks` ساخته شده (خارج از Git)
 - [ ] `.\_build-cafebazaar-release.ps1` بدون خطا اجرا شده
+- [ ] فایل **`AudioSteg_*.bin`** (bundle-signer) برای آپلود App Bundle ساخته شده
+- [ ] Java نصب است (برای bundle-signer)
 - [ ] فایل آپلود **release** است (نه debug)
 - [ ] متن فارسی و justification مجوزها در پنل پر شده
 - [ ] آیکن و اسکرین‌شات آپلود شده
@@ -183,6 +229,8 @@ storeFile=upload-keystore.jks
 | `Release signing not configured` | `key.properties` و keystore را طبق بخش ۳ بسازید |
 | `ANDROID_HOME` not found | Android SDK را نصب و متغیر محیطی را تنظیم کنید |
 | APK با کلید debug | `key.properties` وجود ندارد — release به debug برمی‌گردد |
+| `bundle-signer` / Java | JDK 8+؛ `CAFEBAZAAR_BUNDLESIGNER_JAR` یا `-BundleSignerJarPath` یا دانلود به `android/tools/` |
+| `Invalid keystore format` | تبدیل JKS به PKCS12 (بخش ۴-الف) |
 | رد شدن به‌خاطر مجوز | در پنل، توضیح فارسی برای میکروفن و فایل صوتی بنویسید |
 
 ---
