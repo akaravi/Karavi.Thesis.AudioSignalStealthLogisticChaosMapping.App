@@ -1139,3 +1139,44 @@
 - ✅ `publish/cafebazaar/screenshots/` — 01..05 (embed/extract/settings/about + embed dark)
 - ✅ `Export-CafeBazaarScreenshots.ps1` — بازتولید و کپی به publish
 - ✅ `LISTING.fa.md` بخش ۱۱
+
+---
+
+## Part 58 — اسکرین‌شات ۱۶:۹ برای فروشگاه
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "تبدیل نسبت تصاویر اسکرین‌شات ارسالی کاربر به 16:9 (1920x1080)"
+}
+```
+
+### Result 58
+- ✅ `publish/cafebazaar/screenshots_16x9/` — `01_16x9.png` … `11_16x9.png` (1920×1080، letterbox)
+- ✅ `publish/cafebazaar/screenshots_source/` — منبع عمودی `01_source.png` … `11_source.png`
+- ✅ `publish/cafebazaar/scripts/Convert-To16x9.ps1` + `convert_to_16x9.py`
+- ✅ `LISTING.fa.md` بخش ۱۱ — نسخه ۱۶:۹ و ۹:۱۶
+
+---
+
+## Part 59 — آیکن راهنمای کامل در صفحات نهان‌نگاری و رمزگشایی
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "افزودن آیکن راهنما در بالا/سمت چپ صفحات نهان‌نگاری (کنار جدید) و رمزگشایی؛ باز شدن popup با توضیح کامل برنامه و مراحل گام‌به‌گام نهان‌نگاری و رمزگشایی"
+}
+```
+
+### Result 59
+- ✅ `features/shared/help_sheet.dart` — `showHelpSheet(context, initialSection)` با
+  `DraggableScrollableSheet` و ۵ سکشن (Overview، Tabs، Embed Steps، Extract Steps، Tips)
+- ✅ نهان‌نگاری: کنار آیکن «نهان‌نگاری جدید» (top-end / در RTL = بالا سمت چپ) آیکن
+  `help_outline_rounded` با رنگ `secondaryContainer` اضافه شد؛ initialSection = embed
+- ✅ رمزگشایی: کل صفحه به `Stack` تبدیل شد و آیکن راهنما در `top-end` با initialSection = extract قرار گرفت
+- ✅ `app_strings.dart` — رشته‌های کامل FA/EN/AR/FR: helpTitle, helpTooltip, helpSection×5,
+  helpOverviewBody, helpTabsBody, helpEmbedStep1..8, helpExtractStep1..6, helpTipsBody, helpClose
+- ✅ بازتولید goldens: `cafebazaar_screenshots_test.dart` با `--update-goldens` (۵/۵ سبز)
+- ✅ `flutter analyze` — صفر خطا/اخطار

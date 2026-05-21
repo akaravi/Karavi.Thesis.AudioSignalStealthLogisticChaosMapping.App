@@ -13,6 +13,7 @@ import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/stego/stego.dart';
+import '../shared/help_sheet.dart';
 import '../shared/tab_scroll_body.dart';
 
 class ExtractScreen extends ConsumerStatefulWidget {
@@ -237,6 +238,60 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
   bool get _hasLoadedAudio => _loadedWav != null;
 
+  bool get _canStartNewExtract =>
+      _loadedWav != null ||
+      _bitLenCtrl.text.trim().isNotEmpty ||
+      _extractionAttempted ||
+      _result != null ||
+      _statusMessage != null ||
+      _isPlaying ||
+      _playbackLoaded;
+
+  bool get _newExtractFabEnabled {
+    if (_processing || _loadingFile) return false;
+    return _canStartNewExtract;
+  }
+
+  Future<void> _startNewExtract() async {
+    if (!_newExtractFabEnabled) return;
+    try {
+      await _player.stop();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Extract new: stop playback: $e');
+      }
+    }
+    if (!mounted) return;
+    _bitLenCtrl.clear();
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _processing = false;
+      _loadingFile = false;
+      _extractionAttempted = false;
+      _loadedWav = null;
+      _result = null;
+      _statusMessage = null;
+      _bitLengthError = null;
+      _isPlaying = false;
+      _playbackLoaded = false;
+    });
+  }
+
+  Widget _buildNewExtractFab(AppStrings s) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 4,
+      shadowColor: scheme.shadow.withValues(alpha: 0.4),
+      color: scheme.primaryContainer,
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: s.extractNew,
+        onPressed: _newExtractFabEnabled ? _startNewExtract : null,
+        icon: Icon(Icons.note_add_outlined, color: scheme.onPrimaryContainer),
+      ),
+    );
+  }
+
   Widget _buildPlaybackControls(AppStrings s) {
     if (!_hasLoadedAudio) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
@@ -283,91 +338,135 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     );
   }
 
+  Widget _buildHelpFab(AppStrings s) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 4,
+      shadowColor: scheme.shadow.withValues(alpha: 0.4),
+      color: scheme.secondaryContainer,
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: s.helpTooltip,
+        onPressed: () =>
+            showHelpSheet(context, initialSection: HelpSection.extract),
+        icon: Icon(
+          Icons.help_outline_rounded,
+          color: scheme.onSecondaryContainer,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    return TabScrollBody(
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(
-                  Icons.audio_file_outlined,
-                  size: 56,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  s.pickFile,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _bitLenCtrl,
-                  keyboardType: TextInputType.number,
-                  scrollPhysics: const NeverScrollableScrollPhysics(),
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  enabled: !_processing,
-                  onChanged: (_) {
-                    if (_bitLengthError != null) {
-                      setState(() => _bitLengthError = null);
-                    }
-                  },
-                  decoration: InputDecoration(
-                    labelText: s.msgBitLengthHint,
-                    helperText: s.msgBitLengthHelper,
-                    errorText: _bitLengthError,
-                    prefixIcon: const Icon(Icons.format_list_numbered),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+        TabScrollBody(
+          padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    FilledButton.icon(
-                      onPressed: _processing || _loadingFile
-                          ? null
-                          : _pickAudio,
-                      icon: _loadingFile
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.folder_open),
-                      label: Text(s.pickFile),
+                    Icon(
+                      Icons.audio_file_outlined,
+                      size: 56,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    _buildPlaybackControls(s),
+                    const SizedBox(height: 12),
+                    Text(
+                      s.pickFile,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _bitLenCtrl,
+                      keyboardType: TextInputType.number,
+                      scrollPhysics: const NeverScrollableScrollPhysics(),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      enabled: !_processing,
+                      onChanged: (_) {
+                        if (_bitLengthError != null) {
+                          setState(() => _bitLengthError = null);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: s.msgBitLengthHint,
+                        helperText: s.msgBitLengthHelper,
+                        errorText: _bitLengthError,
+                        prefixIcon: const Icon(Icons.format_list_numbered),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: _processing || _loadingFile
+                              ? null
+                              : _pickAudio,
+                          icon: _loadingFile
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.folder_open),
+                          label: Text(s.pickFile),
+                        ),
+                        _buildPlaybackControls(s),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _processing || !_hasLoadedAudio
+                          ? null
+                          : _extract,
+                      icon: const Icon(Icons.lock_open_outlined),
+                      label: Text(s.extractTab),
+                    ),
+                    if (_statusMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _statusMessage!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: _processing || !_hasLoadedAudio ? null : _extract,
-                  icon: const Icon(Icons.lock_open_outlined),
-                  label: Text(s.extractTab),
-                ),
-                if (_statusMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _statusMessage!,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _resultCard(s),
+          ],
+        ),
+        PositionedDirectional(
+          top: 8,
+          end: 8,
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildNewExtractFab(s),
+                const SizedBox(width: 8),
+                _buildHelpFab(s),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        _resultCard(s),
       ],
     );
   }

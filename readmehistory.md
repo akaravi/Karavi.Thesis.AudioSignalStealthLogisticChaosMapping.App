@@ -4,6 +4,11 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-21 | — | 60 | دکمه «رمزگشایی جدید» بالای تب رمزگشایی (مانند نهان‌نگاری) | `extract_screen.dart`, `app_strings.dart` (`extractNew`) |
+| 2026-05-21 | — | run-all | run all: دیباگ/تست سبز؛ Flutter+WPF اجرا؛ رفع کرش WPF (آیکن pack URI + ICO سالم) | `logs/`, `MainWindow.xaml`, `Assets/app.ico` |
+| 2026-05-21 | — | 59b | تست `help_strings_i18n_test` — ۲۵ کلید راهنما در fa/en/ar/fr | `test/app/help_strings_i18n_test.dart` |
+| 2026-05-21 | — | 59 | آیکن راهنمای پاپ‌آپ در صفحات نهان‌نگاری و رمزگشایی + رشته‌های راهنمای کامل ۴ زبانه | `features/shared/help_sheet.dart`, `features/embed/embed_screen.dart`, `features/extract/extract_screen.dart`, `app/app_strings.dart` |
+| 2026-05-21 | — | 58 | تبدیل ۱۱ اسکرین‌شات به ۱۶:۹ (1920×1080 letterbox) | `publish/cafebazaar/screenshots_16x9/`, `scripts/Convert-To16x9.ps1`, `screenshots_source/` |
 | 2026-05-21 | — | 56 | متن جامع انتشار کافه‌بازار (نام، توضیح کوتاه/کامل، انگلیسی، مجوزها) | `publish/cafebazaar/LISTING.fa.md` |
 | 2026-05-21 | — | 56b | حذف اشاره به پایان‌نامه/پژوهش از متن فروشگاه کافه‌بازار | `publish/cafebazaar/LISTING.fa.md`, `docs/cafebazaar-publish-guide.md` |
 | 2026-05-21 | — | 56c | حذف «نگاشت آشوب» و اصطلاحات آشوب/لجستیک از متن فروشگاه؛ زبان عمومی‌تر | `publish/cafebazaar/LISTING.fa.md`, `docs/cafebazaar-publish-guide.md` |

@@ -25,6 +25,7 @@ import '../../core/stego/stego.dart';
 import '../shared/audio_equalizer_view.dart';
 import '../shared/dual_waveform_chart.dart';
 import '../shared/circle_action_button.dart';
+import '../shared/help_sheet.dart';
 import '../shared/record_button.dart';
 import '../shared/stego_share.dart';
 import '../shared/tab_scroll_body.dart';
@@ -555,6 +556,25 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     );
   }
 
+  Widget _buildHelpFab(AppStrings s) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 4,
+      shadowColor: scheme.shadow.withValues(alpha: 0.4),
+      color: scheme.secondaryContainer,
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: s.helpTooltip,
+        onPressed: () =>
+            showHelpSheet(context, initialSection: HelpSection.embed),
+        icon: Icon(
+          Icons.help_outline_rounded,
+          color: scheme.onSecondaryContainer,
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveStego() async {
     final stego = _stego;
     final result = _result;
@@ -749,7 +769,17 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         PositionedDirectional(
           top: 8,
           end: 8,
-          child: SafeArea(bottom: false, child: _buildNewEmbedFab(s)),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildNewEmbedFab(s),
+                const SizedBox(width: 8),
+                _buildHelpFab(s),
+              ],
+            ),
+          ),
         ),
       ],
     );
