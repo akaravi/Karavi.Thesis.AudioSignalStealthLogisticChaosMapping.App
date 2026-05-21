@@ -1043,3 +1043,37 @@
 - ✅ قانون Cursor: `.cursor/rules/update-ver.mdc` (alwaysApply) — تریگر: `update ver` / `آپدیت ورژن`
 - ✅ پیش‌نمایش: `.\_update-ver.ps1 -WhatIf`
 - ℹ️ NuGet/Gradle/XML encoding — خارج از دامنه bump
+
+---
+
+## Part 53 — رفع خطای Using variable در بیلد کافه‌بازار
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع خطای PowerShell: A Using variable cannot be retrieved در _build-cafebazaar-release.ps1 خط 100"
+}
+```
+
+### Result 53
+- ✅ `$using:flutterCmd` → `$flutterCmd` در scriptblock `$flutterInvokeSb`
+- ✅ علت: `Invoke-FlutterAndroidReleaseBuild` با `& $InvokeFlutterInProject` فراخوانی می‌کند نه `Invoke-Command`/`Start-Job`
+- ✅ هم‌تراز با `_build-flutter-android.ps1` و `_build-all-projects.ps1` (بدون `$using:`)
+
+---
+
+## Part 54 — رفع تداخل abiFilters و split-per-abi
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع Gradle: ndk abiFilters cannot be present when splits abi filters are set"
+}
+```
+
+### Result 54
+- ✅ حذف `ndk { abiFilters }` از `android/app/build.gradle.kts`
+- ✅ علت: `flutter build apk --split-per-abi` با `abiFilters` ثابت arm در Gradle سازگار نیست
+- ✅ انتشار APK همچنان فقط `arm64-v8a` در `Resolve-FlutterApkOutputs`؛ AAB تحویل per-device توسط فروشگاه

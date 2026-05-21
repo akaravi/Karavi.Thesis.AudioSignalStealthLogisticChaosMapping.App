@@ -44,9 +44,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
-        }
+        // Do not set ndk.abiFilters here: Flutter --split-per-abi sets split ABI filters
+        // and Gradle rejects both at once. Release APK publish script keeps arm64-v8a only.
     }
 
     buildTypes {

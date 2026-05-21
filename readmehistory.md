@@ -148,3 +148,5 @@
 | 2026-05-21 | — | ci | رفع Billing: workflow → self-hosted Windows؛ آپلود Release با REST API (`Publish-GitHubReleaseAssets.ps1`)؛ `Setup-GitHubSelfHostedRunner.ps1` | `.github/workflows/release-on-publish-tag.yml`, `scripts/ci/*` |
 | 2026-05-21 | — | ci | اصلاح workflow: تگ `publish/**`؛ `runs-on: self-hosted`؛ skip بدون runner؛ آپلود با `Invoke-WorkflowReleaseUpload.ps1`؛ متغیر `SELF_HOSTED_RUNNER_READY` | `.github/workflows/release-on-publish-tag.yml`, `Enable-ReleaseWorkflowRepository.ps1` |
 | 2026-05-21 | — | rule | دستور `update ver`: اسکریپت `_update-ver.ps1` + قانون `.cursor/rules/update-ver.mdc` — bump minor+build در `pubspec.yaml` و `AudioSteg.Desktop.csproj` | `_update-ver.ps1`, `update-ver.mdc`, `README.md`, `Cursor.01.plan.md` Part 52 |
+| 2026-05-21 | — | fix | رفع خطای `$using:flutterCmd` در `_build-cafebazaar-release.ps1` — closure معمولی `$flutterCmd` برای فراخوانی مستقیم scriptblock | `_build-cafebazaar-release.ps1` |
+| 2026-05-21 | — | fix | رفع تداخل Gradle: حذف `ndk.abiFilters` از `app/build.gradle.kts` هنگام `--split-per-abi` | `android/app/build.gradle.kts` |

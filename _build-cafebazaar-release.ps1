@@ -87,7 +87,7 @@ $flutterInvokeSb = {
     param([string]$ProjectDirectory, [string[]]$ArgumentList)
     Push-Location $ProjectDirectory
     try {
-        & $using:flutterCmd @ArgumentList
+        & $flutterCmd @ArgumentList
         if ($LASTEXITCODE -ne 0) {
             throw "flutter failed: $($ArgumentList -join ' ')"
         }
