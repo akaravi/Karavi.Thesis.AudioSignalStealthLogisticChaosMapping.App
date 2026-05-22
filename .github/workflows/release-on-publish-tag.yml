@@ -59,7 +59,7 @@ jobs:
 
       - name: Prepare Android signing
         shell: pwsh
-        run: ./scripts/ci/Prepare-AndroidReleaseSigning.ps1 -AndroidRoot ./src/audio_steg_app/android
+        run: ./scripts/ci/Prepare-AndroidReleaseSigning.ps1 -AndroidRoot ./src/audio_stegano_app/android
         continue-on-error: true
 
       - name: Verify toolchain

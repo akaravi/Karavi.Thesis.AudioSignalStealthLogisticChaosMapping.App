@@ -35,7 +35,7 @@ void main() {
       runApp(
         ProviderScope(
           overrides: [appConfigProvider.overrideWithValue(appConfig)],
-          child: const AudioStegApp(),
+          child: const AudioSteganoApp(),
         ),
       );
     },
@@ -45,8 +45,8 @@ void main() {
   );
 }
 
-class AudioStegApp extends ConsumerWidget {
-  const AudioStegApp({super.key});
+class AudioSteganoApp extends ConsumerWidget {
+  const AudioSteganoApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -4,8 +4,8 @@
 
 .EXAMPLE
   # One-time: create keystore
-  .\src\audio_steg_app\android\scripts\create_release_keystore.ps1
-  Copy-Item src\audio_steg_app\android\key.properties.example src\audio_steg_app\android\key.properties
+  .\src\audio_stegano_app\android\scripts\create_release_keystore.ps1
+  Copy-Item src\audio_stegano_app\android\key.properties.example src\audio_stegano_app\android\key.properties
   # Edit key.properties with your passwords
 
   .\_build-cafebazaar-release.ps1
@@ -25,7 +25,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$flutterAppPath = Join-Path $root "src\audio_steg_app"
+$flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $androidRoot = Join-Path $flutterAppPath "android"
 $keyProperties = Join-Path $androidRoot "key.properties"
 $defaultOut = Join-Path $root "publish\cafebazaar"
@@ -33,7 +33,7 @@ $defaultOut = Join-Path $root "publish\cafebazaar"
 if (-not (Test-Path -LiteralPath $keyProperties)) {
     throw @"
 Release signing not configured.
-  1. Run: .\src\audio_steg_app\android\scripts\create_release_keystore.ps1
+  1. Run: .\src\audio_stegano_app\android\scripts\create_release_keystore.ps1
   2. Copy key.properties.example to android\key.properties and fill passwords
   3. Re-run this script
 "@
@@ -123,7 +123,7 @@ if (Test-Path -LiteralPath $appSettingsScript) {
 $buildsAab = $artifact -in @("AppBundle", "Both")
 if ($buildsAab -and -not $SkipBundleSigner) {
     $bundleSignerScript = Join-Path $androidRoot "scripts\Invoke-CafeBazaarBundleSigner.ps1"
-    $aabCandidates = @(Get-ChildItem -Path $outDir -Filter "AudioSteg_*.aab" -File | Sort-Object LastWriteTime -Descending)
+    $aabCandidates = @(Get-ChildItem -Path $outDir -Filter "AudioStegano_*.aab" -File | Sort-Object LastWriteTime -Descending)
     if ($aabCandidates.Count -eq 0) {
         throw "AAB expected in $outDir for Cafe Bazaar bundle-signer but none found."
     }

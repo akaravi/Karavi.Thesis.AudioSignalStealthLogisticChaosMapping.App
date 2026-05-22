@@ -2,7 +2,7 @@
 
 پلن اصلی اپلیکیشن نهان‌نگاری صوتی چندسکویی (Windows / Linux / Android) بر پایه الگوریتم‌های MATLAB در پوشه [src/Matlab/](src/Matlab/).
 
-**ساختار مخزن:** تمام پروژه‌ها زیر `src/` — `src/audio_steg_app` (Flutter)، `src/audio_steg_desktop` (.NET)، `src/Matlab`.
+**ساختار مخزن:** تمام پروژه‌ها زیر `src/` — `src/audio_stegano_app` (Flutter)، `src/audio_stegano_desktop` (.NET)، `src/Matlab`.
 
 تکنولوژی: **Flutter 3.41 (Dart 3.11)** • معماری: **Clean Architecture + Riverpod**
 تنها منبع الگوریتم: **۵ اسکریپت متلب** (`embed_extract_data`, `logistic_map_keygen`, `evaluate_stego`, `main_steganography`, `train_deep_autoencoder` اختیاری/غیرفعال)
@@ -1291,3 +1291,85 @@
 - ✅ Flutter `settings_screen.dart`: بخش‌های compact (padding/spacing/آیکن کوچک‌تر، دایره رنگ ۳۲px)
 - ✅ Flutter `embed_screen.dart`: `_embedInputHidden`؛ دیالوگ `_showEmbedCompleteDialog` همیشه پس از موفقیت (یادآور بیت فقط وقتی محدودیت ثابت خاموش)؛ اسکرول خودکار به کارت نتایج
 - ✅ WPF `SettingsView`: padding کمتر روی تم/زبان/رنگ؛ `EmbedView`: `EmbedInputPanel` مخفی پس از نتیجه؛ `ResetForNewEmbed` با شروع ضبط/بارگذاری؛ MessageBox موفقیت وقتی محدودیت ثابت روشن
+
+---
+
+## Part 66 — تغییر نام جامع Steg → Stegano
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "هر کجا به جای عبارت Stegano از عبارت Steg استفاده شده، با Stegano جایگزین شود",
+  "scope": {
+    "patterns": [
+      { "from": "AudioSteg", "to": "AudioStegano", "rule": "وقتی پس از Steg حرف a/e/o/y نباشد" },
+      { "from": "audio_steg", "to": "audio_stegano", "rule": "وقتی پس از steg حرف a/e/o/y نباشد" },
+      { "from": "Steg", "to": "Stegano", "rule": "به‌عنوان واژهٔ مستقل در رشته‌های UI و کامنت" }
+    ],
+    "preserve": [
+      "Stego (stego_runner.dart, core/stego/, AudioSteg.Core/Stego/)",
+      "Stega (Steganography)",
+      "Stegano (از قبل صحیح)"
+    ],
+    "renames": {
+      "folders": [
+        "src/audio_steg_app/ → src/audio_stegano_app/",
+        "src/audio_steg_desktop/ → src/audio_stegano_desktop/",
+        "src/audio_stegano_desktop/src/AudioSteg.Core/ → src/audio_stegano_desktop/src/AudioStegano.Core/",
+        "src/audio_stegano_desktop/src/AudioSteg.Desktop/ → src/audio_stegano_desktop/src/AudioStegano.Desktop/",
+        "src/audio_stegano_desktop/tests/AudioSteg.Core.Tests/ → src/audio_stegano_desktop/tests/AudioStegano.Core.Tests/"
+      ],
+      "files": [
+        "AudioSteg.sln → AudioStegano.sln",
+        "AudioSteg.Core.csproj → AudioStegano.Core.csproj",
+        "AudioSteg.Desktop.csproj → AudioStegano.Desktop.csproj",
+        "AudioSteg.Core.Tests.csproj → AudioStegano.Core.Tests.csproj"
+      ]
+    },
+    "excluded": ["bin/", "obj/", "build/", ".dart_tool/", ".gradle/", ".vs/", ".idea/", ".git/", "publish/", "logs/"]
+  }
+}
+```
+
+### Result 66
+- ✅ اسکریپت `scripts/_rename_steg_to_stegano.ps1` با regex حساس به حرف بزرگ/کوچک، با lookahead `(?![aeoyAEOY])` برای حفظ `Stego`/`Stega`/`Stegano`/`Steganography`
+- ✅ ۹۲ فایل ویرایش شد (Dart, C#, XAML, PowerShell, csproj/sln, web, scripts, docs)؛ مستثنیات: `bin/`, `obj/`, `build/`, `.dart_tool/`, `.gradle/`, `.vs/`, `.idea/`, `.git/`, `publish/`, `logs/`, `memo/`، `Cursor.01.plan.md`, `readmehistory.md`
+- ✅ ۴ فایل پروژه تغییر نام: `AudioSteg.sln` → `AudioStegano.sln`, `AudioSteg.Core.csproj` → `AudioStegano.Core.csproj`, `AudioSteg.Desktop.csproj` → `AudioStegano.Desktop.csproj`, `AudioSteg.Core.Tests.csproj` → `AudioStegano.Core.Tests.csproj`
+- ✅ ۵ پوشه تغییر نام (عمیق به سطحی): `src/AudioSteg.Core/` → `src/AudioStegano.Core/`, `src/AudioSteg.Desktop/` → `src/AudioStegano.Desktop/`, `tests/AudioSteg.Core.Tests/` → `tests/AudioStegano.Core.Tests/`, `src/audio_steg_desktop/` → `src/audio_stegano_desktop/`, `src/audio_steg_app/` → `src/audio_stegano_app/`
+- ✅ پاکسازی `bin/`, `obj/`, `.dart_tool/`, `build/` پیش از rename + توقف فرایندهای `dart`/`dartvm`/`dotnet BuildHost` که هندل می‌گرفتند
+- ✅ Flutter: `flutter pub get`، `flutter analyze` (No issues)، `flutter test` (۳۷/۳۷ سبز)
+- ✅ .NET: `dotnet build AudioStegano.sln` (0 Warning, 0 Error)، `dotnet test` (۵/۵ سبز)
+- ✅ Golden screenshots برای 5 صفحه Cafe Bazaar با عنوان جدید `AudioStegano` به‌روز شد
+- ⏪ حفظ شده: `Stego` (پوشه و فایل `stego_runner.dart`, `core/stego/`, نام‌فضای `AudioStegano.Core.Stego`), `Steganography` در رشته‌های UI و کامنت‌ها
+- ⏪ بدون تغییر: `applicationId = ir.ntk.audiowmark.app` (نام پکیج اندروید مستقل از این refactor)
+- ✅ پاکسازی نام فایل‌ها/پوشه‌ها (Phase 2):
+  - پوشهٔ خالی `kotlin/com/karavi/thesis/audio_steg_app/` → `audio_stegano_app/`
+  - `src/audio_stegano_app/audio_steg_app.iml` → `audio_stegano_app.iml`
+  - `src/audio_stegano_app/android/audio_steg_app_android.iml` → `audio_stegano_app_android.iml`
+  - `publish/cafebazaar/AudioSteg_1.0.0_1*` (۳ فایل aab/apk/bin) → `AudioStegano_1.0.0_1*`
+  - `publish/flutter/android/AudioSteg_1.0.0_1.apk` → `AudioStegano_1.0.0_1.apk`
+  - `publish/dotnet/win-x64/AudioSteg.Desktop/` و ۷ فایل داخل آن (dll/pdb/exe/json) → `AudioStegano.Desktop/`
+  - `scripts/_rename_steg_to_stegano.ps1` → `scripts/_rename_to_stegano.ps1`
+- ✅ پس از Phase 2: `flutter analyze` (No issues) و `dotnet build AudioStegano.sln` (0/0) همچنان سبز
+
+---
+
+## Part 66c — ادامهٔ بررسی (تکمیل باقی‌مانده‌ها)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ادامهٔ بررسی پس از rename: نام فایل/پوشه، شناسه‌های کد، MATLAB، publish، اسکریپت‌ها"
+}
+```
+
+### Result 66c
+- ✅ اسکن نام فایل/پوشه در کل repo: **۰** مورد باقی‌مانده با `Steg`/`steg` (به‌جز `Stego`/`Stega`/`Stegano`)
+- ✅ اصلاح کلاس ریشه Flutter: `AudioStegApp` → `AudioSteganoApp` در `lib/main.dart`
+- ✅ حذف پوشهٔ خالی legacy `android/.../kotlin/com/karavi/thesis/` (اسکفولد قدیمی؛ `MainActivity` فقط در `ir/ntk/audiowmark/app`)
+- ✅ MATLAB (`main_steganography.m`, `evaluate_stego.m`): بدون `AudioSteg`/`audio_steg`؛ `stego_audio` و `evaluate_stego` عمداً حفظ شد (اصطلاح دامنه)
+- ✅ `src/`: بدون `Steg`/`steg` در محتوا (به‌جز `Stego`/`Steganography`)
+- ✅ `publish/`, `docs/`, `_build-*.ps1`, `.github/workflows`: هماهنگ با `audio_stegano_*` / `AudioStegano_*`
+- ✅ `flutter analyze` + `flutter test` (۳۷/۳۷) پس از اصلاحات

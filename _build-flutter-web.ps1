@@ -24,7 +24,7 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOrWhiteSpace($PubHostedUrl))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$flutterAppPath = Join-Path $root "src\audio_steg_app"
+$flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $flutterWebBuildDir = Join-Path $flutterAppPath "build\web"
 $defaultPublishDir = Join-Path $root "publish\flutter\web"
 
@@ -134,7 +134,7 @@ function Invoke-FlutterWebZip {
 
     $resolvedZipDir = Resolve-ExistingOrNewDirectory -Path $ZipDirectory
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $zipName = "KaraviThesis_AudioSteg_FlutterWeb_$stamp.zip"
+    $zipName = "KaraviThesis_AudioStegano_FlutterWeb_$stamp.zip"
     $zipFullPath = Join-Path $resolvedZipDir $zipName
 
     $stageRoot = Join-Path $root "publish\flutter-web-staging"
@@ -144,7 +144,7 @@ function Invoke-FlutterWebZip {
     New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
 
     Write-Host "Staging web folder under $stageRoot ..." -ForegroundColor Cyan
-    Copy-Item -Recurse -Force $WebSourceDir (Join-Path $stageRoot "audio_steg_app_web")
+    Copy-Item -Recurse -Force $WebSourceDir (Join-Path $stageRoot "audio_stegano_app_web")
 
     if (Test-Path $zipFullPath) {
         Remove-Item -Force $zipFullPath
@@ -177,7 +177,7 @@ function Start-FlutterWebDevTerminal {
     $encoded = [Convert]::ToBase64String(
         [Text.Encoding]::Unicode.GetBytes("Set-Location '$WorkingDirectory'; & `"$FlutterExe`" $runArgs"))
     Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $encoded | Out-Null
-    Write-Host "Started: audio_steg_app - flutter $runArgs" -ForegroundColor Green
+    Write-Host "Started: audio_stegano_app - flutter $runArgs" -ForegroundColor Green
 }
 
 $flutterCandidates = @(

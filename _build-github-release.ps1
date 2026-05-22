@@ -19,9 +19,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$flutterAppPath = Join-Path $root "src\audio_steg_app"
+$flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $androidRoot = Join-Path $flutterAppPath "android"
-$dotnetPublishOutput = Join-Path $root "publish\dotnet\win-x64\AudioSteg.Desktop"
+$dotnetPublishOutput = Join-Path $root "publish\dotnet\win-x64\AudioStegano.Desktop"
 $androidPublishDir = Join-Path $root "publish\flutter\android"
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
@@ -152,7 +152,7 @@ function Sync-ReleaseVersionToProjects {
     }
 }
 
-$desktopCsproj = Join-Path $root "src\audio_steg_desktop\src\AudioSteg.Desktop\AudioSteg.Desktop.csproj"
+$desktopCsproj = Join-Path $root "src\audio_stegano_desktop\src\AudioStegano.Desktop\AudioStegano.Desktop.csproj"
 Sync-ReleaseVersionToProjects `
     -FlutterProjectPath $flutterAppPath `
     -DesktopCsprojPath $desktopCsproj `
@@ -186,25 +186,25 @@ $flutterWindowsDir = Join-Path $flutterAppPath "build\windows\x64\runner\Release
 if (-not (Test-Path -LiteralPath (Join-Path $flutterWebDir "index.html"))) {
     throw "Flutter web build missing: $flutterWebDir"
 }
-if (-not (Test-Path -LiteralPath (Join-Path $flutterWindowsDir "audio_steg_app.exe"))) {
+if (-not (Test-Path -LiteralPath (Join-Path $flutterWindowsDir "audio_stegano_app.exe"))) {
     throw "Flutter Windows build missing: $flutterWindowsDir"
 }
-if (-not (Test-Path -LiteralPath (Join-Path $dotnetPublishOutput "AudioSteg.Desktop.exe"))) {
+if (-not (Test-Path -LiteralPath (Join-Path $dotnetPublishOutput "AudioStegano.Desktop.exe"))) {
     throw ".NET publish missing: $dotnetPublishOutput"
 }
 
 $perPlatformZips = @(
     @{
         Source = $flutterWebDir
-        Zip    = Join-Path $OutputRoot "KaraviThesis_AudioSteg_FlutterWeb_$versionToken.zip"
+        Zip    = Join-Path $OutputRoot "KaraviThesis_AudioStegano_FlutterWeb_$versionToken.zip"
     },
     @{
         Source = $flutterWindowsDir
-        Zip    = Join-Path $OutputRoot "KaraviThesis_AudioSteg_FlutterWindows_$versionToken.zip"
+        Zip    = Join-Path $OutputRoot "KaraviThesis_AudioStegano_FlutterWindows_$versionToken.zip"
     },
     @{
         Source = $dotnetPublishOutput
-        Zip    = Join-Path $OutputRoot "KaraviThesis_AudioSteg_DotNetDesktop_$versionToken.zip"
+        Zip    = Join-Path $OutputRoot "KaraviThesis_AudioStegano_DotNetDesktop_$versionToken.zip"
     }
 )
 
@@ -232,7 +232,7 @@ if (Test-Path -LiteralPath $androidPublishDir) {
         }
         New-DirectoryZip `
             -SourceDirectory $androidStage `
-            -ZipFilePath (Join-Path $OutputRoot "KaraviThesis_AudioSteg_Android_$versionToken.zip")
+            -ZipFilePath (Join-Path $OutputRoot "KaraviThesis_AudioStegano_Android_$versionToken.zip")
         Remove-Item -Recurse -Force $androidStage
     }
 }

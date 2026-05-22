@@ -39,8 +39,8 @@ Example: `1.0.0+1` → `1.1.0+2`
 
 | Client | File | Fields |
 |--------|------|--------|
-| Flutter | `src/audio_steg_app/pubspec.yaml` | `version: MAJOR.MINOR.PATCH+BUILD` |
-| WPF | `src/audio_steg_desktop/src/AudioSteg.Desktop/AudioSteg.Desktop.csproj` | `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion` |
+| Flutter | `src/audio_stegano_app/pubspec.yaml` | `version: MAJOR.MINOR.PATCH+BUILD` |
+| WPF | `src/audio_stegano_desktop/src/AudioStegano.Desktop/AudioStegano.Desktop.csproj` | `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion` |
 
 `pubspec.yaml` is the source of truth. WPF `InformationalVersion` must match Flutter (`name+build`). Runtime UI reads version from package metadata / assembly — no hard-coded version strings in Dart/C# UI.
 

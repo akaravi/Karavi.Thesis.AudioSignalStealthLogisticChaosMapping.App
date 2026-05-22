@@ -6,8 +6,8 @@
 
 ```
 ├── src/
-│   ├── audio_steg_app/       # Flutter (Windows / Linux / Android)
-│   ├── audio_steg_desktop/   # .NET 10 WPF (Windows)
+│   ├── audio_stegano_app/       # Flutter (Windows / Linux / Android)
+│   ├── audio_stegano_desktop/   # .NET 10 WPF (Windows)
 │   └── Matlab/               # مرجع الگوریتم (منبع حقیقت)
 ├── Cursor.01.plan.md
 └── readmehistory.md
@@ -18,7 +18,7 @@
 ### Flutter
 
 ```bash
-cd src/audio_steg_app
+cd src/audio_stegano_app
 flutter pub get
 flutter run -d windows
 ```
@@ -27,16 +27,16 @@ flutter run -d windows
 
 راهنمای کامل: [`docs/cafebazaar-publish-guide.md`](docs/cafebazaar-publish-guide.md)
 
-1. یک‌بار: `.\src\audio_steg_app\android\scripts\create_release_keystore.ps1` و `android\key.properties` از `key.properties.example`
+1. یک‌بار: `.\src\audio_stegano_app\android\scripts\create_release_keystore.ps1` و `android\key.properties` از `key.properties.example`
 2. بیلد امضا‌شده: `.\_build-cafebazaar-release.ps1` → خروجی در `publish/cafebazaar/`
 3. آپلود در https://developers.cafebazaar.ir/
 
 ### دسکتاپ .NET
 
 ```bash
-cd src/audio_steg_desktop
-dotnet build AudioSteg.sln
-dotnet run --project src/AudioSteg.Desktop
+cd src/audio_stegano_desktop
+dotnet build AudioStegano.sln
+dotnet run --project src/AudioStegano.Desktop
 ```
 
 ### انتشار GitHub (همه پلتفرم‌ها با یک تگ)
@@ -73,7 +73,7 @@ git push origin publish/1.0.0+1
 
 پیش‌نمایش بدون نوشتن فایل: `.\_update-ver.ps1 -WhatIf`
 
-مثال: `1.0.0+1` → `1.1.0+2`. منبع حقیقت: `src/audio_steg_app/pubspec.yaml`.
+مثال: `1.0.0+1` → `1.1.0+2`. منبع حقیقت: `src/audio_stegano_app/pubspec.yaml`.
 
 ## MATLAB
 

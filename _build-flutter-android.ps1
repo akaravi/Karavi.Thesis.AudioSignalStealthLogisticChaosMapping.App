@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-  Build Flutter Android release (APK and/or App Bundle) for audio_steg_app.
+  Build Flutter Android release (APK and/or App Bundle) for audio_stegano_app.
 
 .EXAMPLE
-  .\_build-flutter-android.ps1 -ZipOutputDirectory D:\PublishKaravi\ThesisAudioSteg
+  .\_build-flutter-android.ps1 -ZipOutputDirectory D:\PublishKaravi\ThesisAudioStegano
 
 .EXAMPLE
   .\_build-flutter-android.ps1 -SkipPackage -AndroidArtifact AppBundle -UseFlutterIoCnMirror
@@ -33,7 +33,7 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOrWhiteSpace($PubHostedUrl))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$flutterAppPath = Join-Path $root "src\audio_steg_app"
+$flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $defaultAndroidPublishDir = Join-Path $root "publish\flutter\android"
 
 function Resolve-CommandPath {
@@ -214,7 +214,7 @@ function Invoke-AndroidZip {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $resolvedZipDir = Resolve-ExistingOrNewDirectory -Path $ZipDirectory
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $zipName = "KaraviThesis_AudioSteg_Android_${VersionToken}_$stamp.zip"
+    $zipName = "KaraviThesis_AudioStegano_Android_${VersionToken}_$stamp.zip"
     $zipFullPath = Join-Path $resolvedZipDir $zipName
     $stageRoot = Join-Path $root "publish\android-staging"
     if (Test-Path $stageRoot) { Remove-Item -Recurse -Force $stageRoot }

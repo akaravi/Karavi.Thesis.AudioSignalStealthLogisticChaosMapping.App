@@ -30,14 +30,14 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOrWhiteSpace($PubHostedUrl))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$solutionPath = Join-Path $root "src\audio_steg_desktop\AudioSteg.sln"
-$desktopProj = Join-Path $root "src\audio_steg_desktop\src\AudioSteg.Desktop\AudioSteg.Desktop.csproj"
+$solutionPath = Join-Path $root "src\audio_stegano_desktop\AudioStegano.sln"
+$desktopProj = Join-Path $root "src\audio_stegano_desktop\src\AudioStegano.Desktop\AudioStegano.Desktop.csproj"
 $desktopPath = Split-Path -Parent $desktopProj
-$flutterAppPath = Join-Path $root "src\audio_steg_app"
+$flutterAppPath = Join-Path $root "src\audio_stegano_app"
 
 $runtime = "win-x64"
 $publishRoot = Join-Path $root "publish\dotnet\$runtime"
-$dotnetPublishOutput = Join-Path $publishRoot "AudioSteg.Desktop"
+$dotnetPublishOutput = Join-Path $publishRoot "AudioStegano.Desktop"
 $androidPublishDir = Join-Path $root "publish\flutter\android"
 
 $flutterAppSettingsScript = Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1"
@@ -142,16 +142,16 @@ function Invoke-CorePublish {
     }
 
     if (-not $SkipStopRunningProjects) {
-        Stop-RunningProjectProcess -ProcessName "AudioSteg.Desktop"
+        Stop-RunningProjectProcess -ProcessName "AudioStegano.Desktop"
     }
 
-    Write-Host "Publishing AudioSteg.Desktop ($Configuration, $runtime) ..." -ForegroundColor Cyan
+    Write-Host "Publishing AudioStegano.Desktop ($Configuration, $runtime) ..." -ForegroundColor Cyan
     dotnet publish $desktopProj -c $Configuration -r $runtime --self-contained false -o $dotnetPublishOutput
-    if ($LASTEXITCODE -ne 0) { throw "Publish failed for AudioSteg.Desktop" }
+    if ($LASTEXITCODE -ne 0) { throw "Publish failed for AudioStegano.Desktop" }
 
     Write-Host ""
     Write-Host "Publish output (.NET):" -ForegroundColor Green
-    Write-Host "AudioSteg.Desktop -> $dotnetPublishOutput" -ForegroundColor Yellow
+    Write-Host "AudioStegano.Desktop -> $dotnetPublishOutput" -ForegroundColor Yellow
 }
 
 function Resolve-FlutterWindowsReleasePath {
@@ -160,7 +160,7 @@ function Resolve-FlutterWindowsReleasePath {
     )
 
     $releaseDir = Join-Path $FlutterRoot "build\windows\x64\runner\Release"
-    $exePath = Join-Path $releaseDir "audio_steg_app.exe"
+    $exePath = Join-Path $releaseDir "audio_stegano_app.exe"
     if (-not (Test-Path $exePath)) {
         throw "Flutter Windows release output was not found. Expected '$exePath'. Run 'flutter build windows --release'."
     }
@@ -192,7 +192,7 @@ function Invoke-DeployZip {
     $resolvedZipDir = Resolve-ExistingOrNewDirectory -Path $ZipDirectory
 
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $zipName = "KaraviThesis_AudioSteg_Build_$stamp.zip"
+    $zipName = "KaraviThesis_AudioStegano_Build_$stamp.zip"
     $zipFullPath = Join-Path $resolvedZipDir $zipName
 
     $flutterWebRelease = Resolve-FlutterWebReleasePath -FlutterRoot $flutterAppPath
@@ -207,14 +207,14 @@ function Invoke-DeployZip {
     New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
 
     Write-Host "Staging deploy folder under $stageRoot ..." -ForegroundColor Cyan
-    Copy-Item -Recurse -Force $dotnetPublishOutput (Join-Path $stageRoot "AudioSteg.Desktop")
+    Copy-Item -Recurse -Force $dotnetPublishOutput (Join-Path $stageRoot "AudioStegano.Desktop")
     if (-not $SkipFlutterWindows) {
-        Copy-Item -Recurse -Force $flutterWindowsRelease (Join-Path $stageRoot "audio_steg_app_windows_release")
+        Copy-Item -Recurse -Force $flutterWindowsRelease (Join-Path $stageRoot "audio_stegano_app_windows_release")
     }
     else {
-        Write-Host "ZIP: skipped audio_steg_app_windows_release (-SkipFlutterWindows)." -ForegroundColor DarkYellow
+        Write-Host "ZIP: skipped audio_stegano_app_windows_release (-SkipFlutterWindows)." -ForegroundColor DarkYellow
     }
-    Copy-Item -Recurse -Force $flutterWebRelease (Join-Path $stageRoot "audio_steg_app_web")
+    Copy-Item -Recurse -Force $flutterWebRelease (Join-Path $stageRoot "audio_stegano_app_web")
 
     if (-not $SkipFlutterAndroid) {
         if (Test-Path -LiteralPath $androidPublishDir) {
@@ -223,12 +223,12 @@ function Invoke-DeployZip {
                 Get-ChildItem -Path $androidPublishDir -File -Filter "*.aab" -ErrorAction SilentlyContinue
             )
             if ($androidFiles.Count -gt 0) {
-                $androidStage = Join-Path $stageRoot "audio_steg_app_android"
+                $androidStage = Join-Path $stageRoot "audio_stegano_app_android"
                 New-Item -ItemType Directory -Path $androidStage -Force | Out-Null
                 foreach ($f in $androidFiles) {
                     Copy-Item -Force $f.FullName (Join-Path $androidStage $f.Name)
                 }
-                Write-Host "ZIP: included audio_steg_app_android ($($androidFiles.Count) file(s))." -ForegroundColor DarkCyan
+                Write-Host "ZIP: included audio_stegano_app_android ($($androidFiles.Count) file(s))." -ForegroundColor DarkCyan
             }
             else {
                 Write-Warning "ZIP: no APK/AAB in $androidPublishDir — Android folder omitted."
@@ -239,7 +239,7 @@ function Invoke-DeployZip {
         }
     }
     else {
-        Write-Host "ZIP: skipped audio_steg_app_android (-SkipFlutterAndroid)." -ForegroundColor DarkYellow
+        Write-Host "ZIP: skipped audio_stegano_app_android (-SkipFlutterAndroid)." -ForegroundColor DarkYellow
     }
 
     if (Test-Path $zipFullPath) {
@@ -510,7 +510,7 @@ if (-not $SkipPackage) {
         Invoke-FlutterPubGetWithMirrorRetry -ProjectDirectory $flutterAppPath
     }
 
-    Write-Host "Building AudioSteg.sln ($Configuration) ..." -ForegroundColor Cyan
+    Write-Host "Building AudioStegano.sln ($Configuration) ..." -ForegroundColor Cyan
     if (-not $SkipRestore) {
         dotnet build $solutionPath -c $Configuration --no-restore
     }
@@ -520,7 +520,7 @@ if (-not $SkipPackage) {
     if ($LASTEXITCODE -ne 0) { throw "dotnet build failed" }
 
     if (-not $SkipTests) {
-        Write-Host "Testing AudioSteg.sln ($Configuration) ..." -ForegroundColor Cyan
+        Write-Host "Testing AudioStegano.sln ($Configuration) ..." -ForegroundColor Cyan
         dotnet test $solutionPath -c $Configuration --no-build
         if ($LASTEXITCODE -ne 0) { throw "dotnet test failed" }
     }
@@ -538,7 +538,7 @@ if (-not $SkipPackage) {
     }
 
     if (-not $SkipStopRunningProjects) {
-        Stop-RunningProjectProcess -ProcessName "audio_steg_app"
+        Stop-RunningProjectProcess -ProcessName "audio_stegano_app"
     }
 
     $normalizedWebBaseHref = $WebBaseHref.Trim()
@@ -619,19 +619,19 @@ if ($PackageOnly) {
 
 if (-not $SkipDevServers) {
     if (-not $SkipStopRunningProjects) {
-        Stop-RunningProjectProcess -ProcessName "AudioSteg.Desktop"
-        Stop-RunningProjectProcess -ProcessName "audio_steg_app"
+        Stop-RunningProjectProcess -ProcessName "AudioStegano.Desktop"
+        Stop-RunningProjectProcess -ProcessName "audio_stegano_app"
     }
 
     Start-ProjectTerminal `
         -WorkingDirectory $desktopPath `
         -Command "dotnet run --project `"$desktopProj`"" `
-        -RestartMessage "Started: AudioSteg.Desktop (WPF) — dotnet run"
+        -RestartMessage "Started: AudioStegano.Desktop (WPF) — dotnet run"
 
     Start-ProjectTerminal `
         -WorkingDirectory $flutterAppPath `
         -Command ("& `"$flutterCommand`" run -d windows") `
-        -RestartMessage "Started: audio_steg_app — flutter run -d windows"
+        -RestartMessage "Started: audio_stegano_app — flutter run -d windows"
 }
 
 Write-Host "`nDone." -ForegroundColor Yellow

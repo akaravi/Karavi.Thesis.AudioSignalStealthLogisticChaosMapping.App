@@ -33,7 +33,7 @@
 
 | تگ | نسخهٔ بیلد |
 |----|------------|
-| `publish` | از `pubspec.yaml` و `AudioSteg.Desktop.csproj` |
+| `publish` | از `pubspec.yaml` و `AudioStegano.Desktop.csproj` |
 | `publish/1.0.0+2` | نام `1.0.0` و build number `2` |
 | `publish-v1.0.0` | نام `1.0.0` (شماره بیلد از pubspec) |
 | `publish_1.0.0+2` | همان الگوی بالا |
@@ -42,13 +42,13 @@
 
 | فایل | پلتفرم |
 |------|--------|
-| `KaraviThesis_AudioSteg_FlutterWeb_*.zip` | Flutter Web |
-| `KaraviThesis_AudioSteg_FlutterWindows_*.zip` | Flutter Desktop (Windows) |
-| `KaraviThesis_AudioSteg_DotNetDesktop_*.zip` | .NET WPF Desktop |
-| `KaraviThesis_AudioSteg_Android_*.zip` | APK/AAB داخل ZIP |
-| `AudioSteg_*_arm64-v8a.apk` | Flutter Android (arm64) |
-| `AudioSteg_*.aab` | Flutter Android (App Bundle) |
-| `KaraviThesis_AudioSteg_Build_*.zip` | بستهٔ ترکیبی (همه در یک ZIP) |
+| `KaraviThesis_AudioStegano_FlutterWeb_*.zip` | Flutter Web |
+| `KaraviThesis_AudioStegano_FlutterWindows_*.zip` | Flutter Desktop (Windows) |
+| `KaraviThesis_AudioStegano_DotNetDesktop_*.zip` | .NET WPF Desktop |
+| `KaraviThesis_AudioStegano_Android_*.zip` | APK/AAB داخل ZIP |
+| `AudioStegano_*_arm64-v8a.apk` | Flutter Android (arm64) |
+| `AudioStegano_*.aab` | Flutter Android (App Bundle) |
+| `KaraviThesis_AudioStegano_Build_*.zip` | بستهٔ ترکیبی (همه در یک ZIP) |
 | `RELEASE_MANIFEST.txt` | فهرست فایل‌ها |
 
 ## نحوهٔ انتشار
@@ -83,7 +83,7 @@ git push origin publish
 تولید Base64 در PowerShell:
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("src\audio_steg_app\android\upload-keystore.jks")) | Set-Clipboard
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("src\audio_stegano_app\android\upload-keystore.jks")) | Set-Clipboard
 ```
 
 ## بیلد محلی (همان منطق CI)

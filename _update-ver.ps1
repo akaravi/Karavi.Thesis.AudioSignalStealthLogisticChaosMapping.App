@@ -8,8 +8,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$pubspecPath = Join-Path $root "src\audio_steg_app\pubspec.yaml"
-$csprojPath = Join-Path $root "src\audio_steg_desktop\src\AudioSteg.Desktop\AudioSteg.Desktop.csproj"
+$pubspecPath = Join-Path $root "src\audio_stegano_app\pubspec.yaml"
+$csprojPath = Join-Path $root "src\audio_stegano_desktop\src\AudioStegano.Desktop\AudioStegano.Desktop.csproj"
 
 function Write-Utf8NoBom {
     param(
@@ -117,7 +117,7 @@ $nextLabel = Format-AppVersionLabel -Version $next
 Write-Host "update ver" -ForegroundColor Cyan
 Write-Host "  Current : $currentLabel" -ForegroundColor DarkGray
 Write-Host "  Next    : $nextLabel  (minor +1, patch -> 0, build +1)" -ForegroundColor Green
-Write-Host "  Files   : pubspec.yaml, AudioSteg.Desktop.csproj" -ForegroundColor DarkGray
+Write-Host "  Files   : pubspec.yaml, AudioStegano.Desktop.csproj" -ForegroundColor DarkGray
 
 if ($WhatIf) {
     Write-Host "WhatIf: no files changed." -ForegroundColor Yellow
