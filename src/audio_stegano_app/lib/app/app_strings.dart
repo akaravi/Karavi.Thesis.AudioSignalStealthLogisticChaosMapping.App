@@ -322,6 +322,14 @@ class AppStrings {
       'Impossible de lire le MP3. Réessayez ou utilisez un WAV.',
     ),
   );
+  String get errorMp4Decode => _t(
+    const _S(
+      'خواندن فایل MP4 ممکن نشد. فایل را دوباره انتخاب کنید یا از WAV استفاده کنید.',
+      'Could not read the MP4 file. Pick the file again or use WAV.',
+      'تعذر قراءة ملف MP4. اختر الملف مرة أخرى أو استخدم WAV.',
+      'Impossible de lire le MP4. Réessayez ou utilisez un WAV.',
+    ),
+  );
   String get embedWarningTitle =>
       _t(const _S('هشدار', 'Warning', 'تحذير', 'Avertissement'));
   String get errorTooLong => _t(

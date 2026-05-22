@@ -16,6 +16,7 @@ import '../../core/io/native_file.dart';
 import '../../app/session_log.dart';
 import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
+import '../../core/audio/audio_load_errors.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/audio_recorder.dart';
 import '../../core/audio/stego_file_naming.dart';
@@ -285,9 +286,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         if (!mounted) return;
         setState(() {
           _processing = false;
-          _statusMessage = e.toString().contains('MP3 decode failed')
-              ? s.errorMp3Decode
-              : e.toString();
+          _statusMessage = audioLoadErrorMessage(s, e);
         });
         return;
       }

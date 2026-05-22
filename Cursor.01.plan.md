@@ -1429,3 +1429,40 @@
 - ✅ Flutter: `embed_warning_dialog.dart`؛ فراخوانی از `embed_screen` (ظرفیت، متن خالی، خطای engine)
 - ✅ WPF: `ShowEmbedWarning` با `MessageBox` و آیکن Warning
 - ✅ تست i18n به‌روز در `metric_help_strings_i18n_test.dart`
+
+---
+
+## Part 70 — رفع شکست golden تست‌های Cafe Bazaar (build-all)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع خطای flutter test در _build-all-projects: ۲ golden embed با ~1.37% pixel diff"
+}
+```
+
+### Result 70
+- ✅ علت: UI صفحه Embed پس از Part 67–69 (چیدمان FAB، پاپ‌آپ متریک/هشدار) با goldenهای قدیمی `01_embed_fa_light` و `05_embed_fa_dark` هم‌خوان نبود
+- ✅ `flutter test test/store/cafebazaar_screenshots_test.dart --update-goldens` → ۵/۵ سبز
+- ✅ `flutter test` کامل → ۴۱/۴۱ سبز
+- ✅ `Export-CafeBazaarScreenshots.ps1` → کپی PNG به `publish/cafebazaar/screenshots/`
+
+---
+
+## Part 71 — اندروید: Open with برای WAV و MP4
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "در Open with گوشی برای فرمت‌های wav و mp4 این نرم‌افزار قابل انتخاب باشد"
+}
+```
+
+### Result 71
+- ✅ `AndroidManifest.xml`: intent-filterهای `ACTION_VIEW` برای MIMEهای WAV/MP4 و پسوند `file://` (`.wav`, `.mp4`)
+- ✅ `MainActivity.kt`: resolve `content`/`file` URI → مسیر محلی؛ MethodChannel + EventChannel به Flutter
+- ✅ `AndroidOpenFileIntent` (IO) + `pendingOpenAudioFileProvider` → تب رمزگشایی و بارگذاری فایل
+- ✅ `AudioInputLoader`: پسوند `mp4` + `decodeMp4ToWav`؛ پیام `errorMp4Decode` (fa/en/ar/fr)
+- ✅ `flutter analyze` + `flutter test` (۴۱/۴۱) سبز

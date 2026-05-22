@@ -9,8 +9,11 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../app/app_strings.dart';
 import '../../app/app_config_provider.dart';
+import '../../app/opened_audio_file.dart';
+import '../../app/pending_open_audio_provider.dart';
 import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
+import '../../core/audio/audio_load_errors.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/stego/stego.dart';
@@ -45,6 +48,48 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     unawaited(_player.dispose());
     _bitLenCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAudioFile({
+    required String fileName,
+    Uint8List? bytes,
+    String? path,
+  }) async {
+    if (_processing) return;
+    final s = AppStrings.of(context);
+
+    setState(() {
+      _loadingFile = true;
+      _statusMessage = s.processing;
+      _extractionAttempted = false;
+      _result = null;
+    });
+
+    WavFile? wav;
+    String? error;
+    try {
+      wav = await AudioInputLoader.loadPickedFile(
+        fileName: fileName,
+        bytes: bytes,
+        path: kIsWeb ? null : path,
+      );
+    } catch (e) {
+      error = audioLoadErrorMessage(s, e);
+    }
+
+    await _player.stop();
+    if (!mounted) return;
+    setState(() {
+      _loadingFile = false;
+      _loadedWav = wav;
+      _isPlaying = false;
+      _playbackLoaded = false;
+      if (error != null) {
+        _statusMessage = error;
+      } else if (wav != null) {
+        _statusMessage = s.audioFileLoaded(fileName);
+      }
+    });
   }
 
   void _attachPlaybackListeners() {
@@ -95,52 +140,18 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     if (picked == null || picked.files.isEmpty) return;
 
     final file = picked.files.first;
-    final s = AppStrings.of(context);
-
-    setState(() {
-      _loadingFile = true;
-      _statusMessage = s.processing;
-      _extractionAttempted = false;
-      _result = null;
-    });
-
     final fileName = file.name;
     if (fileName.isEmpty) {
       if (!mounted) return;
-      setState(() {
-        _loadingFile = false;
-        _statusMessage = s.keyMismatch;
-      });
+      setState(() => _statusMessage = AppStrings.of(context).keyMismatch);
       return;
     }
 
-    WavFile? wav;
-    String? error;
-    try {
-      wav = await AudioInputLoader.loadPickedFile(
-        fileName: fileName,
-        bytes: file.bytes,
-        path: kIsWeb ? null : file.path,
-      );
-    } catch (e) {
-      error = e.toString().contains('MP3 decode failed')
-          ? s.errorMp3Decode
-          : e.toString();
-    }
-
-    await _player.stop();
-    if (!mounted) return;
-    setState(() {
-      _loadingFile = false;
-      _loadedWav = wav;
-      _isPlaying = false;
-      _playbackLoaded = false;
-      if (error != null) {
-        _statusMessage = error;
-      } else if (wav != null) {
-        _statusMessage = s.audioFileLoaded(fileName);
-      }
-    });
+    await _loadAudioFile(
+      fileName: fileName,
+      bytes: file.bytes,
+      path: file.path,
+    );
   }
 
   Future<void> _extract() async {
@@ -364,6 +375,12 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<OpenedAudioFile?>(pendingOpenAudioFileProvider, (prev, next) {
+      if (next == null) return;
+      ref.read(pendingOpenAudioFileProvider.notifier).clear();
+      unawaited(_loadAudioFile(fileName: next.displayName, path: next.path));
+    });
+
     final s = AppStrings.of(context);
     final useFixedLen = ref.watch(settingsProvider).defaultFixedMessageBitLimit;
     return Stack(

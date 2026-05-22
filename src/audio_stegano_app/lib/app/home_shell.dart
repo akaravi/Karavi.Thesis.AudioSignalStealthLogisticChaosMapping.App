@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/platform/android_open_file_intent.dart';
 import '../features/about/about_screen.dart';
 import '../features/embed/embed_screen.dart';
 import '../features/extract/extract_screen.dart';
 import '../features/settings/settings_screen.dart';
 import 'app_strings.dart';
+import 'opened_audio_file.dart';
+import 'pending_open_audio_provider.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -16,6 +21,37 @@ class HomeShell extends ConsumerStatefulWidget {
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
+  StreamSubscription<OpenedAudioFile>? _androidOpenSub;
+
+  static const _extractTabIndex = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_bindAndroidOpenWith());
+  }
+
+  Future<void> _bindAndroidOpenWith() async {
+    final initial = await AndroidOpenFileIntent.consumeInitial();
+    if (initial != null) {
+      _scheduleOpenFile(initial);
+    }
+    _androidOpenSub = AndroidOpenFileIntent.watchOpens().listen(
+      _scheduleOpenFile,
+    );
+  }
+
+  void _scheduleOpenFile(OpenedAudioFile file) {
+    if (!mounted) return;
+    ref.read(pendingOpenAudioFileProvider.notifier).setPending(file);
+    setState(() => _index = _extractTabIndex);
+  }
+
+  @override
+  void dispose() {
+    unawaited(_androidOpenSub?.cancel());
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

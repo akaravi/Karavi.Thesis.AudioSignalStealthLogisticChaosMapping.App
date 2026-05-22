@@ -6,9 +6,9 @@ import '../io/native_file.dart';
 import 'audio_mp3_decoder.dart';
 import 'wav_io.dart';
 
-/// Loads WAV or MP3 bytes/paths into [WavFile] (mono PCM 16-bit).
+/// Loads WAV, MP3, or MP4 bytes/paths into [WavFile] (mono PCM 16-bit).
 abstract final class AudioInputLoader {
-  static const audioPickerExtensions = ['wav', 'mp3'];
+  static const audioPickerExtensions = ['wav', 'mp3', 'mp4'];
 
   /// Loads audio from a file picker result (path preferred on IO for MP3).
   static Future<WavFile> loadPickedFile({
@@ -36,6 +36,20 @@ abstract final class AudioInputLoader {
         final mp3Bytes =
             bytes ?? await nativeReadBytes(_requirePath(path, fileName));
         return decodeMp3ToWav(mp3Bytes);
+      case '.mp4':
+        if (path != null && path.isNotEmpty) {
+          try {
+            return await decodeMp4ToWav(
+              bytes ?? Uint8List(0),
+              sourcePath: path,
+            );
+          } on StateError {
+            rethrow;
+          }
+        }
+        final mp4Bytes =
+            bytes ?? await nativeReadBytes(_requirePath(path, fileName));
+        return decodeMp4ToWav(mp4Bytes);
       default:
         throw FormatException('Unsupported audio format: $ext');
     }

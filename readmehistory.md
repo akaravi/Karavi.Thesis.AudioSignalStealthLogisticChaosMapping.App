@@ -4,6 +4,8 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-22 | 15:00 | 71 | اندروید: «باز کردن با» برای WAV و MP4 در منوی سیستم؛ intent-filterهای VIEW؛ دریافت URI در `MainActivity`؛ بارگذاری خودکار در تب رمزگشایی؛ پشتیبانی decode MP4 | `AndroidManifest.xml`, `MainActivity.kt`, `android_open_file_intent*.dart`, `home_shell.dart`, `extract_screen.dart`, `audio_input_loader*.dart`, `audio_mp3_decoder.dart`, `app_strings.dart` |
+| 2026-05-22 | 14:15 | 70 | رفع شکست `flutter test`: به‌روزرسانی goldenهای Cafe Bazaar برای صفحه Embed (تغییرات Part 67–69)؛ کپی به `publish/cafebazaar/screenshots/` | `test/goldens/cafebazaar/01_embed_fa_light.png`, `05_embed_fa_dark.png`, `publish/cafebazaar/screenshots/` |
 | 2026-05-22 | 13:00 | 69b | پس از هشدار ظرفیت: آزادسازی `_busy`/`_processing`؛ «شروع ضبط» و «نهان‌نگاری جدید» دوباره فعال | `embed_screen.dart`, `EmbedView.xaml.cs` |
 | 2026-05-22 | 12:30 | 69 | هشدار ظرفیت صوت: متن جدید چندزبانه + نمایش در پاپ‌آپ (Flutter AlertDialog، WPF MessageBox) به‌جای نوار وضعیت | `app_strings.dart`, `embed_warning_dialog.dart`, `embed_screen.dart`, `AppStrings.cs`, `EmbedView.xaml.cs` |
 | 2026-05-22 | 12:00 | 68 | پاپ‌آپ توضیح کامل هر متریک کیفیت (۱۰ متریک) با کلیک؛ چهار زبان fa/en/ar/fr؛ Flutter + WPF | `embed_metric_kind.dart`, `metric_help_strings.dart`, `metric_help_dialog.dart`, `embed_screen.dart`, `MetricHelpStrings.cs`, `MetricHelpDialog.*`, `EmbedView.*`, `SharedStyles.xaml`, `metric_help_strings_i18n_test.dart` |
