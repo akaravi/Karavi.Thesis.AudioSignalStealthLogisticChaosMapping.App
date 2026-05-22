@@ -1466,3 +1466,7 @@
 - ✅ `AndroidOpenFileIntent` (IO) + `pendingOpenAudioFileProvider` → تب رمزگشایی و بارگذاری فایل
 - ✅ `AudioInputLoader`: پسوند `mp4` + `decodeMp4ToWav`؛ پیام `errorMp4Decode` (fa/en/ar/fr)
 - ✅ `flutter analyze` + `flutter test` (۴۱/۴۱) سبز
+
+### Result 71b
+- ✅ `audio_mp3_decode_path_stub.dart`: `decodeMp4FromPath` / `decodeMp4BytesViaTempFile` (dart2js به شاخهٔ `!kIsWeb` هم به stub نیاز دارد)
+- ✅ `flutter build web --release` سبز

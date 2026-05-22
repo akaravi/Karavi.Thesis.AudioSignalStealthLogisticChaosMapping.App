@@ -4,6 +4,7 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-22 | 15:30 | 71b | رفع `flutter build web`: stub وب برای `decodeMp4FromPath` / `decodeMp4BytesViaTempFile` | `audio_mp3_decode_path_stub.dart` |
 | 2026-05-22 | 15:00 | 71 | اندروید: «باز کردن با» برای WAV و MP4 در منوی سیستم؛ intent-filterهای VIEW؛ دریافت URI در `MainActivity`؛ بارگذاری خودکار در تب رمزگشایی؛ پشتیبانی decode MP4 | `AndroidManifest.xml`, `MainActivity.kt`, `android_open_file_intent*.dart`, `home_shell.dart`, `extract_screen.dart`, `audio_input_loader*.dart`, `audio_mp3_decoder.dart`, `app_strings.dart` |
 | 2026-05-22 | 14:15 | 70 | رفع شکست `flutter test`: به‌روزرسانی goldenهای Cafe Bazaar برای صفحه Embed (تغییرات Part 67–69)؛ کپی به `publish/cafebazaar/screenshots/` | `test/goldens/cafebazaar/01_embed_fa_light.png`, `05_embed_fa_dark.png`, `publish/cafebazaar/screenshots/` |
 | 2026-05-22 | 13:00 | 69b | پس از هشدار ظرفیت: آزادسازی `_busy`/`_processing`؛ «شروع ضبط» و «نهان‌نگاری جدید» دوباره فعال | `embed_screen.dart`, `EmbedView.xaml.cs` |

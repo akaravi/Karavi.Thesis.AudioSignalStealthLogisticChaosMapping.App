@@ -9,3 +9,11 @@ Future<WavFile> decodeMp3FromPath(String inputPath) {
 Future<WavFile> decodeMp3BytesViaTempFile(Uint8List mp3Bytes) {
   throw UnsupportedError('decodeMp3BytesViaTempFile is not available on web');
 }
+
+Future<WavFile> decodeMp4FromPath(String inputPath) {
+  throw UnsupportedError('decodeMp4FromPath is not available on web');
+}
+
+Future<WavFile> decodeMp4BytesViaTempFile(Uint8List mp4Bytes) {
+  throw UnsupportedError('decodeMp4BytesViaTempFile is not available on web');
+}
