@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using AudioStegano.Core.Audio;
@@ -38,6 +39,7 @@ public partial class EmbedView : UserControl
             ApplyStrings();
             ApplyEmbedLayout();
         };
+        MetricsItems.PreviewMouseLeftButtonDown += MetricsItems_PreviewMouseLeftButtonDown;
     }
 
     public void ApplyStrings()
@@ -55,7 +57,60 @@ public partial class EmbedView : UserControl
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
         SaveLabel.Text = s.SaveStego;
         VerifyLabel.Text = s.Verify;
+        MetricsTapHint.Text = s.MetricHelpTapHint;
         UpdateMessageBitCounter();
+    }
+
+    private void MetricsItems_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (FindMetricChip(e.OriginalSource) is not { } chip)
+            return;
+
+        var owner = Window.GetWindow(this);
+        var dlg = new MetricHelpDialog(chip.Kind);
+        if (owner is not null)
+            dlg.Owner = owner;
+        dlg.ShowDialog();
+        e.Handled = true;
+    }
+
+    private static MetricChipItem? FindMetricChip(object? source)
+    {
+        if (source is not DependencyObject d)
+            return null;
+        for (var cur = d; cur != null; cur = VisualTreeHelper.GetParent(cur))
+        {
+            if (cur is FrameworkElement { DataContext: MetricChipItem chip })
+                return chip;
+        }
+        return null;
+    }
+
+    private static bool IsEmbedCapacityError(string message) =>
+        message.Contains("too long", StringComparison.OrdinalIgnoreCase) ||
+        message.Contains("Message too long", StringComparison.Ordinal);
+
+    private void ShowEmbedWarning(string message)
+    {
+        var s = ThemeManager.Strings;
+        var owner = Window.GetWindow(this);
+        if (owner is not null)
+            MessageBox.Show(owner, message, s.EmbedWarningTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        else
+            MessageBox.Show(message, s.EmbedWarningTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        ReleaseEmbedInteractionLocks();
+    }
+
+    private void ReleaseEmbedInteractionLocks()
+    {
+        BusyBar.Visibility = Visibility.Collapsed;
+        RecordBtn.IsEnabled = true;
+        LoadFileBtn.IsEnabled = true;
+        RecordBtn.IsRecording = false;
+        Equalizer.IsActive = false;
+        MessageTextBox.IsEnabled = true;
+        _busy = false;
+        StatusText.Text = string.Empty;
     }
 
     private void MessageTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -179,14 +234,9 @@ public partial class EmbedView : UserControl
             }
             finally
             {
-                BusyBar.Visibility = Visibility.Collapsed;
-                RecordBtn.IsEnabled = true;
-                LoadFileBtn.IsEnabled = true;
-                RecordBtn.IsRecording = false;
-                Equalizer.IsActive = false;
                 Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
                 StopRecordTimer();
-                _busy = false;
+                ReleaseEmbedInteractionLocks();
             }
 
             return;
@@ -194,7 +244,7 @@ public partial class EmbedView : UserControl
 
         if (string.IsNullOrEmpty(MessageTextBox.Text.Trim()))
         {
-            StatusText.Text = s.ErrorEmpty;
+            ShowEmbedWarning(s.ErrorEmpty);
             return;
         }
 
@@ -252,7 +302,7 @@ public partial class EmbedView : UserControl
         var messageText = MessageTextBox.Text.Trim();
         if (string.IsNullOrEmpty(messageText))
         {
-            StatusText.Text = s.ErrorEmpty;
+            ShowEmbedWarning(s.ErrorEmpty);
             return;
         }
 
@@ -294,10 +344,7 @@ public partial class EmbedView : UserControl
             await RunEmbedAsync(cover, messageText, Path.GetFileName(dlg.FileName));
         }
 
-        BusyBar.Visibility = Visibility.Collapsed;
-        LoadFileBtn.IsEnabled = true;
-        RecordBtn.IsEnabled = true;
-        _busy = false;
+        ReleaseEmbedInteractionLocks();
     }
 
     private async Task RunEmbedAsync(WavFile cover, string messageText, string? loadedFileName = null)
@@ -305,7 +352,7 @@ public partial class EmbedView : UserControl
         var s = ThemeManager.Strings;
         if (string.IsNullOrEmpty(messageText))
         {
-            StatusText.Text = s.ErrorEmpty;
+            ShowEmbedWarning(s.ErrorEmpty);
             return;
         }
 
@@ -315,7 +362,7 @@ public partial class EmbedView : UserControl
             : MessageBits.BitLengthForText(messageText);
         if (required > cover.ToMono().Samples.Length)
         {
-            StatusText.Text = $"{s.ErrorTooLong} ({required} bits)";
+            ShowEmbedWarning(s.ErrorTooLong);
             return;
         }
 
@@ -323,8 +370,7 @@ public partial class EmbedView : UserControl
             MessageBits.BitLengthForText(messageText) >
             AppConfig.Current.DefaultFixedMessageBitLength)
         {
-            StatusText.Text =
-                $"{s.ErrorTooLong} ({MessageBits.BitLengthForText(messageText)} bits)";
+            ShowEmbedWarning(s.ErrorTooLong);
             return;
         }
 
@@ -344,7 +390,12 @@ public partial class EmbedView : UserControl
         });
 
         if (error is not null)
-            StatusText.Text = error;
+        {
+            if (IsEmbedCapacityError(error))
+                ShowEmbedWarning(s.ErrorTooLong);
+            else
+                StatusText.Text = error;
+        }
         else if (outcome is not null)
         {
             ShowResult(outcome, cover);
@@ -389,22 +440,23 @@ public partial class EmbedView : UserControl
 
         var m = outcome.Metrics;
         var duration = outcome.Stego.Samples.Length / (double)outcome.Stego.SampleRate;
+        var msgLen = outcome.OriginalBits.Length;
         var chips = new List<MetricChipItem>
         {
-            new("\uE121", s.Duration, $"{duration:F2} s"),
-            new("\uE7C1", s.BitsEmbedded, $"{outcome.BitsEmbedded}"),
-            new("\uE7F4", s.Capacity, $"{outcome.CapacityBits}"),
-            new("\uE9F9", s.Utilization, $"{outcome.Utilization * 100:F1} %"),
+            new("\uE121", s.Duration, $"{duration:F2} s", EmbedMetricKind.Duration),
+            new("\uE7C1", s.BitsEmbedded, $"{outcome.BitsEmbedded}", EmbedMetricKind.BitsEmbedded),
+            new("\uE7F4", s.Capacity, $"{outcome.CapacityBits}", EmbedMetricKind.Capacity),
+            new("\uE9F9", s.Utilization, $"{outcome.Utilization * 100:F1} %", EmbedMetricKind.Utilization),
         };
         if (!AppState.Settings.DefaultFixedMessageBitLimit)
-            chips.Add(new("\uE8FD", s.MsgBitLength, $"{outcome.BitsEmbedded}"));
+            chips.Add(new("\uE8FD", s.MsgBitLength, $"{msgLen}", EmbedMetricKind.MsgBitLength));
         if (double.IsFinite(m.SnrDb))
-            chips.Add(new("\uE9D9", s.SnrLabel, m.SnrDb.ToString("F2")));
+            chips.Add(new("\uE9D9", s.SnrLabel, m.SnrDb.ToString("F2"), EmbedMetricKind.Snr));
         if (double.IsFinite(m.PsnrDb))
-            chips.Add(new("\uE9D9", s.PsnrLabel, m.PsnrDb.ToString("F2")));
-        chips.Add(new("\uE94C", s.BerLabel, m.BerPercent.ToString("F4")));
-        chips.Add(new("\uE72E", s.NpcrLabel, m.NpcrPercent.ToString("F4")));
-        chips.Add(new("\uE72E", s.UaciLabel, m.UaciPercent.ToString("F4")));
+            chips.Add(new("\uE9D9", s.PsnrLabel, m.PsnrDb.ToString("F2"), EmbedMetricKind.Psnr));
+        chips.Add(new("\uE94C", s.BerLabel, m.BerPercent.ToString("F4"), EmbedMetricKind.Ber));
+        chips.Add(new("\uE72E", s.NpcrLabel, m.NpcrPercent.ToString("F4"), EmbedMetricKind.Npcr));
+        chips.Add(new("\uE72E", s.UaciLabel, m.UaciPercent.ToString("F4"), EmbedMetricKind.Uaci));
         MetricsItems.ItemsSource = chips;
 
         VerifyBanner.Visibility = Visibility.Collapsed;

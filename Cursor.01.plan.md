@@ -1373,3 +1373,59 @@
 - ✅ `src/`: بدون `Steg`/`steg` در محتوا (به‌جز `Stego`/`Steganography`)
 - ✅ `publish/`, `docs/`, `_build-*.ps1`, `.github/workflows`: هماهنگ با `audio_stegano_*` / `AudioStegano_*`
 - ✅ `flutter analyze` + `flutter test` (۳۷/۳۷) پس از اصلاحات
+
+---
+
+## Part 67 — رفع دکمه «نهان‌نگاری جدید»
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "دکمه نهان‌نگاری جدید در بالای صفحه کار نمی‌کند"
+}
+```
+
+### Result 67
+- ✅ علت: `_newEmbedFabEnabled` پس از نهان‌نگاری موفق (ورودی مخفی) گاهی غیرفعال می‌ماند؛ FAB روی `Stack` زیر ناحیهٔ لمسی `SingleChildScrollView` قرار می‌گرفت
+- ✅ `_embedInputHidden` در `_canStartNewEmbed` و اولویت فعال‌سازی دکمه (`!_processing` وقتی ورودی مخفی است)
+- ✅ چیدمان: ردیف FAB بالای `Expanded(TabScrollBody)`؛ `ScrollController` + اسکرول به بالا پس از reset
+- ✅ `_loadAndEmbed`: `finally` برای آزاد کردن `_busy`؛ `_startRecording`: نمایش مجدد ورودی (`_embedInputHidden = false`)
+- ✅ `flutter analyze` سبز
+
+---
+
+## Part 68 — پاپ‌آپ توضیح متریک‌های کیفیت (چندزبانه)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "هر متریک کیفیت با کلیک توضیح کامل چندزبانه در popup"
+}
+```
+
+### Result 68
+- ✅ Flutter: `EmbedMetricKind`، `metric_help_strings.dart` (fa/en/ar/fr)، `metric_help_dialog.dart`، چیپ‌های متریک با `InkWell` + آیکن info + `Tooltip`؛ راهنمای «برای توضیح روی هر متریک بزنید»
+- ✅ WPF: `EmbedMetricKind`، `MetricHelpStrings.cs` (partial `AppStrings`)، `MetricHelpDialog`، کلیک روی چیپ (`PreviewMouseLeftButtonDown`)، `MetricsTapHint`، `Cursor=Hand` روی template
+- ✅ تست: `metric_help_strings_i18n_test.dart` (۴ زبان × ۱۰ متریک)
+- ✅ `flutter analyze` + `dotnet build AudioStegano.sln` سبز
+
+---
+
+## Part 69 — هشدار ظرفیت صوت در پاپ‌آپ
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "جایگزینی هشدار طول متن/ظرفیت ضبط با متن جدید و نمایش هشدارها در popup"
+}
+```
+
+### Result 69
+- ✅ متن `errorTooLong` / `ErrorTooLong`: «طول صدای ضبط‌شده باید بیشتر باشد تا نهان‌نگاری امکان‌پذیر باشد. مجدداً شروع به ضبط صدا کنید.» (+ en/ar/fr)
+- ✅ عنوان `embedWarningTitle` / `EmbedWarningTitle`
+- ✅ Flutter: `embed_warning_dialog.dart`؛ فراخوانی از `embed_screen` (ظرفیت، متن خالی، خطای engine)
+- ✅ WPF: `ShowEmbedWarning` با `MessageBox` و آیکن Warning
+- ✅ تست i18n به‌روز در `metric_help_strings_i18n_test.dart`

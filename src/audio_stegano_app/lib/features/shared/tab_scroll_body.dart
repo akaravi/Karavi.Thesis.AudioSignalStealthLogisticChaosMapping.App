@@ -6,10 +6,16 @@ import 'package:flutter/material.dart';
 /// - Keyboard inset padding and drag-to-dismiss keyboard.
 /// - Bouncing, always-scrollable physics (short pages still scroll on iOS).
 class TabScrollBody extends StatelessWidget {
-  const TabScrollBody({super.key, required this.children, this.padding});
+  const TabScrollBody({
+    super.key,
+    required this.children,
+    this.padding,
+    this.scrollController,
+  });
 
   final List<Widget> children;
   final EdgeInsetsGeometry? padding;
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +37,7 @@ class TabScrollBody extends StatelessWidget {
           final minHeight = (constraints.maxHeight - effectivePadding.vertical)
               .clamp(0.0, double.infinity);
           return SingleChildScrollView(
+            controller: scrollController,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),

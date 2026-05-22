@@ -322,12 +322,14 @@ class AppStrings {
       'Impossible de lire le MP3. Réessayez ou utilisez un WAV.',
     ),
   );
+  String get embedWarningTitle =>
+      _t(const _S('هشدار', 'Warning', 'تحذير', 'Avertissement'));
   String get errorTooLong => _t(
     const _S(
-      'متن طولانی‌تر از ظرفیت صدای ضبط شده است.',
-      'Text too long for the recorded audio.',
-      'النص أطول من سعة الصوت المسجل.',
-      'Texte trop long pour l’audio enregistré.',
+      'طول صدای ضبط‌شده باید بیشتر باشد تا نهان‌نگاری امکان‌پذیر باشد. مجدداً شروع به ضبط صدا کنید.',
+      'Recorded audio must be longer before steganography can succeed. Please start recording again.',
+      'يجب أن يكون الصوت المسجَّل أطول ليكون الإخفاء ممكناً. ابدأ التسجيل من جديد.',
+      'L’audio enregistré doit être plus long pour que l’intégration soit possible. Recommencez l’enregistrement.',
     ),
   );
   String get successSaved => _t(

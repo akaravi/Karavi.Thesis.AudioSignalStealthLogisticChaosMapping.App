@@ -85,7 +85,9 @@
                          Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8" />
               <controls:DualWaveformControl x:Name="CompareChart" Margin="0,0,0,12" />
               <TextBlock x:Name="MetricsTitle" Style="{StaticResource SectionTitle}" FontSize="14"
-                         Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8" />
+                         Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4" />
+              <TextBlock x:Name="MetricsTapHint" Style="{StaticResource BodySmall}"
+                         Margin="0,0,0,8" />
               <ItemsControl x:Name="MetricsItems" ItemTemplate="{StaticResource MetricChipTemplate}" />
             </StackPanel>
           </Border>

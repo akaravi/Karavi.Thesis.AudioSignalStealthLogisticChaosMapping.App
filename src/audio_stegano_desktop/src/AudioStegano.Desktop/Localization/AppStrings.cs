@@ -1,6 +1,6 @@
 namespace AudioStegano.Desktop.Localization;
 
-public sealed class AppStrings
+public sealed partial class AppStrings
 {
     private readonly AppLanguage _lang;
 
@@ -160,9 +160,13 @@ public sealed class AppStrings
     public string ErrorNoRecording => T(
         "صدایی ضبط نشده است.", "No recorded audio.",
         "لم يُسجَّل صوت.", "Aucun enregistrement audio.");
+    public string EmbedWarningTitle => T(
+        "هشدار", "Warning", "تحذير", "Avertissement");
     public string ErrorTooLong => T(
-        "متن طولانی‌تر از ظرفیت صدای ضبط شده است.", "Text too long for the recorded audio.",
-        "النص أطول من سعة الصوت المسجل.", "Texte trop long pour l’audio enregistré.");
+        "طول صدای ضبط‌شده باید بیشتر باشد تا نهان‌نگاری امکان‌پذیر باشد. مجدداً شروع به ضبط صدا کنید.",
+        "Recorded audio must be longer before steganography can succeed. Please start recording again.",
+        "يجب أن يكون الصوت المسجَّل أطول ليكون الإخفاء ممكناً. ابدأ التسجيل من جديد.",
+        "L’audio enregistré doit être plus long pour que l’intégration soit possible. Recommencez l’enregistrement.");
     public string KeyMismatch => T(
         "کلید/پارامترها صحیح نیستند یا داده‌ای پیدا نشد.", "Wrong key/params or no payload found.",
         "المفتاح/المعاملات غير صحيحة أو لم يُعثر على بيانات.", "Clé/paramètres incorrects ou aucune charge utile.");
