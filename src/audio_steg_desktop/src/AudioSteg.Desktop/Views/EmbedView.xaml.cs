@@ -21,6 +21,7 @@ public partial class EmbedView : UserControl
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
     private bool _busy;
+    private bool _updatingMessageText;
     private DispatcherTimer? _recordTimer;
     private DateTime _recordStartUtc;
 
@@ -54,6 +55,46 @@ public partial class EmbedView : UserControl
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
         SaveLabel.Text = s.SaveStego;
         VerifyLabel.Text = s.Verify;
+        UpdateMessageBitCounter();
+    }
+
+    private void MessageTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_updatingMessageText) return;
+        EnforceMessageBitLimitIfNeeded();
+        UpdateMessageBitCounter();
+    }
+
+    private void EnforceMessageBitLimitIfNeeded()
+    {
+        if (!AppState.Settings.DefaultFixedMessageBitLimit) return;
+
+        var max = AppConfig.Current.DefaultFixedMessageBitLength;
+        var text = MessageTextBox.Text;
+        if (MessageBits.BitLengthForText(text) <= max) return;
+
+        _updatingMessageText = true;
+        while (text.Length > 0 && MessageBits.BitLengthForText(text) > max)
+            text = text[..^1];
+        var caret = Math.Min(MessageTextBox.CaretIndex, text.Length);
+        MessageTextBox.Text = text;
+        MessageTextBox.CaretIndex = caret;
+        _updatingMessageText = false;
+    }
+
+    public void UpdateMessageBitCounter()
+    {
+        if (!IsLoaded) return;
+        EnforceMessageBitLimitIfNeeded();
+        var s = ThemeManager.Strings;
+        var used = MessageBits.BitLengthForText(MessageTextBox.Text);
+        if (AppState.Settings.DefaultFixedMessageBitLimit)
+        {
+            var remaining = AppConfig.Current.DefaultFixedMessageBitLength - used;
+            MessageBitsCounter.Text = s.MessageBitsUsedAndRemaining(used, remaining);
+        }
+        else
+            MessageBitsCounter.Text = s.MessageBitsUsed(used);
     }
 
     private void ApplyEmbedLayout()
@@ -157,6 +198,9 @@ public partial class EmbedView : UserControl
             return;
         }
 
+        if (ResultPanel.Visibility == Visibility.Visible)
+            ResetForNewEmbed();
+
         try
         {
             Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
@@ -202,6 +246,8 @@ public partial class EmbedView : UserControl
     private async void LoadFileBtn_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _capture.IsRecording) return;
+        if (ResultPanel.Visibility == Visibility.Visible)
+            ResetForNewEmbed();
         var s = ThemeManager.Strings;
         var messageText = MessageTextBox.Text.Trim();
         if (string.IsNullOrEmpty(messageText))
@@ -263,20 +309,33 @@ public partial class EmbedView : UserControl
             return;
         }
 
-        var required = MessageBits.BitLengthForText(messageText);
+        var useFixedLen = AppState.Settings.DefaultFixedMessageBitLimit;
+        var required = useFixedLen
+            ? AppConfig.Current.DefaultFixedMessageBitLength
+            : MessageBits.BitLengthForText(messageText);
         if (required > cover.ToMono().Samples.Length)
         {
             StatusText.Text = $"{s.ErrorTooLong} ({required} bits)";
             return;
         }
 
+        if (useFixedLen &&
+            MessageBits.BitLengthForText(messageText) >
+            AppConfig.Current.DefaultFixedMessageBitLength)
+        {
+            StatusText.Text =
+                $"{s.ErrorTooLong} ({MessageBits.BitLengthForText(messageText)} bits)";
+            return;
+        }
+
         WatermarkOutcome? outcome = null;
         string? error = null;
+        var fixedLen = useFixedLen ? AppConfig.Current.DefaultFixedMessageBitLength : (int?)null;
         await Task.Run(() =>
         {
             try
             {
-                outcome = AppState.Watermarking.Embed(messageText, cover);
+                outcome = AppState.Watermarking.Embed(messageText, cover, fixedLen);
             }
             catch (Exception ex)
             {
@@ -294,6 +353,20 @@ public partial class EmbedView : UserControl
         }
     }
 
+    private void ResetForNewEmbed()
+    {
+        _cover = null;
+        _stego = null;
+        _outcome = null;
+        ResultPanel.Visibility = Visibility.Collapsed;
+        VerifyBanner.Visibility = Visibility.Collapsed;
+        EmbedInputPanel.Visibility = Visibility.Visible;
+        MessageTextBox.IsEnabled = true;
+        StatusText.Text = string.Empty;
+        Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
+        UpdatePlaybackButtons();
+    }
+
     private void ShowResult(WatermarkOutcome outcome, WavFile? cover)
     {
         var s = ThemeManager.Strings;
@@ -301,7 +374,7 @@ public partial class EmbedView : UserControl
         _cover = cover;
         _stego = outcome.Stego;
         StatusText.Text = string.Empty;
-        MessageTextBox.IsEnabled = true;
+        EmbedInputPanel.Visibility = Visibility.Collapsed;
 
         ResultPanel.Visibility = Visibility.Visible;
         ResultTitle.Text = s.SuccessSaved;
@@ -322,8 +395,9 @@ public partial class EmbedView : UserControl
             new("\uE7C1", s.BitsEmbedded, $"{outcome.BitsEmbedded}"),
             new("\uE7F4", s.Capacity, $"{outcome.CapacityBits}"),
             new("\uE9F9", s.Utilization, $"{outcome.Utilization * 100:F1} %"),
-            new("\uE8FD", s.MsgBitLength, $"{outcome.BitsEmbedded}"),
         };
+        if (!AppState.Settings.DefaultFixedMessageBitLimit)
+            chips.Add(new("\uE8FD", s.MsgBitLength, $"{outcome.BitsEmbedded}"));
         if (double.IsFinite(m.SnrDb))
             chips.Add(new("\uE9D9", s.SnrLabel, m.SnrDb.ToString("F2")));
         if (double.IsFinite(m.PsnrDb))
@@ -335,17 +409,30 @@ public partial class EmbedView : UserControl
 
         VerifyBanner.Visibility = Visibility.Collapsed;
         UpdatePlaybackButtons();
-        if (AppConfig.Current.ShowEmbedRecoveryDialog)
-            ShowRecoveryBitsDialog(outcome.BitsEmbedded, outcome.CapacityBits);
+        var showRecovery = !AppState.Settings.DefaultFixedMessageBitLimit &&
+                           AppConfig.Current.ShowEmbedRecoveryDialog;
+        ShowEmbedCompleteDialog(outcome.BitsEmbedded, outcome.CapacityBits, showRecovery);
     }
 
-    private void ShowRecoveryBitsDialog(int msgBitLength, int capacityBits)
+    private void ShowEmbedCompleteDialog(int msgBitLength, int capacityBits, bool showRecoveryReminder)
     {
         var owner = Window.GetWindow(this);
-        var dlg = new RecoveryBitsDialog(msgBitLength, capacityBits);
-        if (owner is not null)
-            dlg.Owner = owner;
-        dlg.ShowDialog();
+        if (showRecoveryReminder)
+        {
+            var dlg = new RecoveryBitsDialog(msgBitLength, capacityBits);
+            if (owner is not null)
+                dlg.Owner = owner;
+            dlg.ShowDialog();
+            return;
+        }
+
+        var s = ThemeManager.Strings;
+        MessageBox.Show(
+            owner,
+            s.SuccessSaved,
+            s.EmbedCompleteTitle,
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void PlayButton_Click(object sender, RoutedEventArgs e)

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using AudioSteg.Core.Audio;
+using AudioSteg.Core.Stego;
 using AudioSteg.Desktop.Services;
 using Microsoft.Win32;
 
@@ -33,6 +34,13 @@ public partial class ExtractView : UserControl
         ToolTipService.SetToolTip(PlayButton, s.Play);
         ToolTipService.SetToolTip(PauseButton, s.Pause);
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
+        ApplyBitLengthPanelVisibility();
+    }
+
+    private void ApplyBitLengthPanelVisibility()
+    {
+        var hide = AppState.Settings.DefaultFixedMessageBitLimit;
+        BitLengthPanel.Visibility = hide ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void UpdatePlaybackButtons()
@@ -127,8 +135,14 @@ public partial class ExtractView : UserControl
 
     private async void ExtractButton_Click(object sender, RoutedEventArgs e)
     {
-        var bitLen = ParseBitLength();
-        if (bitLen is null) return;
+        int? bitLen;
+        if (AppState.Settings.DefaultFixedMessageBitLimit)
+            bitLen = AppConfig.Current.DefaultFixedMessageBitLength;
+        else
+        {
+            bitLen = ParseBitLength();
+            if (bitLen is null) return;
+        }
 
         var s = ThemeManager.Strings;
         if (_loadedWav is null)

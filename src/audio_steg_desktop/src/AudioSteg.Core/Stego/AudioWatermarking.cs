@@ -17,9 +17,11 @@ public sealed class AudioWatermarking
         X0 = x0;
     }
 
-    public WatermarkOutcome Embed(string text, WavFile cover)
+    public WatermarkOutcome Embed(string text, WavFile cover, int? fixedMsgBitLength = null)
     {
-        var binaryMsg = MessageBits.FromUtf8Text(text);
+        var binaryMsg = fixedMsgBitLength is > 0
+            ? MessageBits.FromUtf8TextPadded(text, fixedMsgBitLength.Value)
+            : MessageBits.FromUtf8Text(text);
         var embed = EmbedBits(cover, binaryMsg);
         var stegoDiff = StegoWithPerturbedKey(cover, binaryMsg);
         var coverMono = cover.ToMono();

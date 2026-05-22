@@ -4,11 +4,15 @@
              xmlns:controls="clr-namespace:AudioSteg.Desktop.Controls">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
     <StackPanel MaxWidth="720">
-      <TextBox x:Name="MessageTextBox" Style="{StaticResource MaterialTextBox}"
-               AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96"
-               VerticalScrollBarVisibility="Auto" />
+      <StackPanel x:Name="EmbedInputPanel">
+        <TextBox x:Name="MessageTextBox" Style="{StaticResource MaterialTextBox}"
+                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96"
+                 VerticalScrollBarVisibility="Auto"
+                 TextChanged="MessageTextBox_TextChanged" />
+        <TextBlock x:Name="MessageBitsCounter" Style="{StaticResource BodySmall}"
+                   Margin="0,6,0,0" HorizontalAlignment="Right" TextAlignment="Right" />
 
-      <Border Style="{StaticResource MaterialCard}" Margin="0,16,0,0" Padding="12,16">
+        <Border Style="{StaticResource MaterialCard}" Margin="0,16,0,0" Padding="12,16">
         <StackPanel>
           <TextBlock x:Name="EqualizerTitle" Style="{StaticResource BodySmall}" Margin="0,0,0,6" />
           <controls:EqualizerControl x:Name="Equalizer" />
@@ -27,7 +31,8 @@
           <TextBlock x:Name="StatusText" Margin="0,12,0,0" TextAlignment="Center"
                      Style="{StaticResource BodySmall}" />
         </StackPanel>
-      </Border>
+        </Border>
+      </StackPanel>
 
       <Border x:Name="ResultPanel" Style="{StaticResource ResultCard}" Margin="0,16,0,0"
               Visibility="Collapsed" Padding="16">

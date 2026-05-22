@@ -30,6 +30,7 @@ public partial class MainWindow : Window
 
         UpdateNavLabels();
         EmbedPage.ApplyStrings();
+        EmbedPage.UpdateMessageBitCounter();
         ExtractPage.ApplyStrings();
         AboutPage.ApplyStrings();
     }

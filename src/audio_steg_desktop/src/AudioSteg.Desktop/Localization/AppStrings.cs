@@ -110,6 +110,42 @@ public sealed class AppStrings
     public string LogisticInvalidValue => T(
         "مقدار خارج از بازه مجاز است.", "Value is outside the allowed range.",
         "القيمة خارج النطاق المسموح.", "La valeur est hors de la plage autorisée.");
+    public string LogisticMapPreviewHint => T(
+        "پیش‌نمایش دنبالهٔ آشوب با پارامترهای فعلی (خط چین: آستانهٔ کلید باینری)",
+        "Chaos sequence preview for current r and x0 (dashed: binary key threshold)",
+        "معاينة تسلسل الفوضى للمعاملات الحالية (متقطع: عتبة المفتاح الثنائي)",
+        "Aperçu de la séquence chaotique pour r et x0 actuels (pointillé : seuil clé binaire)");
+    public string DefaultFixedMessageBitLimit(int bits) => _lang switch
+    {
+        AppLanguage.Fa => $"محدودیت طول پیام پیش‌فرض {bits} بیت",
+        AppLanguage.Ar => $"حد طول الرسالة الافتراضي: {bits} بت",
+        AppLanguage.Fr => $"Limite de longueur par défaut : {bits} bits",
+        _ => $"Default message length limit: {bits} bits",
+    };
+    public string DefaultFixedMessageBitLimitHint(int bits) => _lang switch
+    {
+        AppLanguage.Fa =>
+            $"نهان‌نگاری و رمزگشایی همیشه با {bits} بیت انجام می‌شود؛ طول پیام از شما پرسیده نمی‌شود.",
+        AppLanguage.Ar =>
+            $"الإخفاء والاستخراج دائماً بـ {bits} بت؛ لا يُطلب طول الرسالة.",
+        AppLanguage.Fr =>
+            $"Intégration et extraction à {bits} bits ; la longueur n’est pas demandée.",
+        _ => $"Embed and extract always use {bits} bits; message length is not asked.",
+    };
+    public string MessageBitsUsed(int used) => _lang switch
+    {
+        AppLanguage.Fa => $"{used} بیت استفاده‌شده",
+        AppLanguage.Ar => $"{used} بت مستخدم",
+        AppLanguage.Fr => $"{used} bits utilisés",
+        _ => $"{used} bits used",
+    };
+    public string MessageBitsUsedAndRemaining(int used, int remaining) => _lang switch
+    {
+        AppLanguage.Fa => $"{used} بیت استفاده‌شده — {remaining} بیت باقی‌مانده",
+        AppLanguage.Ar => $"{used} بت مستخدم — {remaining} بت متبقٍ",
+        AppLanguage.Fr => $"{used} bits utilisés — {remaining} bits restants",
+        _ => $"{used} bits used — {remaining} bits remaining",
+    };
     public string Reset => T("بازنشانی", "Reset", "إعادة تعيين", "Réinitialiser");
     public string Play => T("پخش", "Play", "تشغيل", "Lecture");
     public string Pause => T("مکث", "Pause", "إيقاف مؤقت", "Pause");

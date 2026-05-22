@@ -32,8 +32,25 @@ public static class MessageBits
                 b = (b << 1) | (bits[pos++] & 1);
             bytes[i] = (byte)b;
         }
-        return Encoding.UTF8.GetString(bytes);
+        var end = bytes.Length;
+        while (end > 0 && bytes[end - 1] == 0)
+            end--;
+        if (end == 0) return string.Empty;
+        return Encoding.UTF8.GetString(bytes, 0, end);
     }
 
     public static int BitLengthForText(string text) => FromUtf8Text(text).Length;
+
+    /// <summary>UTF-8 bits padded with zeros to [fixedBitLength] (main_steganography fixed msg_len).</summary>
+    public static byte[] FromUtf8TextPadded(string text, int fixedBitLength)
+    {
+        var bits = FromUtf8Text(text);
+        if (bits.Length > fixedBitLength)
+            throw new ArgumentException(
+                $"Message needs {bits.Length} bits; fixed limit is {fixedBitLength}.");
+        if (bits.Length == fixedBitLength) return bits;
+        var padded = new byte[fixedBitLength];
+        Array.Copy(bits, padded, bits.Length);
+        return padded;
+    }
 }

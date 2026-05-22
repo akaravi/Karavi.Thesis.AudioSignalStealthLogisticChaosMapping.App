@@ -25,9 +25,9 @@ void _mockPrefs({ThemeMode theme = ThemeMode.light}) {
     'locale': 'fa',
     'locale_configured': true,
     'usage_guide_seen': true,
-    'seed': AppSettings.defaults.seedColor.toARGB32(),
-    'logistic_r': 3.99,
-    'logistic_x0': 0.45,
+    'seed': const Color(0xFF00B4B7).toARGB32(),
+    'logistic_r': AppConfig.defaults.logisticR,
+    'logistic_x0': AppConfig.defaults.logisticX0,
   });
 }
 

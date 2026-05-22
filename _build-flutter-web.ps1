@@ -419,6 +419,12 @@ if (-not $SkipTests) {
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("test")
 }
 
+$appSettingsScript = Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1"
+if (Test-Path -LiteralPath $appSettingsScript) {
+    . $appSettingsScript
+    Sync-AppSettingsToFlutterProjectAssets -RepoRoot $root -FlutterProjectPath $flutterAppPath
+}
+
 $normalizedWebBaseHref = Normalize-WebBaseHref -BaseHref $WebBaseHref
 Write-Host "Building Flutter web [$flutterAppPath] release base-href=$normalizedWebBaseHref ..." -ForegroundColor Cyan
 Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(

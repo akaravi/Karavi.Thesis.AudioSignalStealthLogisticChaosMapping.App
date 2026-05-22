@@ -69,6 +69,12 @@ if ([string]::IsNullOrWhiteSpace($sdk) -or -not (Test-Path $sdk)) {
     throw "ANDROID_HOME / ANDROID_SDK_ROOT required."
 }
 
+$appSettingsScript = Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1"
+if (Test-Path -LiteralPath $appSettingsScript) {
+    . $appSettingsScript
+    Sync-AppSettingsToFlutterProjectAssets -RepoRoot $root -FlutterProjectPath $flutterAppPath
+}
+
 if (-not $SkipRestore) {
     Write-Host "flutter pub get ..." -ForegroundColor Cyan
     Push-Location $flutterAppPath
@@ -105,6 +111,14 @@ $null = Invoke-FlutterAndroidReleaseBuild `
     -AndroidPublishDir $outDir `
     -AndroidArtifact $artifact `
     -InvokeFlutterInProject $flutterInvokeSb
+
+if (Test-Path -LiteralPath $appSettingsScript) {
+    Copy-AppSettingsToFlutterDeployOutputs `
+        -RepoRoot $root `
+        -FlutterProjectPath $flutterAppPath `
+        -IncludeAndroidPublish `
+        -AndroidPublishDir $outDir
+}
 
 $buildsAab = $artifact -in @("AppBundle", "Both")
 if ($buildsAab -and -not $SkipBundleSigner) {

@@ -45,7 +45,27 @@ public partial class SettingsView : UserControl
         RSlider.Value = LogisticParamBounds.ClampR(st.R);
         X0Slider.Value = LogisticParamBounds.ClampX0(st.X0);
         SyncParamTextBoxes();
+        SyncLogisticPreview(s);
+        var fixedBits = AppConfig.Current.DefaultFixedMessageBitLength;
+        DefaultFixedMsgBitLimitCheck.Content = s.DefaultFixedMessageBitLimit(fixedBits);
+        DefaultFixedMsgBitLimitCheck.ToolTip = s.DefaultFixedMessageBitLimitHint(fixedBits);
+        DefaultFixedMsgBitLimitCheck.IsChecked = st.DefaultFixedMessageBitLimit;
         _loading = false;
+    }
+
+    private void DefaultFixedMsgBitLimitCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading || !IsLoaded) return;
+        AppState.Settings.DefaultFixedMessageBitLimit =
+            DefaultFixedMsgBitLimitCheck.IsChecked == true;
+        AppState.Save();
+    }
+
+    private void SyncLogisticPreview(AppStrings s)
+    {
+        LogisticPreview.SetCaption(s.LogisticMapPreviewHint);
+        LogisticPreview.R = RSlider.Value;
+        LogisticPreview.X0 = X0Slider.Value;
     }
 
     private void BuildThemeSegments(AppStrings s)
@@ -99,9 +119,9 @@ public partial class SettingsView : UserControl
             var ring = current == hex.ToUpperInvariant();
             var btn = new Button
             {
-                Width = 44,
-                Height = 44,
-                Margin = new Thickness(0, 0, 12, 12),
+                Width = 36,
+                Height = 36,
+                Margin = new Thickness(0, 0, 8, 8),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Cursor = System.Windows.Input.Cursors.Hand,
@@ -109,8 +129,8 @@ public partial class SettingsView : UserControl
             };
             var ellipse = new Ellipse
             {
-                Width = 36,
-                Height = 36,
+                Width = 28,
+                Height = 28,
                 Fill = new SolidColorBrush(color),
                 Stroke = ring ? (Brush)FindResource("TextBrush") : null,
                 StrokeThickness = ring ? 3 : 0,
@@ -131,7 +151,7 @@ public partial class SettingsView : UserControl
         {
             Content = label,
             Margin = new Thickness(4, 0, 4, 0),
-            Padding = new Thickness(12, 8, 12, 8),
+            Padding = new Thickness(10, 6, 10, 6),
             Background = selected
                 ? (Brush)Application.Current.Resources["NavIndicatorBrush"]
                 : Brushes.Transparent,
@@ -152,6 +172,7 @@ public partial class SettingsView : UserControl
         AppState.Settings.R = LogisticParamBounds.ClampR(RSlider.Value);
         AppState.Save();
         SyncParamTextBoxes();
+        SyncLogisticPreview(ThemeManager.Strings);
     }
 
     private void X0Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -160,6 +181,7 @@ public partial class SettingsView : UserControl
         AppState.Settings.X0 = LogisticParamBounds.ClampX0(X0Slider.Value);
         AppState.Save();
         SyncParamTextBoxes();
+        SyncLogisticPreview(ThemeManager.Strings);
     }
 
     private void RTextBox_LostFocus(object sender, RoutedEventArgs e) => CommitRFromTextBox();
@@ -193,6 +215,7 @@ public partial class SettingsView : UserControl
         AppState.Settings.R = r;
         AppState.Save();
         SyncParamTextBoxes();
+        SyncLogisticPreview(ThemeManager.Strings);
         _loading = false;
     }
 
@@ -215,6 +238,7 @@ public partial class SettingsView : UserControl
         AppState.Settings.X0 = x0;
         AppState.Save();
         SyncParamTextBoxes();
+        SyncLogisticPreview(ThemeManager.Strings);
         _loading = false;
     }
 

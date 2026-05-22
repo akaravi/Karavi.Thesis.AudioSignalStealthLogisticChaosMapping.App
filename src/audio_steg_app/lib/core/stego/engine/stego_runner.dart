@@ -9,6 +9,7 @@ class _EmbedRequest {
   final String text;
   final double r;
   final double x0;
+  final int? fixedMsgBitLength;
   final int sampleRate;
   final int numChannels;
   final int bitsPerSample;
@@ -18,6 +19,7 @@ class _EmbedRequest {
     required this.text,
     required this.r,
     required this.x0,
+    this.fixedMsgBitLength,
     required this.sampleRate,
     required this.numChannels,
     required this.bitsPerSample,
@@ -127,11 +129,13 @@ class StegoRunner {
     required WavFile cover,
     double r = 3.99,
     double x0 = 0.45,
+    int? fixedMsgBitLength,
   }) async {
     final req = _EmbedRequest(
       text: text,
       r: r,
       x0: x0,
+      fixedMsgBitLength: fixedMsgBitLength,
       sampleRate: cover.sampleRate,
       numChannels: cover.numChannels,
       bitsPerSample: cover.bitsPerSample,
@@ -168,7 +172,11 @@ _EmbedResponse _embedOnIsolate(_EmbedRequest req) {
     bitsPerSample: req.bitsPerSample,
     samples: req.samples,
   );
-  final outcome = wm.embed(text: req.text, cover: cover);
+  final outcome = wm.embed(
+    text: req.text,
+    cover: cover,
+    fixedMsgBitLength: req.fixedMsgBitLength,
+  );
   final m = outcome.metrics;
   return _EmbedResponse(
     sampleRate: outcome.stego.sampleRate,

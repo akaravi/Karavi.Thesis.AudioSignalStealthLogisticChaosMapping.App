@@ -26,6 +26,7 @@ import '../shared/audio_equalizer_view.dart';
 import '../shared/dual_waveform_chart.dart';
 import '../shared/circle_action_button.dart';
 import '../shared/help_sheet.dart';
+import '../shared/message_bit_length_formatter.dart';
 import '../shared/record_button.dart';
 import '../shared/stego_share.dart';
 import '../shared/tab_scroll_body.dart';
@@ -45,6 +46,10 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   bool _busy = false;
   bool _processing = false;
   bool _verifying = false;
+
+  /// After a successful embed, message field and record/load card stay hidden until new embed.
+  bool _embedInputHidden = false;
+  final GlobalKey _resultCardKey = GlobalKey();
   WavFile? _cover;
   WavFile? _stego;
   EmbedRunResult? _result;
@@ -292,7 +297,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     }
 
-    final required = MessageBits.bitLengthForText(text);
+    final settings = ref.read(settingsProvider);
+    final deploy = ref.read(appConfigProvider);
+    final fixedBits = deploy.defaultFixedMessageBitLength;
+    final useFixedLen = settings.defaultFixedMessageBitLimit;
+    final required = useFixedLen
+        ? fixedBits
+        : MessageBits.bitLengthForText(text);
     final available = cover.toMono().samples.length;
     if (required > available) {
       if (!mounted) return;
@@ -303,8 +314,17 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       });
       return;
     }
+    if (useFixedLen && MessageBits.bitLengthForText(text) > fixedBits) {
+      if (!mounted) return;
+      setState(() {
+        _processing = false;
+        _statusMessage =
+            '${s.errorTooLong} (${MessageBits.bitLengthForText(text)} bits > '
+            '$fixedBits)';
+      });
+      return;
+    }
 
-    final settings = ref.read(settingsProvider);
     EmbedRunResult? produced;
     String? error;
     try {
@@ -313,16 +333,19 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         cover: cover,
         r: settings.r,
         x0: settings.x0,
+        fixedMsgBitLength: useFixedLen ? fixedBits : null,
       );
     } catch (e) {
       error = e.toString();
     }
     if (!mounted) return;
+    final success = produced != null && error == null;
     setState(() {
       _processing = false;
       _cover = cover;
       _result = produced;
       _stego = produced?.stego;
+      _embedInputHidden = success;
       if (error != null) {
         _statusMessage = error;
       } else if (loadedName != null) {
@@ -333,21 +356,38 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _verifyStatus = null;
       _verifyOk = null;
     });
-    if (produced != null &&
-        error == null &&
-        ref.read(appConfigProvider).showEmbedRecoveryDialog) {
-      await _showRecoveryBitsDialog(produced);
+    if (success) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _resultCardKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            alignment: 0.05,
+          );
+        }
+      });
+      final showRecovery =
+          !useFixedLen && ref.read(appConfigProvider).showEmbedRecoveryDialog;
+      await _showEmbedCompleteDialog(
+        produced,
+        showRecoveryReminder: showRecovery,
+      );
     }
   }
 
-  Future<void> _showRecoveryBitsDialog(EmbedRunResult result) async {
+  Future<void> _showEmbedCompleteDialog(
+    EmbedRunResult result, {
+    required bool showRecoveryReminder,
+  }) async {
     if (!mounted) return;
     final s = AppStrings.of(context);
     final bits = result.msgBitLength;
     final theme = Theme.of(context);
     await showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (dialogCtx) {
         return AlertDialog(
           title: Text(s.embedCompleteTitle),
@@ -355,76 +395,86 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                s.embedRecoveryMessage,
-                style: theme.textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Material(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$bits',
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+              if (!showRecoveryReminder)
+                Text(
+                  s.successSaved,
+                  style: theme.textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                )
+              else ...[
+                Text(
+                  s.embedRecoveryMessage,
+                  style: theme.textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Material(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$bits',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filledTonal(
-                        tooltip: s.copy,
-                        onPressed: () async {
-                          await Clipboard.setData(ClipboardData(text: '$bits'));
-                          if (!dialogCtx.mounted) return;
-                          ScaffoldMessenger.of(dialogCtx).showSnackBar(
-                            SnackBar(content: Text(s.embedRecoveryCopied)),
-                          );
-                        },
-                        icon: const Icon(Icons.copy_outlined),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton.filledTonal(
-                        tooltip: s.shareStego,
-                        onPressed: () async {
-                          final outcome = await shareStegoWavBytes(
-                            bytes: result.stego.encode(),
-                            fileName: stegoWavFileName(result.msgBitLength),
-                            subject: s.shareStego,
-                          );
-                          if (!dialogCtx.mounted) return;
-                          final message = switch (outcome) {
-                            StegoShareOutcome.fileDownloaded =>
-                              s.shareFileDownloaded,
-                            StegoShareOutcome.shared ||
-                            StegoShareOutcome.textCopied => null,
-                          };
-                          if (message != null) {
-                            ScaffoldMessenger.of(
-                              dialogCtx,
-                            ).showSnackBar(SnackBar(content: Text(message)));
-                          }
-                        },
-                        icon: const Icon(Icons.share_outlined),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        IconButton.filledTonal(
+                          tooltip: s.copy,
+                          onPressed: () async {
+                            await Clipboard.setData(
+                              ClipboardData(text: '$bits'),
+                            );
+                            if (!dialogCtx.mounted) return;
+                            ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                              SnackBar(content: Text(s.embedRecoveryCopied)),
+                            );
+                          },
+                          icon: const Icon(Icons.copy_outlined),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton.filledTonal(
+                          tooltip: s.shareStego,
+                          onPressed: () async {
+                            final outcome = await shareStegoWavBytes(
+                              bytes: result.stego.encode(),
+                              fileName: stegoWavFileName(result.msgBitLength),
+                              subject: s.shareStego,
+                            );
+                            if (!dialogCtx.mounted) return;
+                            final message = switch (outcome) {
+                              StegoShareOutcome.fileDownloaded =>
+                                s.shareFileDownloaded,
+                              StegoShareOutcome.shared ||
+                              StegoShareOutcome.textCopied => null,
+                            };
+                            if (message != null) {
+                              ScaffoldMessenger.of(
+                                dialogCtx,
+                              ).showSnackBar(SnackBar(content: Text(message)));
+                            }
+                          },
+                          icon: const Icon(Icons.share_outlined),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                s.embedRecoveryCapacityHint(result.capacityBits),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 12),
+                Text(
+                  s.embedRecoveryCapacityHint(result.capacityBits),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           actions: [
@@ -523,6 +573,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       setState(() {
         _processing = false;
         _verifying = false;
+        _embedInputHidden = false;
         _cover = null;
         _stego = null;
         _result = null;
@@ -684,10 +735,26 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     }
   }
 
+  String _messageBitCounterText(
+    AppStrings s,
+    bool useFixedLimit,
+    int fixedBits,
+  ) {
+    final used = MessageBits.bitLengthForText(_textCtrl.text);
+    if (useFixedLimit) {
+      return s.messageBitsUsedAndRemaining(used, fixedBits - used);
+    }
+    return s.messageBitsUsed(used);
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    final appConfig = ref.watch(appConfigProvider);
+    final settings = ref.watch(settingsProvider);
+    final deploy = ref.watch(appConfigProvider);
+    final useFixedLimit = settings.defaultFixedMessageBitLimit;
+    final fixedBits = deploy.defaultFixedMessageBitLength;
+    final appConfig = deploy;
     final isRecording = _recorder.isRecording;
     final eqActive = isRecording || _isPlaying || _playbackLoaded;
     final canPickFile = !isRecording && !_processing && !_busy;
@@ -697,73 +764,87 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         TabScrollBody(
           padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
           children: [
-            TextField(
-              controller: _textCtrl,
-              maxLines: 4,
-              minLines: 3,
-              scrollPhysics: const NeverScrollableScrollPhysics(),
-              enabled: !isRecording && !_processing,
-              decoration: InputDecoration(
-                labelText: s.textHint,
-                prefixIcon: const Icon(Icons.message_outlined),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 12,
-                ),
-                child: Column(
-                  children: [
-                    AudioEqualizerView(
-                      bands: _eqBands,
-                      active: eqActive,
-                      recordingElapsed: isRecording ? _recordingElapsed : null,
-                    ),
-                    const SizedBox(height: 16),
-                    AudioSourceActionsPanel(
-                      orLabel: s.audioSourceOr,
-                      showLoadAction: appConfig.showEmbedLoadFileButton,
-                      loadAction: CircleActionButton(
-                        icon: Icons.upload_file_outlined,
-                        label: s.loadAudioFile,
-                        shape: ActionButtonShape.roundedSquare,
-                        enabled: canPickFile,
-                        onPressed: _loadAndEmbed,
-                        accent: CircleActionAccent.primary,
-                      ),
-                      recordAction: RecordButton(
-                        isActive: isRecording,
-                        enabled: !_processing && (isRecording || !_busy),
-                        onPressed: _toggleRecord,
-                        labelIdle: s.startRecording,
-                        labelActive: s.stopRecording,
-                      ),
-                    ),
-                    if (_processing) ...[
-                      const SizedBox(height: 12),
-                      const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      ),
-                    ],
-                    if (_statusMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _statusMessage!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ],
+            if (!_embedInputHidden) ...[
+              TextField(
+                controller: _textCtrl,
+                maxLines: 4,
+                minLines: 3,
+                scrollPhysics: const NeverScrollableScrollPhysics(),
+                enabled: !isRecording && !_processing,
+                inputFormatters: useFixedLimit
+                    ? [MessageBitLengthFormatter(fixedBits)]
+                    : const [],
+                decoration: InputDecoration(
+                  labelText: s.textHint,
+                  helperText: _messageBitCounterText(
+                    s,
+                    useFixedLimit,
+                    fixedBits,
+                  ),
+                  helperMaxLines: 2,
+                  prefixIcon: const Icon(Icons.message_outlined),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            if (_stego != null) _buildResultCard(s),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
+                  child: Column(
+                    children: [
+                      AudioEqualizerView(
+                        bands: _eqBands,
+                        active: eqActive,
+                        recordingElapsed: isRecording
+                            ? _recordingElapsed
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      AudioSourceActionsPanel(
+                        orLabel: s.audioSourceOr,
+                        showLoadAction: appConfig.showEmbedLoadFileButton,
+                        loadAction: CircleActionButton(
+                          icon: Icons.upload_file_outlined,
+                          label: s.loadAudioFile,
+                          shape: ActionButtonShape.roundedSquare,
+                          enabled: canPickFile,
+                          onPressed: _loadAndEmbed,
+                          accent: CircleActionAccent.primary,
+                        ),
+                        recordAction: RecordButton(
+                          isActive: isRecording,
+                          enabled: !_processing && (isRecording || !_busy),
+                          onPressed: _toggleRecord,
+                          labelIdle: s.startRecording,
+                          labelActive: s.stopRecording,
+                        ),
+                      ),
+                      if (_processing) ...[
+                        const SizedBox(height: 12),
+                        const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                      ],
+                      if (_statusMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _statusMessage!,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (_stego != null)
+              KeyedSubtree(key: _resultCardKey, child: _buildResultCard(s)),
           ],
         ),
         PositionedDirectional(
@@ -976,12 +1057,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         s.utilization,
         '${(result.utilization * 100).toStringAsFixed(1)} %',
       ),
-      _metricChip(
-        theme,
-        Icons.format_list_numbered,
-        s.msgBitLength,
-        '${result.msgBitLength}',
-      ),
+      if (!ref.watch(settingsProvider).defaultFixedMessageBitLimit)
+        _metricChip(
+          theme,
+          Icons.format_list_numbered,
+          s.msgBitLength,
+          '${result.msgBitLength}',
+        ),
       if (result.snrDb != null && result.snrDb!.isFinite)
         _metricChip(
           theme,

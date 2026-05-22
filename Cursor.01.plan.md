@@ -1180,3 +1180,114 @@
   helpOverviewBody, helpTabsBody, helpEmbedStep1..8, helpExtractStep1..6, helpTipsBody, helpClose
 - ✅ بازتولید goldens: `cafebazaar_screenshots_test.dart` با `--update-goldens` (۵/۵ سبز)
 - ✅ `flutter analyze` — صفر خطا/اخطار
+
+---
+
+## Part 61 — نمودار پیش‌نمایش آشوب لاجستیک در تنظیمات
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "در صفحه تنظیمات، بالای بخش پارامترهای آشوب لاجستیک، نمودار دنباله با r و x0 فعلی نمایش داده شود و با تغییر اسلایدر/فیلد به‌روز شود (Flutter + WPF)"
+}
+```
+
+### Result 61
+- ✅ Flutter: `features/shared/logistic_map_preview_chart.dart` — `LogisticMap.sequence(120)` + خط آستانهٔ باینری (میانگین دنباله، مطابق `binaryKey`)
+- ✅ `settings_screen.dart` — نمودار بالای `LogisticParamField`؛ واکنش‌گرا با `settingsProvider`
+- ✅ WPF: `Controls/LogisticMapPreviewControl` + `SettingsView` — به‌روز در اسلایدر، فیلد متنی و بازنشانی
+- ✅ i18n: `logisticMapPreviewHint` در `app_strings.dart` و `AppStrings.cs`
+- ✅ `flutter analyze` و `dotnet build` — بدون خطا
+
+---
+
+## Part 62 — محدودیت طول پیام ۱۰۰۰۰۰ بیت (تنظیمات)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "در تنظیمات زیر پارامترهای آشوب، چک‌باکس «محدودیت طول پیام پیش‌فرض 100000 بیت» با پیش‌فرض روشن؛ در حالت فعال نهان‌نگاری/رمزگشایی با 100000 بیت بدون پرسش و بدون نمایش طول پیام از کاربر"
+}
+```
+
+### Result 62
+- ✅ Flutter: `defaultFixedMessageBitLimit` در `AppSettings` + `SharedPreferences` (پیش‌فرض `true`)
+- ✅ `settings_screen.dart` — `CheckboxListTile` زیر اسلایدرهای r و x0
+- ✅ نهان‌نگاری: `MessageBits.fromUtf8TextPadded` + `StegoRunner.embed(fixedMsgBitLength: 100000)`؛ بدون دیالوگ یادآوری طول پیام
+- ✅ رمزگشایی: فیلد «طول پیام (بیت)» مخفی؛ استخراج با `100000`
+- ✅ WPF: همان رفتار در `AppState`، `SettingsView`، `EmbedView`، `ExtractView`
+- ✅ Core: `WatermarkDefaults.DefaultFixedMessageBitLength = 100_000`؛ `ToUtf8Text` بایت‌های صفر انتهایی را حذف می‌کند
+- ✅ i18n FA/EN/AR/FR؛ `flutter test` و `dotnet test` سبز
+
+---
+
+## Part 62b — شمارنده بیت در TextBox پیام (نهان‌نگاری)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "با محدودیت 100000 بیت: نمایش بیت استفاده‌شده و باقی‌مانده + محدود کردن ورود؛ بدون محدودیت: فقط بیت استفاده‌شده"
+}
+```
+
+### Result 62b
+- ✅ Flutter: `helperText` + `MessageBitLengthFormatter` در `embed_screen.dart`
+- ✅ WPF: `MessageBitsCounter` + `TextChanged` + برش متن در `EmbedView`
+- ✅ i18n: `messageBitsUsed` / `messageBitsUsedAndRemaining` (۴ زبان)
+
+---
+
+## Part 63 — appsettings.json: 262144 بیت و پیش‌فرض آشوب
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "جایگزینی 100000 با 262144 (2^18) و قرار دادن DefaultFixedMessageBitLength و LogisticR/LogisticX0 در appsettings.json"
+}
+```
+
+### Result 63
+- ✅ `appsettings.json`: `DefaultFixedMessageBitLength`: 262144، `LogisticR`: 3.99، `LogisticX0`: 0.45
+- ✅ Flutter `AppConfig` + `SettingsController.fromDeploy` — r/x0 و طول ثابت از فایل استقرار
+- ✅ WPF `AppConfig.Current` — Embed/Extract/Settings از همان منبع
+- ✅ برچسب چک‌باکس و راهنما با عدد پویا از config
+
+---
+
+## Part 64 — appsettings در همه خروجی‌های Flutter
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "بررسی و اطمینان از خوانده شدن appsettings.json در همه حالت‌های خروجی Flutter"
+}
+```
+
+### Result 64
+- ✅ `AppConfig.load()`: ۱) فایل استقرار (IO کنار exe / fetch وب) ۲) asset `assets/appsettings.json` ۳) `../../appsettings.json` ۴) defaults
+- ✅ `assets/appsettings.json` از ریشه repo همگام و در `pubspec.yaml` bundle می‌شود
+- ✅ `copy_appsettings_to_flutter_outputs.ps1`: web، Windows Release/Debug، Linux bundle، Android publish، sync asset
+- ✅ بیلد: `_build-all-projects.ps1`, `_build-flutter-web.ps1`, `_build-cafebazaar-release.ps1`, `invoke_flutter_windows_build.ps1`
+- ✅ `test/app/app_config_test.dart` — asset bundle سبز
+
+---
+
+## Part 65 — UX تنظیمات فشرده + نتایج نهان‌نگاری با محدودیت ثابت
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "کاهش ارتفاع کارت‌های تم/زبان/رنگ در تنظیمات؛ با محدودیت طول پیام ثابت: نمایش دیالوگ/کارت نتایج (بدون یادآور بیت بازیابی)؛ پس از نهان‌نگاری مخفی‌سازی متن و ضبط/بارگذاری تا نهان‌نگاری جدید"
+}
+```
+
+### Result 65
+- ✅ Flutter `settings_screen.dart`: بخش‌های compact (padding/spacing/آیکن کوچک‌تر، دایره رنگ ۳۲px)
+- ✅ Flutter `embed_screen.dart`: `_embedInputHidden`؛ دیالوگ `_showEmbedCompleteDialog` همیشه پس از موفقیت (یادآور بیت فقط وقتی محدودیت ثابت خاموش)؛ اسکرول خودکار به کارت نتایج
+- ✅ WPF `SettingsView`: padding کمتر روی تم/زبان/رنگ؛ `EmbedView`: `EmbedInputPanel` مخفی پس از نتیجه؛ `ResetForNewEmbed` با شروع ضبط/بارگذاری؛ MessageBox موفقیت وقتی محدودیت ثابت روشن

@@ -4,6 +4,13 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-22 | — | 65 | تنظیمات فشرده (تم/زبان/رنگ)؛ پس از نهان‌نگاری: دیالوگ موفقیت + کارت نتایج با محدودیت ثابت (بدون یادآور بیت)؛ مخفی‌سازی ورودی تا «نهان‌نگاری جدید» | `settings_screen.dart`, `embed_screen.dart`, `SettingsView.*`, `EmbedView.*` |
+| 2026-05-22 | — | 64 | `appsettings.json` در همه خروجی‌های Flutter: asset `assets/appsettings.json`، وب/ویندوز/لینوکس/اندروید publish، اسکریپت بیلد یکپارچه | `app_config.dart`, `app_config_loader_io.dart`, `copy_appsettings_to_flutter_outputs.ps1`, `_build-all-projects.ps1`, `_build-cafebazaar-release.ps1`, `_build-flutter-web.ps1` |
+| 2026-05-22 | — | 63 | طول پیام ثابت 262144 (2^18) و پیش‌فرض r/x0 در `appsettings.json`؛ Flutter `AppConfig` + WPF `AppConfig`/`AppState` | `appsettings.json`, `app_config.dart`, `AppConfig.cs`, `settings_controller.dart`, حذف `stego_constants.dart` |
+| 2026-05-22 | — | 62b | شمارنده بیت زیر TextBox پیام: با محدودیت ثابت «استفاده‌شده + باقی‌مانده» و محدودیت ورود؛ بدون محدودیت فقط «استفاده‌شده» | `embed_screen.dart`, `message_bit_length_formatter.dart`, `EmbedView.*`, `app_strings.dart`, `AppStrings.cs` |
+| 2026-05-22 | — | 62 | چک‌باکس تنظیمات «محدودیت طول پیام پیش‌فرض 100000 بیت» (پیش‌فرض فعال): نهان‌نگاری/رمزگشایی با msg_len ثابت، بدون پرسش و بدون نمایش فیلد طول پیام | `settings_screen.dart`, `settings_controller.dart`, `embed_screen.dart`, `extract_screen.dart`, `stego_constants.dart`, `audio_watermarking.dart`, `SettingsView.*`, `EmbedView.xaml.cs`, `ExtractView.*`, `AppState.cs`, `MessageBits.cs`, `app_strings.dart`, `AppStrings.cs` |
+| 2026-05-22 | — | 61b | برچسب عددی محور عمودی (min/mid/max) و افقی (گام ۱، ۶۰، ۱۲۰) روی نمودار آشوب تنظیمات | `logistic_map_preview_chart.dart`, `LogisticMapPreviewControl.xaml.cs` |
+| 2026-05-22 | — | 61 | نمودار پیش‌نمایش دنبالهٔ آشوب لاجستیک در بالای پارامترهای تنظیمات (Flutter + WPF)، به‌روز با r و x0 | `logistic_map_preview_chart.dart`, `LogisticMapPreviewControl`, `settings_screen.dart`, `SettingsView.*`, `app_strings.dart`, `AppStrings.cs` |
 | 2026-05-21 | — | 60 | دکمه «رمزگشایی جدید» بالای تب رمزگشایی (مانند نهان‌نگاری) | `extract_screen.dart`, `app_strings.dart` (`extractNew`) |
 | 2026-05-21 | — | run-all | run all: دیباگ/تست سبز؛ Flutter+WPF اجرا؛ رفع کرش WPF (آیکن pack URI + ICO سالم) | `logs/`, `MainWindow.xaml`, `Assets/app.ico` |
 | 2026-05-21 | — | 59b | تست `help_strings_i18n_test` — ۲۵ کلید راهنما در fa/en/ar/fr | `test/app/help_strings_i18n_test.dart` |

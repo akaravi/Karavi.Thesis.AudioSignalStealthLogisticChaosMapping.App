@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../app/app_strings.dart';
+import '../../app/app_config_provider.dart';
 import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_player.dart';
@@ -151,7 +152,12 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       return;
     }
 
-    final msgBitLength = _parseBitLength(s);
+    final settings = ref.read(settingsProvider);
+    final deploy = ref.read(appConfigProvider);
+    final useFixedLen = settings.defaultFixedMessageBitLimit;
+    final msgBitLength = useFixedLen
+        ? deploy.defaultFixedMessageBitLength
+        : _parseBitLength(s);
     if (msgBitLength == null) return;
 
     setState(() {
@@ -164,7 +170,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     String? text;
     String? error;
     try {
-      final settings = ref.read(settingsProvider);
       text = await StegoRunner.extract(
         wav,
         msgBitLength: msgBitLength,
@@ -360,6 +365,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
+    final useFixedLen = ref.watch(settingsProvider).defaultFixedMessageBitLimit;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -383,25 +389,29 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                       style: Theme.of(context).textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _bitLenCtrl,
-                      keyboardType: TextInputType.number,
-                      scrollPhysics: const NeverScrollableScrollPhysics(),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      enabled: !_processing,
-                      onChanged: (_) {
-                        if (_bitLengthError != null) {
-                          setState(() => _bitLengthError = null);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: s.msgBitLengthHint,
-                        helperText: s.msgBitLengthHelper,
-                        errorText: _bitLengthError,
-                        prefixIcon: const Icon(Icons.format_list_numbered),
+                    if (!useFixedLen) ...[
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _bitLenCtrl,
+                        keyboardType: TextInputType.number,
+                        scrollPhysics: const NeverScrollableScrollPhysics(),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        enabled: !_processing,
+                        onChanged: (_) {
+                          if (_bitLengthError != null) {
+                            setState(() => _bitLengthError = null);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: s.msgBitLengthHint,
+                          helperText: s.msgBitLengthHelper,
+                          errorText: _bitLengthError,
+                          prefixIcon: const Icon(Icons.format_list_numbered),
+                        ),
                       ),
-                    ),
+                    ],
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 8,

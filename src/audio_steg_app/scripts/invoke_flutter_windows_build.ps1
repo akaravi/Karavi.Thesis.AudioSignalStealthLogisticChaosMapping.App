@@ -122,6 +122,7 @@ exit `$LASTEXITCODE
     $copyScript = Join-Path $ProjectDirectory "scripts\copy_appsettings_to_flutter_outputs.ps1"
     if (Test-Path -LiteralPath $copyScript) {
         . $copyScript
+        Sync-AppSettingsToFlutterProjectAssets -RepoRoot $repoRoot -FlutterProjectPath $ProjectDirectory
         Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $repoRoot -FlutterProjectPath $ProjectDirectory -IncludeWindows
     }
 }

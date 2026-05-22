@@ -40,6 +40,12 @@ $publishRoot = Join-Path $root "publish\dotnet\$runtime"
 $dotnetPublishOutput = Join-Path $publishRoot "AudioSteg.Desktop"
 $androidPublishDir = Join-Path $root "publish\flutter\android"
 
+$flutterAppSettingsScript = Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1"
+if (Test-Path -LiteralPath $flutterAppSettingsScript) {
+    . $flutterAppSettingsScript
+    Sync-AppSettingsToFlutterProjectAssets -RepoRoot $root -FlutterProjectPath $flutterAppPath
+}
+
 function Resolve-CommandPath {
     param(
         [Parameter(Mandatory = $true)][string]$CommandName,
@@ -549,8 +555,9 @@ if (-not $SkipPackage) {
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
         "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
     )
-    . (Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1")
-    Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
+    if (Test-Path -LiteralPath $flutterAppSettingsScript) {
+        Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
+    }
 
     if (-not $SkipFlutterWindows) {
         Write-Host "Building Flutter Windows ($flutterAppPath, release) ..." -ForegroundColor Cyan
@@ -558,7 +565,9 @@ if (-not $SkipPackage) {
             -ProjectDirectory $flutterAppPath `
             -FlutterExecutable $flutterCommand `
             -LaunchDeveloperSettingsPage:$OpenDeveloperSettings
-        Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWindows
+        if (Test-Path -LiteralPath $flutterAppSettingsScript) {
+            Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWindows
+        }
     }
     else {
         Write-Host "Skipping Flutter Windows build (-SkipFlutterWindows)." -ForegroundColor Yellow
@@ -574,9 +583,20 @@ if (-not $SkipPackage) {
             -FatApk:$FatAndroidApk `
             -InvokeFlutterInProject $flutterInvokeSb
         Write-Host "Android publish: $androidPublishDir" -ForegroundColor Green
+        if (Test-Path -LiteralPath $flutterAppSettingsScript) {
+            Copy-AppSettingsToFlutterDeployOutputs `
+                -RepoRoot $root `
+                -FlutterProjectPath $flutterAppPath `
+                -IncludeAndroidPublish `
+                -AndroidPublishDir $androidPublishDir
+        }
     }
     else {
         Write-Host "Skipping Flutter Android build (-SkipFlutterAndroid)." -ForegroundColor Yellow
+    }
+
+    if (Test-Path -LiteralPath $flutterAppSettingsScript) {
+        Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeLinux
     }
 
     Invoke-DeployZip -ZipDirectory $ZipOutputDirectory

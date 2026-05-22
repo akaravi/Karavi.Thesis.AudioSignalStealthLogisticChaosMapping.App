@@ -103,14 +103,33 @@ class MessageBits {
       }
       bytes[i] = b;
     }
+    var end = bytes.length;
+    while (end > 0 && bytes[end - 1] == 0) {
+      end--;
+    }
+    if (end == 0) return '';
     try {
-      return utf8.decode(bytes);
+      return utf8.decode(bytes.sublist(0, end));
     } on FormatException {
       return null;
     }
   }
 
   static int bitLengthForText(String text) => fromUtf8Text(text).length;
+
+  /// UTF-8 bits zero-padded to [fixedBitLength] for fixed-msg_len embed mode.
+  static Uint8List fromUtf8TextPadded(String text, int fixedBitLength) {
+    final bits = fromUtf8Text(text);
+    if (bits.length > fixedBitLength) {
+      throw ArgumentError(
+        'Message needs ${bits.length} bits; fixed limit is $fixedBitLength.',
+      );
+    }
+    if (bits.length == fixedBitLength) return bits;
+    final padded = Uint8List(fixedBitLength);
+    padded.setRange(0, bits.length, bits);
+    return padded;
+  }
 }
 
 // ─── evaluate_stego.m ──────────────────────────────────────────────────────
@@ -244,8 +263,14 @@ class AudioWatermarking {
 
   // ── Embed + evaluate (main_steganography.m) ─────────────────────────────
 
-  WatermarkOutcome embed({required String text, required WavFile cover}) {
-    final binaryMsg = MessageBits.fromUtf8Text(text);
+  WatermarkOutcome embed({
+    required String text,
+    required WavFile cover,
+    int? fixedMsgBitLength,
+  }) {
+    final binaryMsg = fixedMsgBitLength != null && fixedMsgBitLength > 0
+        ? MessageBits.fromUtf8TextPadded(text, fixedMsgBitLength)
+        : MessageBits.fromUtf8Text(text);
     final embed = embedBits(cover: cover, binaryMsg: binaryMsg);
     final stegoDiff = stegoWithPerturbedKey(cover: cover, binaryMsg: binaryMsg);
     final coverMono = cover.toMono();

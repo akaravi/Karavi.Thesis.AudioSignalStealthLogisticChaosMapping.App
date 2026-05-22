@@ -222,6 +222,38 @@ class AppStrings {
       'Paramètres du chaos logistique',
     ),
   );
+  String defaultFixedMessageBitLimit(int bits) => _t(
+    _S(
+      'محدودیت طول پیام پیش‌فرض $bits بیت',
+      'Default message length limit: $bits bits',
+      'حد طول الرسالة الافتراضي: $bits بت',
+      'Limite de longueur par défaut : $bits bits',
+    ),
+  );
+  String defaultFixedMessageBitLimitHint(int bits) => _t(
+    _S(
+      'نهان‌نگاری و رمزگشایی همیشه با $bits بیت انجام می‌شود؛ طول پیام از شما پرسیده نمی‌شود.',
+      'Embed and extract always use $bits bits; message length is not asked.',
+      'الإخفاء والاستخراج دائماً بـ $bits بت؛ لا يُطلب طول الرسالة.',
+      'Intégration et extraction à $bits bits ; la longueur n’est pas demandée.',
+    ),
+  );
+  String messageBitsUsed(int used) => _t(
+    _S(
+      '$used بیت استفاده‌شده',
+      '$used bits used',
+      '$used بت مستخدم',
+      '$used bits utilisés',
+    ),
+  );
+  String messageBitsUsedAndRemaining(int used, int remaining) => _t(
+    _S(
+      '$used بیت استفاده‌شده — $remaining بیت باقی‌مانده',
+      '$used bits used — $remaining bits remaining',
+      '$used بت مستخدم — $remaining بت متبقٍ',
+      '$used bits utilisés — $remaining bits restants',
+    ),
+  );
   String get rParam =>
       _t(const _S('پارامتر r', 'r parameter', 'معامل r', 'Paramètre r'));
   String get x0Param => _t(
@@ -254,6 +286,14 @@ class AppStrings {
       'Value is outside the allowed range.',
       'القيمة خارج النطاق المسموح.',
       'La valeur est hors de la plage autorisée.',
+    ),
+  );
+  String get logisticMapPreviewHint => _t(
+    const _S(
+      'پیش‌نمایش دنبالهٔ آشوب با پارامترهای فعلی (خط چین: آستانهٔ کلید باینری)',
+      'Chaos sequence preview for current r and x0 (dashed: binary key threshold)',
+      'معاينة تسلسل الفوضى للمعاملات الحالية (متقطع: عتبة المفتاح الثنائي)',
+      'Aperçu de la séquence chaotique pour r et x0 actuels (pointillé : seuil clé binaire)',
     ),
   );
   String get colorSeed =>
