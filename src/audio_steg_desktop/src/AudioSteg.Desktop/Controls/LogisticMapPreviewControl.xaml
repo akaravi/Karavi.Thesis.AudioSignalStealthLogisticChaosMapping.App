@@ -1,9 +1,0 @@
-<UserControl x:Class="AudioSteg.Desktop.Controls.LogisticMapPreviewControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <StackPanel>
-    <TextBlock x:Name="CaptionText" Style="{StaticResource BodySmall}" Margin="0,0,0,8" />
-    <Border x:Name="ChartHost" Height="168" CornerRadius="12"
-            Background="{DynamicResource SurfaceContainerHighBrush}" ClipToBounds="True" />
-  </StackPanel>
-</UserControl>

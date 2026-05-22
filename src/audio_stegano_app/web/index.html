@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If the app is served from a subfolder (e.g. https://host/ThesisAudioStegano/),
+    build with: flutter build web --release --base-href=/ThesisAudioStegano/
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="نهان‌نگاری پیام در صوت — پنهان و استخراج متن در فایل WAV. Audio Steganography: hide and extract secret messages in audio.">
+  <meta name="theme-color" content="#00B4B7">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="صوت‌نهان">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>نهان‌نگاری پیام در صوت — Audio Steganography</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      background: #1a1a1a;
+      color: #e8e8e8;
+      font-family: system-ui, sans-serif;
+    }
+    flt-glass-pane, flutter-view {
+      touch-action: manipulation;
+    }
+    #boot-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1rem;
+    }
+    #boot-error {
+      display: none;
+      max-width: 32rem;
+      padding: 1rem;
+      text-align: center;
+      color: #ffb4ab;
+    }
+  </style>
+</head>
+<body>
+  <div id="boot-loading" aria-live="polite">
+    <p>در حال بارگذاری… / Loading…</p>
+  </div>
+  <div id="boot-error" role="alert"></div>
+  <script>
+    window.addEventListener('error', function (e) {
+      var el = document.getElementById('boot-error');
+      var loading = document.getElementById('boot-loading');
+      if (el && loading) {
+        loading.style.display = 'none';
+        el.style.display = 'block';
+        el.textContent = 'Startup error: ' + (e.message || e);
+      }
+    });
+    window.addEventListener('flutter-first-frame', function () {
+      var loading = document.getElementById('boot-loading');
+      if (loading) loading.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
