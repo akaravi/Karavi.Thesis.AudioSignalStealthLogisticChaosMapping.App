@@ -4,6 +4,8 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-23 | — | 72b | ادامه README: فهرست، تب‌ها، تنظیمات/متریک، پایان‌نامه، پیش‌نیاز، تست، معماری mermaid، عیب‌یابی، حریم خصوصی | `README.md` |
+| 2026-05-23 | — | 72 | README دوزبانه (fa/en): معرفی، ویژگی‌ها، راهنمای کاربر، ۱۱ اسکرین‌شات ۱۶:۹، اجرا و انتشار | `README.md` |
 | 2026-05-22 | 15:30 | 71b | رفع `flutter build web`: stub وب برای `decodeMp4FromPath` / `decodeMp4BytesViaTempFile` | `audio_mp3_decode_path_stub.dart` |
 | 2026-05-22 | 15:00 | 71 | اندروید: «باز کردن با» برای WAV و MP4 در منوی سیستم؛ intent-filterهای VIEW؛ دریافت URI در `MainActivity`؛ بارگذاری خودکار در تب رمزگشایی؛ پشتیبانی decode MP4 | `AndroidManifest.xml`, `MainActivity.kt`, `android_open_file_intent*.dart`, `home_shell.dart`, `extract_screen.dart`, `audio_input_loader*.dart`, `audio_mp3_decoder.dart`, `app_strings.dart` |
 | 2026-05-22 | 14:15 | 70 | رفع شکست `flutter test`: به‌روزرسانی goldenهای Cafe Bazaar برای صفحه Embed (تغییرات Part 67–69)؛ کپی به `publish/cafebazaar/screenshots/` | `test/goldens/cafebazaar/01_embed_fa_light.png`, `05_embed_fa_dark.png`, `publish/cafebazaar/screenshots/` |

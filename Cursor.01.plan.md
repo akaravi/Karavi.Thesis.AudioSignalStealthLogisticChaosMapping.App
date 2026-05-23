@@ -1470,3 +1470,46 @@
 ### Result 71b
 - ✅ `audio_mp3_decode_path_stub.dart`: `decodeMp4FromPath` / `decodeMp4BytesViaTempFile` (dart2js به شاخهٔ `!kIsWeb` هم به stub نیاز دارد)
 - ✅ `flutter build web --release` سبز
+
+---
+
+## Part 72 — README دوزبانه کامل
+
+```json
+{
+  "part": 72,
+  "title": "README.md bilingual (fa/en) with screenshots and user guide",
+  "commands": [
+    "Expand README.md: Persian + English sections",
+    "Embed all 11 images from docs/cafebazaar/screenshots_16x9/",
+    "Include quick + full user guide from in-app help strings",
+    "Link cafebazaar-publish-guide, GITHUB_RELEASE, repo structure, quick start"
+  ],
+  "files": ["README.md", "readmehistory.md", "Cursor.01.plan.md"]
+}
+```
+
+### Result 72
+- ✅ `README.md` — بخش فارسی و انگلیسی: معرفی، جدول ویژگی‌ها، گالری ۱۱ اسکرین‌شات ۱۶:۹، راهنمای سریع و کامل نهان‌نگاری/رمزگشایی، ساختار مخزن، اجرای Flutter/WPF/MATLAB، انتشار کافه‌بازار و GitHub، `update ver`، مجوزها، پشتیبانی
+- ✅ تصاویر: `docs/cafebazaar/screenshots_16x9/01_16x9.png` … `11_16x9.png`
+- ✅ `readmehistory.md` — Part 72
+
+---
+
+## Part 72b — ادامه README (فهرست، معماری، عیب‌یابی)
+
+```json
+{
+  "part": "72b",
+  "title": "README continuation: TOC, tabs, metrics, thesis links, dev setup, mermaid, FAQ",
+  "files": ["README.md", "readmehistory.md", "Cursor.01.plan.md"]
+}
+```
+
+### Result 72b
+- ✅ فهرست دوزبانه + لینک مخزن GitHub
+- ✅ تب‌ها، تنظیمات کلید (`seed`/`r`/`x0`)، جدول متریک‌ها، مراحل ۴–۶ رمزگشایی
+- ✅ درباره پایان‌نامه (کاروی / دکتر مصلح) + پیوندهای `about_constants.dart`
+- ✅ پیش‌نیازها، `flutter test` / `dotnet test`، `_build-all-projects.ps1`
+- ✅ نمودار mermaid + جدول نگاشت MATLAB ↔ Dart
+- ✅ عیب‌یابی رایج، حریم خصوصی، License
