@@ -119,6 +119,15 @@ function Invoke-FlutterAndroidReleaseBuild {
 
     Assert-AndroidSdkAvailable
 
+    $ensureGradleScript = Join-Path $androidModule "scripts\ensure_gradle_wrapper_dist.ps1"
+    if (Test-Path -LiteralPath $ensureGradleScript) {
+        Write-Host "Ensuring Gradle wrapper distribution..." -ForegroundColor Cyan
+        & $ensureGradleScript -AndroidProjectPath $androidModule
+        if ($LASTEXITCODE -ne 0) {
+            throw "ensure_gradle_wrapper_dist.ps1 failed (exit $LASTEXITCODE)"
+        }
+    }
+
     $versionLabel = Get-FlutterPubspecVersionLabel -FlutterProjectPath $FlutterProjectPath
     $versionToken = Get-SafeVersionFileToken -VersionLabel $versionLabel
     Write-Host "App version (pubspec): $versionLabel" -ForegroundColor DarkGray
