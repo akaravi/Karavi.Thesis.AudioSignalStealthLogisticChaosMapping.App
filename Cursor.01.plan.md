@@ -1578,3 +1578,49 @@
 - ✅ `invoke_flutter_windows_build.ps1`: همیشه بیلد عادی پس از junction؛ retry خودکار با `pub.flutter-io.cn` روی exit 69؛ mirror env در اسکریپت elevated
 - ✅ `ensure_windows_plugin_junctions.ps1`: `exit 0`؛ چک `$LASTEXITCODE` فقط وقتی مقدار غیر null و غیر صفر
 - ✅ تأیید: `Invoke-FlutterWindowsReleaseBuild` بدون mirror env → exit 69 → mirror retry → Release exe سبز
+
+---
+
+## Part 76 — رفع flutter build apk (Gradle شبکه)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع assembleRelease: Gradle wrapper Connection reset و handshake plugins.gradle.org"
+}
+```
+
+### Result 76
+- ✅ **علت ۱:** کش ناقص `gradle-8.14-all.zip.part` / `.lck` — دانلود wrapper از `services.gradle.org` با Connection reset
+- ✅ **علت ۲:** وابستگی‌های plugin از `plugins.gradle.org` / `repo.maven.apache.org` — Remote host terminated the handshake
+- ✅ `ensure_gradle_wrapper_dist.ps1`: پاکسازی کش ناقص؛ retry mirrorهای Tencent/Huawei/services
+- ✅ `gradle-wrapper.properties`: `mirrors.cloud.tencent.com` + `networkTimeout=120000`
+- ✅ `settings.gradle.kts`: فقط mirrorهای Aliyun/Huawei (+ Flutter storage)؛ حذف `gradlePluginPortal`/`google()`/`mavenCentral()` از pluginManagement
+- ✅ `gradle.properties`: timeout اتصال HTTP
+- ✅ `flutter_android_build.ps1`: فراخوانی ensure قبل از build
+- ℹ️ بیلد `gradlew :app:assembleRelease` پس از fix از مرحله plugin resolution عبور کرد (در حال compile)
+- ℹ️ برای `_build-all-projects.ps1` توصیه: `-UseFlutterIoCnMirror` برای pub/flutter
+
+---
+
+## Part 77 — ممیزی کل پروژه: بدون CDN (فونت / CSS / JS)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "severity": "must",
+  "task": "بررسی سراسری repo برای هرگونه CDN یا URL خارجی در زمان اجرا (فونت، CSS، JS)"
+}
+```
+
+### Result 77
+- ✅ **Flutter Web** (`web/index.html`): فقط `flutter_bootstrap.js`، آیکون‌ها و استایل inline — بدون `<link href="https://...">` یا `<script src="https://...">`
+- ✅ **PWA** (`manifest.json`): آیکون‌های محلی `icons/`
+- ✅ **Flutter app**: بدون `google_fonts`؛ فونت از Material/Cupertino باندل؛ بدون `Image.network` برای UI
+- ✅ **WPF Desktop**: فونت سیستمی `Segoe UI` / `Segoe MDL2 Assets` — بدون دانلود فونت از اینترنت
+- ✅ **خروجی build/publish**: جستجوی `cdn` / `googleapis` / `jsdelivr` — موردی یافت نشد
+- ℹ️ **مجاز (غیر CDN UI):** `url_launcher` برای GitHub/ntk.ir در صفحه درباره؛ xmlns استاندارد XAML/Android
+- ℹ️ **فقط build-time:** Gradle/Maven mirrors، `pub.flutter-io.cn`, دانلود `bundle-signer` از GitHub — در زمان باز شدن اپ توسط کاربر فراخوانی نمی‌شوند
+- ✅ قانون فعال: `.cursor/rules/no-external-cdn-assets.mdc`

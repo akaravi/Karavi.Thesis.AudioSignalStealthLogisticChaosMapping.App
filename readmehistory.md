@@ -4,6 +4,7 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-23 | 23:45 | 76 | رفع `flutter build apk`: Gradle wrapper ناقص + mirror Maven/Gradle (Tencent/Aliyun/Huawei) | `gradle-wrapper.properties`, `settings.gradle.kts`, `ensure_gradle_wrapper_dist.ps1`, `flutter_android_build.ps1` |
 | 2026-05-23 | 22:14 | 75 | رفع `flutter build windows --release` exit 69: بیلد عادی پس از junction (بدون gate symlink)؛ retry mirror pub.dev؛ env mirror در elevated؛ `exit 0` junction script | `invoke_flutter_windows_build.ps1`, `ensure_windows_plugin_junctions.ps1` |
 | 2026-05-23 | 17:59 | 74 | run all: dotnet 5/5، flutter analyze صفر، flutter test 41/41؛ WPF + Flutter Web اجرا؛ HTTP 200؛ بیلد windows debug سبز؛ pub.dev با mirror | `logs/*`, `wpf.pid`, `flutter_web.pid` |
 | 2026-05-23 | 17:54 | 73 | افزایش نسخه فرعی (update ver): `1.0.0+1` → `1.1.0+2` (minor +1، patch → 0، build +1) | `pubspec.yaml`, `AudioStegano.Desktop.csproj` (`_update-ver.ps1`) |
@@ -183,3 +184,4 @@
 | 2026-05-21 | — | fix | رفع تداخل Gradle: حذف `ndk.abiFilters` از `app/build.gradle.kts` هنگام `--split-per-abi` | `android/app/build.gradle.kts` |
 | 2026-05-21 | — | release | یکپارچه‌سازی Cafe Bazaar bundle-signer: `Invoke-CafeBazaarBundleSigner.ps1`، خروجی `.bin` در `_build-cafebazaar-release.ps1`، به‌روزرسانی راهنما | `android/scripts/`, `docs/cafebazaar-publish-guide.md`, `LISTING.fa.md` |
 | 2026-05-21 | — | build | حذف مسیر ثابت E: از جستجوی JAR؛ فقط `CAFEBAZAAR_BUNDLESIGNER_JAR` / `-BundleSignerJarPath` / `android/tools/` | `Invoke-CafeBazaarBundleSigner.ps1`, `cafebazaar-publish-guide.md` |
+| 2026-05-23 | — | audit | ممیزی سراسری CDN: بدون فونت/CSS/JS خارجی در runtime — Flutter Web، WPF، build/publish تأیید شد | `Cursor.01.plan.md` Part 77 |
