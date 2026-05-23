@@ -1,0 +1,38 @@
+// Optional global init (copy to %USERPROFILE%\.gradle\init.gradle if composite builds still hit blocked hosts).
+// Primary mirrors are configured in settings.gradle.kts (pluginManagement + dependencyResolutionManagement).
+
+def mirrorMavenUrls = [
+    'https://maven.aliyun.com/repository/gradle-plugin',
+    'https://maven.aliyun.com/repository/public',
+    'https://maven.aliyun.com/repository/google',
+    'https://maven.aliyun.com/repository/central',
+    'https://repo.huaweicloud.com/repository/maven/'
+]
+
+def addMirrors = { repoHandler ->
+    mirrorMavenUrls.each { url ->
+        repoHandler.maven { it.url = url }
+    }
+}
+
+gradle.settingsEvaluated { settings ->
+    try {
+        addMirrors(settings.pluginManagement.repositories)
+    } catch (ignored) {
+        // Older Gradle / composite edge cases
+    }
+    try {
+        def drm = settings.dependencyResolutionManagement
+        if (drm != null) {
+            addMirrors(drm.repositories)
+        }
+    } catch (ignored) {
+    }
+}
+
+gradle.projectsLoaded {
+    gradle.allprojects { project ->
+        project.buildscript.repositories { addMirrors(it) }
+        project.repositories { addMirrors(it) }
+    }
+}

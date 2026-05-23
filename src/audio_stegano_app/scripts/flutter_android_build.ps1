@@ -123,7 +123,7 @@ function Invoke-FlutterAndroidReleaseBuild {
     if (Test-Path -LiteralPath $ensureGradleScript) {
         Write-Host "Ensuring Gradle wrapper distribution..." -ForegroundColor Cyan
         & $ensureGradleScript -AndroidProjectPath $androidModule
-        if ($LASTEXITCODE -ne 0) {
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) {
             throw "ensure_gradle_wrapper_dist.ps1 failed (exit $LASTEXITCODE)"
         }
     }
