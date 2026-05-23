@@ -1473,7 +1473,54 @@
 
 ---
 
-## Part 72 — افزایش نسخه فرعی (update ver)
+## Part 72 — README دوزبانه کامل
+
+### دستور
+```json
+{
+  "part": 72,
+  "kind": "json-prompt",
+  "title": "README.md bilingual (fa/en) with screenshots and user guide",
+  "commands": [
+    "Expand README.md: Persian + English sections",
+    "Embed all 11 images from docs/cafebazaar/screenshots_16x9/",
+    "Include quick + full user guide from in-app help strings",
+    "Link cafebazaar-publish-guide, GITHUB_RELEASE, repo structure, quick start"
+  ],
+  "files": ["README.md", "readmehistory.md", "Cursor.01.plan.md"]
+}
+```
+
+### Result 72
+- ✅ `README.md` — بخش فارسی و انگلیسی: معرفی، جدول ویژگی‌ها، گالری ۱۱ اسکرین‌شات ۱۶:۹، راهنمای سریع و کامل نهان‌نگاری/رمزگشایی، ساختار مخزن، اجرای Flutter/WPF/MATLAB، انتشار کافه‌بازار و GitHub، `update ver`، مجوزها، پشتیبانی
+- ✅ تصاویر: `docs/cafebazaar/screenshots_16x9/01_16x9.png` … `11_16x9.png`
+- ✅ `readmehistory.md` — Part 72
+
+---
+
+## Part 72b — ادامه README (فهرست، معماری، عیب‌یابی)
+
+### دستور
+```json
+{
+  "part": "72b",
+  "kind": "json-prompt",
+  "title": "README continuation: TOC, tabs, metrics, thesis links, dev setup, mermaid, FAQ",
+  "files": ["README.md", "readmehistory.md", "Cursor.01.plan.md"]
+}
+```
+
+### Result 72b
+- ✅ فهرست دوزبانه + لینک مخزن GitHub
+- ✅ تب‌ها، تنظیمات کلید (`seed`/`r`/`x0`)، جدول متریک‌ها، مراحل ۴–۶ رمزگشایی
+- ✅ درباره پایان‌نامه (کاروی / دکتر مصلح) + پیوندهای `about_constants.dart`
+- ✅ پیش‌نیازها، `flutter test` / `dotnet test`، `_build-all-projects.ps1`
+- ✅ نمودار mermaid + جدول نگاشت MATLAB ↔ Dart
+- ✅ عیب‌یابی رایج، حریم خصوصی، License
+
+---
+
+## Part 73 — افزایش نسخه فرعی (update ver)
 
 ### دستور
 ```json
@@ -1483,7 +1530,7 @@
 }
 ```
 
-### Result 72
+### Result 73
 - ✅ `.\_update-ver.ps1`: `1.0.0+1` → `1.1.0+2` (minor +1، patch → 0، build +1)
 - ✅ `src/audio_stegano_app/pubspec.yaml`: `version: 1.1.0+2`
 - ✅ `AudioStegano.Desktop.csproj`: `Version`/`AssemblyVersion`/`FileVersion` = `1.1.0`؛ `InformationalVersion` = `1.1.0+2`
@@ -1491,7 +1538,7 @@
 
 ---
 
-## Part 73 — run all (دیباگ، اجرا، health)
+## Part 74 — run all (دیباگ، اجرا، health)
 
 ### دستور
 ```json
@@ -1501,7 +1548,7 @@
 }
 ```
 
-### Result 73
+### Result 74
 - ✅ **.NET build:** ۰ خطا (`logs/dotnet_build.log`)
 - ✅ **.NET test:** ۵/۵ Passed (`logs/dotnet_test.log`)
 - ✅ **Flutter pub get:** اولین تلاش `pub.dev` → authorization failed؛ موفق با mirror `pub.flutter-io.cn` (`logs/flutter_pub_get.log` اولیه شکست؛ اجرای بعدی در analyze/test)
@@ -1516,7 +1563,7 @@
 
 ---
 
-## Part 74 — رفع flutter build windows exit 69
+## Part 75 — رفع flutter build windows exit 69
 
 ### دستور
 ```json
@@ -1526,7 +1573,7 @@
 }
 ```
 
-### Result 74
+### Result 75
 - ✅ **علت:** `Test-WindowsSymlinkCreationAllowed`=false باعث می‌شد بیلد عادی (با junction آماده) رد شود؛ elevated بدون `PUB_HOSTED_URL` → pub.dev exit 69
 - ✅ `invoke_flutter_windows_build.ps1`: همیشه بیلد عادی پس از junction؛ retry خودکار با `pub.flutter-io.cn` روی exit 69؛ mirror env در اسکریپت elevated
 - ✅ `ensure_windows_plugin_junctions.ps1`: `exit 0`؛ چک `$LASTEXITCODE` فقط وقتی مقدار غیر null و غیر صفر

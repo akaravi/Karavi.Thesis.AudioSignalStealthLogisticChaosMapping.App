@@ -4,9 +4,11 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
-| 2026-05-23 | 22:14 | 74 | رفع `flutter build windows --release` exit 69: بیلد عادی پس از junction (بدون gate symlink)؛ retry mirror pub.dev؛ env mirror در elevated؛ `exit 0` junction script | `invoke_flutter_windows_build.ps1`, `ensure_windows_plugin_junctions.ps1` |
-| 2026-05-23 | 17:59 | run-all | run all: dotnet 5/5، flutter analyze صفر، flutter test 41/41؛ WPF + Flutter Web اجرا؛ HTTP 200؛ بیلد windows debug سبز؛ pub.dev با mirror | `logs/*`, `wpf.pid`, `flutter_web.pid` |
-| 2026-05-23 | 17:54 | 72 | افزایش نسخه فرعی (update ver): `1.0.0+1` → `1.1.0+2` (minor +1، patch → 0، build +1) | `pubspec.yaml`, `AudioStegano.Desktop.csproj` (`_update-ver.ps1`) |
+| 2026-05-23 | 22:14 | 75 | رفع `flutter build windows --release` exit 69: بیلد عادی پس از junction (بدون gate symlink)؛ retry mirror pub.dev؛ env mirror در elevated؛ `exit 0` junction script | `invoke_flutter_windows_build.ps1`, `ensure_windows_plugin_junctions.ps1` |
+| 2026-05-23 | 17:59 | 74 | run all: dotnet 5/5، flutter analyze صفر، flutter test 41/41؛ WPF + Flutter Web اجرا؛ HTTP 200؛ بیلد windows debug سبز؛ pub.dev با mirror | `logs/*`, `wpf.pid`, `flutter_web.pid` |
+| 2026-05-23 | 17:54 | 73 | افزایش نسخه فرعی (update ver): `1.0.0+1` → `1.1.0+2` (minor +1، patch → 0، build +1) | `pubspec.yaml`, `AudioStegano.Desktop.csproj` (`_update-ver.ps1`) |
+| 2026-05-23 | — | 72b | ادامه README: فهرست، تب‌ها، تنظیمات/متریک، پایان‌نامه، پیش‌نیاز، تست، معماری mermaid، عیب‌یابی، حریم خصوصی | `README.md` |
+| 2026-05-23 | — | 72 | README دوزبانه (fa/en): معرفی، ویژگی‌ها، راهنمای کاربر، ۱۱ اسکرین‌شات ۱۶:۹، اجرا و انتشار | `README.md` |
 | 2026-05-22 | 15:30 | 71b | رفع `flutter build web`: stub وب برای `decodeMp4FromPath` / `decodeMp4BytesViaTempFile` | `audio_mp3_decode_path_stub.dart` |
 | 2026-05-22 | 15:00 | 71 | اندروید: «باز کردن با» برای WAV و MP4 در منوی سیستم؛ intent-filterهای VIEW؛ دریافت URI در `MainActivity`؛ بارگذاری خودکار در تب رمزگشایی؛ پشتیبانی decode MP4 | `AndroidManifest.xml`, `MainActivity.kt`, `android_open_file_intent*.dart`, `home_shell.dart`, `extract_screen.dart`, `audio_input_loader*.dart`, `audio_mp3_decoder.dart`, `app_strings.dart` |
 | 2026-05-22 | 14:15 | 70 | رفع شکست `flutter test`: به‌روزرسانی goldenهای Cafe Bazaar برای صفحه Embed (تغییرات Part 67–69)؛ کپی به `publish/cafebazaar/screenshots/` | `test/goldens/cafebazaar/01_embed_fa_light.png`, `05_embed_fa_dark.png`, `publish/cafebazaar/screenshots/` |
