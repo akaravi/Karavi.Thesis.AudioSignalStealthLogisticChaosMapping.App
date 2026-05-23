@@ -34,3 +34,4 @@ foreach ($plugin in $deps.plugins.windows) {
 }
 
 Write-Host "Plugin junctions ready at $linkRoot"
+exit 0

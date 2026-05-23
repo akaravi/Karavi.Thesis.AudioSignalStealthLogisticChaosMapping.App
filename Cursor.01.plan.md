@@ -1470,3 +1470,64 @@
 ### Result 71b
 - ✅ `audio_mp3_decode_path_stub.dart`: `decodeMp4FromPath` / `decodeMp4BytesViaTempFile` (dart2js به شاخهٔ `!kIsWeb` هم به stub نیاز دارد)
 - ✅ `flutter build web --release` سبز
+
+---
+
+## Part 72 — افزایش نسخه فرعی (update ver)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "update ver — افزایش نسخه فرعی و همگام‌سازی Flutter + WPF"
+}
+```
+
+### Result 72
+- ✅ `.\_update-ver.ps1`: `1.0.0+1` → `1.1.0+2` (minor +1، patch → 0، build +1)
+- ✅ `src/audio_stegano_app/pubspec.yaml`: `version: 1.1.0+2`
+- ✅ `AudioStegano.Desktop.csproj`: `Version`/`AssemblyVersion`/`FileVersion` = `1.1.0`؛ `InformationalVersion` = `1.1.0+2`
+- ✅ ثبت در `readmehistory.md`
+
+---
+
+## Part 73 — run all (دیباگ، اجرا، health)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "run all — دیباگ همه پروژه‌ها، اجرا در پس‌زمینه، لیست آدرس‌ها، health، بررسی لاگ‌ها"
+}
+```
+
+### Result 73
+- ✅ **.NET build:** ۰ خطا (`logs/dotnet_build.log`)
+- ✅ **.NET test:** ۵/۵ Passed (`logs/dotnet_test.log`)
+- ✅ **Flutter pub get:** اولین تلاش `pub.dev` → authorization failed؛ موفق با mirror `pub.flutter-io.cn` (`logs/flutter_pub_get.log` اولیه شکست؛ اجرای بعدی در analyze/test)
+- ✅ **Flutter analyze:** No issues found (`logs/flutter_analyze.log`)
+- ✅ **Flutter test:** ۴۱/۴۱ Passed (`logs/flutter_test.log`)
+- ✅ **Flutter Windows build (debug):** سبز — `build\windows\x64\runner\Debug\audio_stegano_app.exe` (`logs/flutter_build_windows.log`)
+- ✅ **WPF:** `dotnet run` — GUI `AudioStegano.Desktop` pid=46652 responding=True؛ launcher dotnet pid=49208 (`logs/wpf_run.log`, `logs/wpf.pid`)
+- ✅ **Flutter Web:** **http://localhost:8080** — HTTP **200**؛ launcher pid=41836 (`logs/flutter_web_run.log`, `logs/flutter_web.pid`)
+- ℹ️ **SSL:** `https://localhost:8080` — N/A (dev web-server فقط HTTP؛ بدون endpoint HTTPS)
+- ℹ️ **API health:** N/A — اپ GUI دسکتاپ/وب؛ بدون REST health backend
+- 📁 **لاگ‌ها:** `logs/{dotnet_build,dotnet_test,flutter_analyze,flutter_test,flutter_build_windows,wpf_run,flutter_web_run}.*`
+
+---
+
+## Part 74 — رفع flutter build windows exit 69
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع خطای _build-all-projects: flutter build windows --release exit 69 پس از symlink test failed"
+}
+```
+
+### Result 74
+- ✅ **علت:** `Test-WindowsSymlinkCreationAllowed`=false باعث می‌شد بیلد عادی (با junction آماده) رد شود؛ elevated بدون `PUB_HOSTED_URL` → pub.dev exit 69
+- ✅ `invoke_flutter_windows_build.ps1`: همیشه بیلد عادی پس از junction؛ retry خودکار با `pub.flutter-io.cn` روی exit 69؛ mirror env در اسکریپت elevated
+- ✅ `ensure_windows_plugin_junctions.ps1`: `exit 0`؛ چک `$LASTEXITCODE` فقط وقتی مقدار غیر null و غیر صفر
+- ✅ تأیید: `Invoke-FlutterWindowsReleaseBuild` بدون mirror env → exit 69 → mirror retry → Release exe سبز
