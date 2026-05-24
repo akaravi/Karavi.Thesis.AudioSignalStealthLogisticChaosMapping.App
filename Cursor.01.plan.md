@@ -1897,3 +1897,55 @@
 - ✅ `_build-cafebazaar-release.ps1`: `New-CafeBazaarTimestampedOutputPath` — پیش‌فرض `publish\cafebazaar_yyyyMMdd_HHmmss`؛ با `-OutputDirectory` → `{path}_yyyyMMdd_HHmmss`
 - ✅ قالب ثابت `publish\cafebazaar\LISTING.fa.md` (در صورت وجود) به پوشهٔ timestamped کپی می‌شود
 - ✅ `docs/cafebazaar-publish-guide.md` به‌روز
+
+---
+
+## Part 91 — رفع flutter analyze (build-all)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع شکست flutter analyze در _build-all-projects.ps1 — unnecessary_import و unnecessary_null_comparison"
+}
+```
+
+### Result 91
+- ✅ `embed_screen.dart`: حذف `import 'dart:typed_data'` (عناصر از `package:flutter/foundation.dart`)
+- ✅ `audio_file_drop_surface_io.dart`: `file.path` غیرnullable — فقط `path.isEmpty` و پسوند پشتیبانی‌شده
+- ✅ `flutter analyze --no-fatal-infos`: No issues found
+
+---
+
+## Part 92 — رفع flutter test: Windows Open with EventChannel
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع MissingPluginException روی windows_open_file_events در cafebazaar_screenshots_test و _build-all-projects.ps1"
+}
+```
+
+### Result 92
+- ✅ علت: روی ویندوز `dart.library.io` → `windows_open_file_intent_io`؛ `Platform.isWindows` در `flutter test` true اما EventChannel فقط در runner بومی ثبت شده
+- ✅ `isSupported`: `Platform.isWindows && FLUTTER_TEST != true`
+- ✅ `flutter test`: 42/42 سبز (شامل 5 golden Cafe Bazaar)
+
+---
+
+## Part 93 — رفع flutter build windows (C++ runner)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع خطاهای C2039 task_runner و C3668 OnListen/OnCancel و C2664 SetStreamHandler در flutter build windows --release"
+}
+```
+
+### Result 93
+- ✅ `windows_open_file_channel.cpp`: `OnListenInternal` / `OnCancelInternal`؛ `SetStreamHandler(std::unique_ptr<StreamHandler>)`؛ `g_stream_handler` برای `EmitPath`
+- ✅ `flutter_window.cpp`: حذف `engine->task_runner()->PostTask` (API حذف‌شده از `FlutterEngine`)
+- ✅ `single_instance`: `kOpenAudioFileMessage` + `PostMessage` از thread پایپ؛ هندل در `MessageHandler`
+- ✅ `flutter build windows --release` سبز

@@ -20,6 +20,15 @@ std::mutex g_pending_mutex;
 std::vector<std::string> g_pending_paths;
 
 void DispatchPath(const std::string& path) {
+  if (g_main_window != nullptr) {
+    auto* copy = new std::string(path);
+    if (::PostMessage(g_main_window, single_instance::kOpenAudioFileMessage, 0,
+                      reinterpret_cast<LPARAM>(copy))) {
+      return;
+    }
+    delete copy;
+  }
+
   std::function<void(const std::string& path)> handler;
   {
     std::lock_guard<std::mutex> lock(g_pending_mutex);

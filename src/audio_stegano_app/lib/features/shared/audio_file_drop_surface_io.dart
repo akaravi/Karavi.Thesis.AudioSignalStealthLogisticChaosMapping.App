@@ -37,7 +37,7 @@ class AudioFileDropSurface extends StatelessWidget {
         if (!enabled || details.files.isEmpty) return;
         final file = details.files.first;
         final path = file.path;
-        if (path == null || path.isEmpty || !_isSupportedPath(path)) return;
+        if (path.isEmpty || !_isSupportedPath(path)) return;
         onFilePath(path);
       },
       child: child,

@@ -30,12 +30,9 @@ bool FlutterWindow::OnCreate() {
   single_instance::SetMainWindow(GetHandle());
   auto* engine = flutter_controller_->engine();
   RegisterWindowsOpenFileChannel(engine);
-  single_instance::AttachPathHandler([engine](const std::string& path) {
-    std::string copy = path;
-    engine->task_runner()->PostTask([copy]() {
-      EmitWindowsOpenFilePath(copy);
-      single_instance::ActivateMainWindow();
-    });
+  single_instance::AttachPathHandler([](const std::string& path) {
+    EmitWindowsOpenFilePath(path);
+    single_instance::ActivateMainWindow();
   });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
@@ -75,6 +72,15 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    case single_instance::kOpenAudioFileMessage: {
+      auto* path = reinterpret_cast<std::string*>(lparam);
+      if (path != nullptr) {
+        EmitWindowsOpenFilePath(*path);
+        single_instance::ActivateMainWindow();
+        delete path;
+      }
+      return 0;
+    }
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;

@@ -10,7 +10,9 @@ const _eventChannel =
 
 /// Secondary-instance «Open with» forwarded via named pipe (WPF parity).
 abstract final class WindowsOpenFileIntent {
-  static bool get isSupported => Platform.isWindows;
+  /// Native EventChannel exists only in the Windows runner, not `flutter test`.
+  static bool get isSupported =>
+      Platform.isWindows && Platform.environment['FLUTTER_TEST'] != 'true';
 
   static Stream<OpenedAudioFile> watchOpens() {
     if (!isSupported) return const Stream.empty();

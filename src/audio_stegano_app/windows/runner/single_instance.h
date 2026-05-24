@@ -10,6 +10,9 @@
 
 namespace single_instance {
 
+// Posted to the main HWND when a secondary instance forwards a file path.
+inline constexpr UINT kOpenAudioFileMessage = WM_APP + 100;
+
 // Returns false when another instance is already running.
 bool TryBecomePrimary();
 

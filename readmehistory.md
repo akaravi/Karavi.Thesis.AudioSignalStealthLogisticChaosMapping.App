@@ -4,6 +4,9 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-24 | — | 93 | رفع `flutter build windows`: `OnListenInternal`/`OnCancelInternal`، `SetStreamHandler(unique_ptr)`؛ حذف `engine->task_runner()`؛ `PostMessage` برای Open with از thread پایپ | `windows_open_file_channel.cpp`, `flutter_window.cpp`, `single_instance.*` |
+| 2026-05-24 | — | 92 | رفع شکست `flutter test` در `_build-all-projects.ps1`: `WindowsOpenFileIntent.isSupported` false وقتی `FLUTTER_TEST=true` (بدون EventChannel در widget test) | `windows_open_file_intent_io.dart` |
+| 2026-05-24 | — | 91 | رفع شکست `flutter analyze` در `_build-all-projects.ps1`: حذف import اضافی `dart:typed_data`؛ حذف مقایسهٔ null غیرضروری روی `file.path` در Drag&Drop | `embed_screen.dart`, `audio_file_drop_surface_io.dart` |
 | 2026-05-24 | — | 90 | خروجی `_build-cafebazaar-release.ps1`: پوشه `publish/cafebazaar_yyyyMMdd_HHmmss`؛ قالب `LISTING.fa.md` در `publish/cafebazaar/` | `_build-cafebazaar-release.ps1`, `docs/cafebazaar-publish-guide.md` |
 | 2026-05-24 | — | 89 | رفع `_build-cafebazaar-release.ps1`: نادیده گرفتن هشدار symlink ویندوز اگر پکیج‌ها resolve شدند؛ retry خودکار آینه pub (flutter-io.cn/Tsinghua) | `_build-cafebazaar-release.ps1` |
 | 2026-05-24 | — | 83 | WPF UX parity: لغو ضبط، FAB نهان‌نگاری جدید حین ضبط، برچسب پیام/«یا»، Drag&Drop wav/mp3/mp4، قفل دکمه‌ها هنگام تأیید | `AudioCaptureService.Cancel`, `AudioFileDropHelper`, `EmbedView`, `ExtractView` |
