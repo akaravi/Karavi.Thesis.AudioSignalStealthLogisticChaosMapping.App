@@ -1,0 +1,54 @@
+// Template for %USERPROFILE%\.gradle\init.gradle
+// MUST skip Flutter Android builds — flutter_tools/gradle uses FAIL_ON_PROJECT_REPOS.
+// Copy: Copy-Item gradle-init.gradle.template "$env:USERPROFILE\.gradle\init.gradle"
+
+def mirrorMavenUrls = [
+    'https://maven.aliyun.com/repository/gradle-plugin',
+    'https://maven.aliyun.com/repository/public',
+    'https://maven.aliyun.com/repository/google',
+    'https://maven.aliyun.com/repository/central',
+    'https://repo.huaweicloud.com/repository/maven/'
+]
+
+def addMirrors = { repoHandler ->
+    mirrorMavenUrls.each { url ->
+        repoHandler.maven { it.url = url }
+    }
+}
+
+def isFlutterAndroidBuild = {
+    def startDir = gradle.startParameter.currentDir
+    if (startDir == null) {
+        return false
+    }
+    def path = startDir.absolutePath.replace('\\', '/').toLowerCase()
+    return path.contains('/android') && (
+        new File(startDir, 'settings.gradle.kts').exists() ||
+        new File(startDir, 'settings.gradle').exists()
+    )
+}()
+
+if (isFlutterAndroidBuild) {
+    return
+}
+
+gradle.settingsEvaluated { settings ->
+    try {
+        addMirrors(settings.pluginManagement.repositories)
+    } catch (ignored) {
+    }
+    try {
+        def drm = settings.dependencyResolutionManagement
+        if (drm != null) {
+            addMirrors(drm.repositories)
+        }
+    } catch (ignored) {
+    }
+}
+
+gradle.projectsLoaded {
+    gradle.allprojects { project ->
+        project.buildscript.repositories { addMirrors(it) }
+        project.repositories { addMirrors(it) }
+    }
+}

@@ -21,7 +21,8 @@ param(
     [switch]$FatAndroidApk,
     [switch]$SkipDevServers,
     [string]$WebBaseHref = "/",
-    [switch]$NonInteractive
+    [switch]$NonInteractive,
+    [switch]$RegisterWindowsOpenWith
 )
 
 $ErrorActionPreference = "Stop"
@@ -152,6 +153,16 @@ function Invoke-CorePublish {
     Write-Host ""
     Write-Host "Publish output (.NET):" -ForegroundColor Green
     Write-Host "AudioStegano.Desktop -> $dotnetPublishOutput" -ForegroundColor Yellow
+
+    if ($RegisterWindowsOpenWith) {
+        $publishedExe = Join-Path $dotnetPublishOutput "AudioStegano.Desktop.exe"
+        if (-not (Test-Path -LiteralPath $publishedExe)) {
+            throw "Cannot register Open with: '$publishedExe' was not found."
+        }
+        $registerScript = Join-Path $root "_register-windows-open-with.ps1"
+        Write-Host "Registering Windows Open with for published Desktop ..." -ForegroundColor Cyan
+        & $registerScript -ExePath $publishedExe
+    }
 }
 
 function Resolve-FlutterWindowsReleasePath {

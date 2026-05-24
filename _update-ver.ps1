@@ -1,6 +1,6 @@
 # Bump app version across Flutter (pubspec) and WPF (csproj).
-# User command: "update ver" — increases semver MINOR by 1, resets PATCH to 0, increments build (+N).
-# Example: 1.0.0+1 -> 1.1.0+2
+# User command: "update ver" — increases PATCH (third segment) by 1.
+# Format: MAJOR.MINOR.PATCH only (no +BUILD suffix). Example: 1.2.3 -> 1.2.4
 param(
     [switch]$WhatIf
 )
@@ -24,31 +24,37 @@ function Parse-AppVersionLabel {
     param([Parameter(Mandatory = $true)][string]$Label)
 
     if ($Label -match '^(\d+)\.(\d+)\.(\d+)(?:\+(\d+))?$') {
+        $major = [int]$Matches[1]
+        $minor = [int]$Matches[2]
+        $patchSegment = [int]$Matches[3]
+        $buildSuffix = if ($Matches[4]) { [int]$Matches[4] } else { $null }
+
+        # Legacy MAJOR.MINOR.PATCH+BUILD: third display segment = BUILD (e.g. 1.2.0+3 -> 1.2.3).
+        $patch = if ($null -ne $buildSuffix) { $buildSuffix } else { $patchSegment }
+
         return [ordered]@{
-            Major = [int]$Matches[1]
-            Minor = [int]$Matches[2]
-            Patch = [int]$Matches[3]
-            Build = if ($Matches[4]) { [int]$Matches[4] } else { 1 }
+            Major = $major
+            Minor = $minor
+            Patch = $patch
         }
     }
 
-    throw "Invalid version label '$Label'. Expected MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH+BUILD."
+    throw "Invalid version label '$Label'. Expected MAJOR.MINOR.PATCH or legacy MAJOR.MINOR.PATCH+BUILD."
 }
 
 function Format-AppVersionLabel {
     param([Parameter(Mandatory = $true)][hashtable]$Version)
 
-    return "{0}.{1}.{2}+{3}" -f $Version.Major, $Version.Minor, $Version.Patch, $Version.Build
+    return "{0}.{1}.{2}" -f $Version.Major, $Version.Minor, $Version.Patch
 }
 
-function Bump-MinorSubVersion {
+function Bump-AppPatchVersion {
     param([Parameter(Mandatory = $true)][hashtable]$Version)
 
     return [ordered]@{
         Major = $Version.Major
-        Minor = $Version.Minor + 1
-        Patch = 0
-        Build = $Version.Build + 1
+        Minor = $Version.Minor
+        Patch = $Version.Patch + 1
     }
 }
 
@@ -93,15 +99,14 @@ function Set-DotNetDesktopVersions {
         [Parameter(Mandatory = $true)][hashtable]$Version
     )
 
-    $semver = "{0}.{1}.{2}" -f $Version.Major, $Version.Minor, $Version.Patch
+    $semver = Format-AppVersionLabel -Version $Version
     $assembly = "{0}.{1}.{2}.0" -f $Version.Major, $Version.Minor, $Version.Patch
-    $informational = Format-AppVersionLabel -Version $Version
 
     $text = [System.IO.File]::ReadAllText($Path)
     $text = $text -replace '(<Version>)[^<]+(</Version>)', "`${1}$semver`${2}"
     $text = $text -replace '(<AssemblyVersion>)[^<]+(</AssemblyVersion>)', "`${1}$assembly`${2}"
     $text = $text -replace '(<FileVersion>)[^<]+(</FileVersion>)', "`${1}$assembly`${2}"
-    $text = $text -replace '(<InformationalVersion>)[^<]+(</InformationalVersion>)', "`${1}$informational`${2}"
+    $text = $text -replace '(<InformationalVersion>)[^<]+(</InformationalVersion>)', "`${1}$semver`${2}"
 
     Write-Utf8NoBom -Path $Path -Content $text
 }
@@ -111,12 +116,16 @@ if (-not (Test-Path $csprojPath)) { throw "Missing csproj: $csprojPath" }
 
 $currentLabel = Get-FlutterPubspecVersionLabel -Path $pubspecPath
 $current = Parse-AppVersionLabel -Label $currentLabel
-$next = Bump-MinorSubVersion -Version $current
+$currentNormalized = Format-AppVersionLabel -Version $current
+$next = Bump-AppPatchVersion -Version $current
 $nextLabel = Format-AppVersionLabel -Version $next
 
 Write-Host "update ver" -ForegroundColor Cyan
 Write-Host "  Current : $currentLabel" -ForegroundColor DarkGray
-Write-Host "  Next    : $nextLabel  (minor +1, patch -> 0, build +1)" -ForegroundColor Green
+if ($currentLabel -ne $currentNormalized) {
+    Write-Host "  Normalized: $currentNormalized (legacy +BUILD removed)" -ForegroundColor Yellow
+}
+Write-Host "  Next    : $nextLabel  (patch +1)" -ForegroundColor Green
 Write-Host "  Files   : pubspec.yaml, AudioStegano.Desktop.csproj" -ForegroundColor DarkGray
 
 if ($WhatIf) {

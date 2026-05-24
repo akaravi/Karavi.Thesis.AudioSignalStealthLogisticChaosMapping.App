@@ -167,6 +167,16 @@ public sealed partial class AppStrings
         "Recorded audio must be longer before steganography can succeed. Please start recording again.",
         "يجب أن يكون الصوت المسجَّل أطول ليكون الإخفاء ممكناً. ابدأ التسجيل من جديد.",
         "L’audio enregistré doit être plus long pour que l’intégration soit possible. Recommencez l’enregistrement.");
+    public string ErrorMp3Decode => T(
+        "خواندن فایل MP3 ممکن نشد. فایل را دوباره انتخاب کنید یا از WAV استفاده کنید.",
+        "Could not read the MP3 file. Pick the file again or use WAV.",
+        "تعذر قراءة ملف MP3. اختر الملف مرة أخرى أو استخدم WAV.",
+        "Impossible de lire le MP3. Réessayez ou utilisez un WAV.");
+    public string ErrorMp4Decode => T(
+        "خواندن فایل MP4 ممکن نشد. فایل را دوباره انتخاب کنید یا از WAV استفاده کنید.",
+        "Could not read the MP4 file. Pick the file again or use WAV.",
+        "تعذر قراءة ملف MP4. اختر الملف مرة أخرى أو استخدم WAV.",
+        "Impossible de lire le MP4. Réessayez ou utilisez un WAV.");
     public string KeyMismatch => T(
         "کلید/پارامترها صحیح نیستند یا داده‌ای پیدا نشد.", "Wrong key/params or no payload found.",
         "المفتاح/المعاملات غير صحيحة أو لم يُعثر على بيانات.", "Clé/paramètres incorrects ou aucune charge utile.");

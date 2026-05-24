@@ -3,6 +3,8 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "single_instance.h"
+#include "windows_open_file_channel.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -25,6 +27,16 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  single_instance::SetMainWindow(GetHandle());
+  auto* engine = flutter_controller_->engine();
+  RegisterWindowsOpenFileChannel(engine);
+  single_instance::AttachPathHandler([engine](const std::string& path) {
+    std::string copy = path;
+    engine->task_runner()->PostTask([copy]() {
+      EmitWindowsOpenFilePath(copy);
+      single_instance::ActivateMainWindow();
+    });
+  });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -40,6 +52,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  single_instance::StopServer();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }

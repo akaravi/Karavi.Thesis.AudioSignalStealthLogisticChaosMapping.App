@@ -1,6 +1,6 @@
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// Runtime app version from [pubspec.yaml] (`version: name+build`).
+/// Runtime app version from [pubspec.yaml] (`version: MAJOR.MINOR.PATCH`).
 abstract final class AppVersion {
   static PackageInfo? _info;
 
@@ -13,6 +13,6 @@ abstract final class AppVersion {
   static String get display {
     final info = _info;
     if (info == null) return '—';
-    return '${info.version}+${info.buildNumber}';
+    return info.version;
   }
 }

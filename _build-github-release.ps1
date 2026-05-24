@@ -37,19 +37,24 @@ function Get-PubspecVersionParts {
     foreach ($line in Get-Content -LiteralPath $pubspec) {
         if ($line -match '^\s*version:\s*(.+?)\s*(?:#.*)?$') {
             $label = $Matches[1].Trim()
-            if ($label -match '^(.+)\+(\d+)$') {
+            if ($label -match '^(\d+\.\d+\.\d+)(?:\+(\d+))?$') {
+                $name = $Matches[1].Trim()
+                $legacyBuild = if ($Matches[2]) { $Matches[2].Trim() } else { $null }
+                $token = ($name -replace '[^\w\.\-]', '_')
                 return @{
                     Label  = $label
-                    Name   = $Matches[1].Trim()
-                    Number = $Matches[2].Trim()
-                    Token  = ($label -replace '\+', '_' -replace '[^\w\.\-]', '_')
+                    Name   = $name
+                    Number = if ($legacyBuild) { $legacyBuild } else {
+                        ($name.Split('.')[-1])
+                    }
+                    Token  = $token
                 }
             }
             return @{
                 Label  = $label
                 Name   = $label
                 Number = "1"
-                Token  = ($label -replace '\+', '_' -replace '[^\w\.\-]', '_')
+                Token  = ($label -replace '[^\w\.\-]', '_')
             }
         }
     }

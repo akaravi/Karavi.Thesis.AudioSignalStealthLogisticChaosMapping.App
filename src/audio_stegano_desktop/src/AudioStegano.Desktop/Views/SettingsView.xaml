@@ -28,6 +28,19 @@
         </StackPanel>
       </Border>
 
+      <Border x:Name="WindowsOpenWithCard" Style="{StaticResource MaterialCard}" Margin="0,0,0,10"
+              Padding="10,10,10,10">
+        <StackPanel>
+          <TextBlock x:Name="WindowsOpenWithTitle" FontSize="14" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4" />
+          <TextBlock x:Name="WindowsOpenWithHint" Style="{StaticResource BodySmall}" Margin="0,0,0,8"
+                     TextWrapping="Wrap" />
+          <CheckBox x:Name="RegisterOpenWithCheck"
+                    Checked="RegisterOpenWithCheck_Changed"
+                    Unchecked="RegisterOpenWithCheck_Changed" />
+        </StackPanel>
+      </Border>
+
       <Border Style="{StaticResource MaterialCard}" Margin="0,0,0,16">
         <StackPanel>
           <TextBlock x:Name="LogisticLabel" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />

@@ -10,6 +10,7 @@
 
   .\_build-cafebazaar-release.ps1
   .\_build-cafebazaar-release.ps1 -OutputDirectory D:\PublishKaravi\CafeBazaar
+  # Default output: publish\cafebazaar_yyyyMMdd_HHmmss
 #>
 param(
     [string]$OutputDirectory = "",
@@ -19,16 +20,33 @@ param(
     [switch]$AabOnly,
     [switch]$SkipBundleSigner,
     [switch]$UseFlutterIoCnMirror,
-    [switch]$OfflinePubGet
+    [switch]$OfflinePubGet,
+    [switch]$DisableAutoMirrorRetry,
+    [switch]$OpenDeveloperSettings
 )
 
 $ErrorActionPreference = "Stop"
+
+$savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
+$userSuppliedMirrorViaParam = $UseFlutterIoCnMirror
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $androidRoot = Join-Path $flutterAppPath "android"
 $keyProperties = Join-Path $androidRoot "key.properties"
-$defaultOut = Join-Path $root "publish\cafebazaar"
+$cafeBazaarTemplateRoot = Join-Path $root "publish\cafebazaar"
+
+function New-CafeBazaarTimestampedOutputPath {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepoRoot,
+        [string]$OutputDirectory
+    )
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+        return Join-Path $RepoRoot "publish\cafebazaar_$stamp"
+    }
+    return "${OutputDirectory}_$stamp"
+}
 
 if (-not (Test-Path -LiteralPath $keyProperties)) {
     throw @"
@@ -75,19 +93,112 @@ if (Test-Path -LiteralPath $appSettingsScript) {
     Sync-AppSettingsToFlutterProjectAssets -RepoRoot $root -FlutterProjectPath $flutterAppPath
 }
 
-if (-not $SkipRestore) {
-    Write-Host "flutter pub get ..." -ForegroundColor Cyan
-    Push-Location $flutterAppPath
-    try {
-        $pubArgs = @("pub", "get")
-        if ($OfflinePubGet) { $pubArgs += "--offline" }
-        & $flutterCmd @pubArgs
-        if ($LASTEXITCODE -ne 0) { throw "flutter pub get failed" }
-    }
-    finally { Pop-Location }
+function Test-FlutterPubGetPackagesResolved {
+    param([Parameter(Mandatory = $true)][string]$ProjectDirectory)
+    return (Test-Path (Join-Path $ProjectDirectory ".dart_tool\package_config.json"))
 }
 
-$outDir = if ([string]::IsNullOrWhiteSpace($OutputDirectory)) { $defaultOut } else { $OutputDirectory }
+function Test-FlutterPubGetSymlinkOnlyWarning {
+    param([Parameter(Mandatory = $true)][string]$LogText)
+    return $LogText -match '(?i)Developer Mode|symlink support'
+}
+
+function Write-FlutterPubGetFailureHints {
+    param(
+        [Parameter(Mandatory = $true)][string]$LogText,
+        [switch]$LaunchDeveloperSettingsPage
+    )
+    if ($LogText -match '(?i)Developer Mode|symlink support') {
+        Write-Host "flutter pub get: enable Windows Developer Mode (symlink support):" -ForegroundColor Yellow
+        Write-Host "  start ms-settings:developers" -ForegroundColor White
+        if ($LaunchDeveloperSettingsPage) {
+            try { Start-Process "ms-settings:developers" -ErrorAction Stop } catch { }
+        }
+        return
+    }
+    Write-Host "flutter pub get failed. Try VPN/proxy, -UseFlutterIoCnMirror, or -OfflinePubGet." -ForegroundColor Yellow
+}
+
+function Convert-FlutterPubOutputToLogText {
+    param([object[]]$Lines)
+    return (($Lines | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message }
+            else { "$_" }
+        }) -join [Environment]::NewLine)
+}
+
+function Write-FlutterPubOutputLines {
+    param([object[]]$Lines)
+    foreach ($item in $Lines) {
+        if ($item -is [System.Management.Automation.ErrorRecord]) {
+            $msg = $item.Exception.Message
+            if (-not [string]::IsNullOrWhiteSpace($msg)) { Write-Host $msg }
+        }
+        else { Write-Host $item }
+    }
+}
+
+function Invoke-FlutterPubGetForCafeBazaar {
+    param([Parameter(Mandatory = $true)][string]$ProjectDirectory)
+
+    Write-Host "flutter pub get ..." -ForegroundColor Cyan
+    $pubArgs = @("pub", "get")
+    if ($OfflinePubGet) { $pubArgs += "--offline" }
+
+    $tryAutoMirror = -not $DisableAutoMirrorRetry -and -not $OfflinePubGet -and -not $userSuppliedMirrorViaParam -and [string]::IsNullOrWhiteSpace($savedEnvPubHostedAtScriptStart)
+    $mirrorFallbacks = @(
+        @{ Label = "flutter-io.cn"; Pub = "https://pub.flutter-io.cn"; Storage = "https://storage.flutter-io.cn" }
+        @{ Label = "Tsinghua"; Pub = "https://mirrors.tuna.tsinghua.edu.cn/dart-pub/"; Storage = "https://mirrors.tuna.tsinghua.edu.cn/flutter" }
+    )
+    $maxAttempts = if ($tryAutoMirror) { 1 + $mirrorFallbacks.Count } else { 1 }
+    $attempt = 0
+
+    while ($attempt -lt $maxAttempts) {
+        $attempt++
+        $exitCode = 0
+        $pubLogText = ""
+        Push-Location $ProjectDirectory
+        try {
+            $prevEap = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            try {
+                $pubGetOutput = @(& $flutterCmd @pubArgs 2>&1)
+                Write-FlutterPubOutputLines -Lines $pubGetOutput
+                $exitCode = $LASTEXITCODE
+                $pubLogText = Convert-FlutterPubOutputToLogText -Lines $pubGetOutput
+            }
+            finally { $ErrorActionPreference = $prevEap }
+        }
+        finally { Pop-Location }
+
+        if ($exitCode -eq 0) { return }
+        if ((Test-FlutterPubGetSymlinkOnlyWarning -LogText $pubLogText) -and
+            (Test-FlutterPubGetPackagesResolved -ProjectDirectory $ProjectDirectory)) {
+            Write-Host "flutter pub get: dependencies resolved; ignoring Windows symlink warning (Android build can continue)." -ForegroundColor Yellow
+            return
+        }
+        if ($OfflinePubGet) {
+            Write-FlutterPubGetFailureHints -LogText $pubLogText
+            throw "flutter pub get failed (exit $exitCode)"
+        }
+        if ($attempt -lt $maxAttempts -and $tryAutoMirror) {
+            $mirror = $mirrorFallbacks[$attempt - 1]
+            Write-Host "Retry $($attempt + 1)/$maxAttempts with $($mirror.Label) mirror..." -ForegroundColor Yellow
+            $env:PUB_HOSTED_URL = $mirror.Pub
+            $env:FLUTTER_STORAGE_BASE_URL = $mirror.Storage
+            continue
+        }
+        Write-FlutterPubGetFailureHints -LogText $pubLogText -LaunchDeveloperSettingsPage:$OpenDeveloperSettings
+        throw "flutter pub get failed (exit $exitCode)"
+    }
+}
+
+if (-not $SkipRestore) {
+    Invoke-FlutterPubGetForCafeBazaar -ProjectDirectory $flutterAppPath
+}
+
+$outDir = New-CafeBazaarTimestampedOutputPath -RepoRoot $root -OutputDirectory $OutputDirectory
+Write-Host "Cafe Bazaar output folder: $outDir" -ForegroundColor DarkCyan
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir -Force | Out-Null }
 $outDir = (Resolve-Path -LiteralPath $outDir).Path
 
@@ -146,8 +257,8 @@ if (Test-Path -LiteralPath $mappingSrc) {
     Write-Host "ProGuard mapping copied (store for crash deobfuscation)." -ForegroundColor DarkCyan
 }
 
-$listingSrc = Join-Path $root "publish\cafebazaar\LISTING.fa.md"
-if ((Resolve-Path $outDir).Path -ne (Resolve-Path (Split-Path $listingSrc)).Path) {
+$listingSrc = Join-Path $cafeBazaarTemplateRoot "LISTING.fa.md"
+if ((Test-Path -LiteralPath $listingSrc) -and (Resolve-Path $outDir).Path -ne (Resolve-Path (Split-Path $listingSrc)).Path) {
     Copy-Item -Force $listingSrc (Join-Path $outDir "LISTING.fa.md")
 }
 

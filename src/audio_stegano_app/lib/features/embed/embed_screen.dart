@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -24,6 +25,7 @@ import '../../core/audio/wav_io.dart';
 import '../../core/audio/spectrum_analyzer.dart';
 import '../../core/audio/waveform_display.dart';
 import '../../core/stego/stego.dart';
+import '../shared/audio_file_drop_surface.dart';
 import '../shared/audio_equalizer_view.dart';
 import '../shared/dual_waveform_chart.dart';
 import '../shared/circle_action_button.dart';
@@ -242,8 +244,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   Future<void> _loadAndEmbed() async {
     if (_busy || _processing || _recorder.isRecording) return;
     final s = AppStrings.of(context);
-    final text = _textCtrl.text.trim();
-    if (text.isEmpty) {
+    if (_textCtrl.text.trim().isEmpty) {
       await _showEmbedWarning(s.errorEmpty);
       return;
     }
@@ -268,6 +269,34 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     }
 
+    await _loadAndEmbedPicked(
+      fileName: name,
+      bytes: file.bytes,
+      path: kIsWeb ? null : file.path,
+    );
+  }
+
+  Future<void> _embedFromDroppedPath(String filePath) async {
+    if (_busy || _processing || _recorder.isRecording) return;
+    final s = AppStrings.of(context);
+    if (_textCtrl.text.trim().isEmpty) {
+      await _showEmbedWarning(s.errorEmpty);
+      return;
+    }
+    await _loadAndEmbedPicked(
+      fileName: p.basename(filePath),
+      path: filePath,
+    );
+  }
+
+  Future<void> _loadAndEmbedPicked({
+    required String fileName,
+    Uint8List? bytes,
+    String? path,
+  }) async {
+    if (!mounted) return;
+    final s = AppStrings.of(context);
+
     _busy = true;
     setState(() {
       _processing = true;
@@ -278,9 +307,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       WavFile cover;
       try {
         cover = await AudioInputLoader.loadPickedFile(
-          fileName: name,
-          bytes: file.bytes,
-          path: kIsWeb ? null : file.path,
+          fileName: fileName,
+          bytes: bytes,
+          path: path,
         );
       } catch (e) {
         if (!mounted) return;
@@ -299,7 +328,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             : List<double>.filled(kSpectrumBandCount, 0);
       });
 
-      await _embedWithCover(cover, loadedName: name);
+      await _embedWithCover(cover, loadedName: fileName);
     } finally {
       _releaseEmbedInteractionLocks();
     }
@@ -843,13 +872,16 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 12,
-                    ),
-                    child: Column(
+                AudioFileDropSurface(
+                  enabled: canPickFile,
+                  onFilePath: _embedFromDroppedPath,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 12,
+                      ),
+                      child: Column(
                       children: [
                         AudioEqualizerView(
                           bands: _eqBands,
@@ -861,7 +893,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                         const SizedBox(height: 16),
                         AudioSourceActionsPanel(
                           orLabel: s.audioSourceOr,
-                          showLoadAction: appConfig.showEmbedLoadFileButton,
+                          showLoadAction: appConfig.showEmbedLoadFileForUi,
                           loadAction: CircleActionButton(
                             icon: Icons.upload_file_outlined,
                             label: s.loadAudioFile,
@@ -897,6 +929,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       ],
                     ),
                   ),
+                ),
                 ),
                 const SizedBox(height: 16),
               ],

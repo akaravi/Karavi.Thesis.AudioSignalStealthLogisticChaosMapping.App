@@ -13,6 +13,15 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+fun semverToVersionCode(versionName: String): Int {
+    val core = versionName.substringBefore("+")
+    val parts = core.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+    return major * 1_000_000 + minor * 1_000 + patch
+}
+
 android {
     namespace = "ir.ntk.audiowmark.app"
     compileSdk = flutter.compileSdkVersion
@@ -42,7 +51,7 @@ android {
         applicationId = "ir.ntk.audiowmark.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        versionCode = semverToVersionCode(flutter.versionName)
         versionName = flutter.versionName
         // Do not set ndk.abiFilters here: Flutter --split-per-abi sets split ABI filters
         // and Gradle rejects both at once. Release APK publish script keeps arm64-v8a only.

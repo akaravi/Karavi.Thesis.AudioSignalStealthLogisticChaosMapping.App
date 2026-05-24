@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as p;
 
 import '../../app/app_strings.dart';
 import '../../app/app_config_provider.dart';
@@ -17,6 +18,7 @@ import '../../core/audio/audio_load_errors.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/stego/stego.dart';
+import '../shared/audio_file_drop_surface.dart';
 import '../shared/help_sheet.dart';
 import '../shared/tab_scroll_body.dart';
 
@@ -389,14 +391,18 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
         TabScrollBody(
           padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Icon(
-                      Icons.audio_file_outlined,
+            AudioFileDropSurface(
+              enabled: !_processing && !_loadingFile,
+              onFilePath: (path) =>
+                  unawaited(_loadAudioFile(fileName: p.basename(path), path: path)),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(
+                        Icons.audio_file_outlined,
                       size: 56,
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -474,6 +480,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                   ],
                 ),
               ),
+            ),
             ),
             const SizedBox(height: 16),
             _resultCard(s),

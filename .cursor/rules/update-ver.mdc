@@ -3,7 +3,7 @@ description: Bump all app versions when the user says "update ver"
 alwaysApply: true
 ---
 
-# update ver — افزایش نسخه فرعی
+# update ver — افزایش نسخه
 
 ## Trigger (must)
 
@@ -29,20 +29,23 @@ Single logical step per invocation:
 
 | Field | Change |
 |-------|--------|
-| Semver **minor** (نسخه فرعی) | `+1` |
-| Semver **patch** | reset to `0` |
-| Flutter **build** (`+N`) | `+1` (required for Android `versionCode` / store uploads) |
+| Format | `MAJOR.MINOR.PATCH` only — **no** `+BUILD` suffix |
+| Semver **patch** (رقم سوم) | `+1` |
 
-Example: `1.0.0+1` → `1.1.0+2`
+Example: `1.2.3` → `1.2.4`
+
+Legacy labels like `1.2.0+3` are normalized to `1.2.3` on the next bump (third segment = former build number).
+
+Android `versionCode` is derived from semver in `app/build.gradle.kts` (not from `+BUILD`).
 
 ## Files updated (must)
 
 | Client | File | Fields |
 |--------|------|--------|
-| Flutter | `src/audio_stegano_app/pubspec.yaml` | `version: MAJOR.MINOR.PATCH+BUILD` |
+| Flutter | `src/audio_stegano_app/pubspec.yaml` | `version: MAJOR.MINOR.PATCH` |
 | WPF | `src/audio_stegano_desktop/src/AudioStegano.Desktop/AudioStegano.Desktop.csproj` | `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion` |
 
-`pubspec.yaml` is the source of truth. WPF `InformationalVersion` must match Flutter (`name+build`). Runtime UI reads version from package metadata / assembly — no hard-coded version strings in Dart/C# UI.
+`pubspec.yaml` is the source of truth. WPF `InformationalVersion` must match Flutter exactly. Runtime UI reads version from package metadata / assembly — no hard-coded version strings in Dart/C# UI.
 
 ## After bump (should)
 
@@ -54,4 +57,4 @@ Example: `1.0.0+1` → `1.1.0+2`
 
 - NuGet `PackageReference Version="..."` in csproj
 - Gradle plugin versions in `settings.gradle.kts`
-- XML `version="1.0"` in Android drawables / manifests (encoding declaration, not app version)
+- XML `version="1.0"` in Android drawables / manifests (unrelated encoding or tooling versions)

@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using AudioStegano.Desktop.Localization;
+using AudioStegano.Desktop.Services;
 
 namespace AudioStegano.Desktop.Views;
 
@@ -23,6 +24,8 @@ public partial class SettingsView : UserControl
         Loaded += (_, _) => LoadFromState();
     }
 
+    public void ApplyStrings() => LoadFromState();
+
     private void LoadFromState()
     {
         _loading = true;
@@ -36,6 +39,13 @@ public partial class SettingsView : UserControl
         RRangeHint.Text = s.LogisticRRangeHint;
         X0RangeHint.Text = s.LogisticX0RangeHint;
         ResetLabel.Text = s.Reset;
+        WindowsOpenWithTitle.Text = s.WindowsOpenWithTitle;
+        WindowsOpenWithHint.Text = s.WindowsOpenWithHint;
+        RegisterOpenWithCheck.Content = s.WindowsOpenWithTitle;
+        RegisterOpenWithCheck.IsChecked = AppState.Settings.RegisterWindowsFileAssociations;
+        WindowsOpenWithCard.Visibility = OperatingSystem.IsWindows()
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
         BuildThemeSegments(s);
         BuildLanguageSegments(s);
@@ -51,6 +61,36 @@ public partial class SettingsView : UserControl
         DefaultFixedMsgBitLimitCheck.ToolTip = s.DefaultFixedMessageBitLimitHint(fixedBits);
         DefaultFixedMsgBitLimitCheck.IsChecked = st.DefaultFixedMessageBitLimit;
         _loading = false;
+    }
+
+    private void RegisterOpenWithCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading || !IsLoaded || !OperatingSystem.IsWindows()) return;
+
+        var enable = RegisterOpenWithCheck.IsChecked == true;
+        AppState.Settings.RegisterWindowsFileAssociations = enable;
+        AppState.Settings.WindowsOpenWithOfferSeen = true;
+        AppState.Save();
+
+        var exe = Environment.ProcessPath;
+        if (string.IsNullOrEmpty(exe)) return;
+
+        var s = ThemeManager.Strings;
+        if (enable)
+        {
+            WindowsFileAssociationService.Register(exe, s.AppTitle);
+            StatusToast(s.WindowsOpenWithRegistered);
+        }
+        else
+        {
+            WindowsFileAssociationService.Unregister();
+            StatusToast(s.WindowsOpenWithUnregistered);
+        }
+    }
+
+    private void StatusToast(string message)
+    {
+        MessageBox.Show(message, ThemeManager.Strings.SettingsTab, MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void DefaultFixedMsgBitLimitCheck_Changed(object sender, RoutedEventArgs e)

@@ -7,8 +7,10 @@ using System.Windows.Threading;
 using AudioStegano.Core.Audio;
 using AudioStegano.Core.Stego;
 using AudioStegano.Desktop.Dialogs;
+using AudioStegano.Desktop.Localization;
 using AudioStegano.Desktop.Models;
 using AudioStegano.Desktop.Services;
+using HelpSection = AudioStegano.Desktop.Dialogs.HelpSection;
 using Microsoft.Win32;
 
 namespace AudioStegano.Desktop.Views;
@@ -22,6 +24,7 @@ public partial class EmbedView : UserControl
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
     private bool _busy;
+    private bool _verifying;
     private bool _updatingMessageText;
     private DispatcherTimer? _recordTimer;
     private DateTime _recordStartUtc;
@@ -38,6 +41,7 @@ public partial class EmbedView : UserControl
         {
             ApplyStrings();
             ApplyEmbedLayout();
+            AudioFileDropHelper.Enable(AudioSourceCard, OnAudioFileDroppedAsync);
         };
         MetricsItems.PreviewMouseLeftButtonDown += MetricsItems_PreviewMouseLeftButtonDown;
     }
@@ -45,7 +49,9 @@ public partial class EmbedView : UserControl
     public void ApplyStrings()
     {
         var s = ThemeManager.Strings;
+        MessageLabel.Text = s.TextHint;
         MessageTextBox.SetValue(ToolTipService.ToolTipProperty, s.TextHint);
+        AudioSourceOrLabel.Text = s.AudioSourceOr;
         EqualizerTitle.Text = s.AudioEqualizer;
         RecordBtn.LabelIdle = s.StartRecording;
         RecordBtn.LabelActive = s.StopRecording;
@@ -55,10 +61,100 @@ public partial class EmbedView : UserControl
         ToolTipService.SetToolTip(PlayButton, s.Play);
         ToolTipService.SetToolTip(PauseButton, s.Pause);
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
+        ToolTipService.SetToolTip(CopyMessageButton, s.Copy);
         SaveLabel.Text = s.SaveStego;
+        ShareLabel.Text = s.ShareStego;
         VerifyLabel.Text = s.Verify;
         MetricsTapHint.Text = s.MetricHelpTapHint;
+        ToolTipService.SetToolTip(NewEmbedFab, s.EmbedNew);
+        ToolTipService.SetToolTip(HelpFab, s.HelpTooltip);
+        UpdateFabStates();
         UpdateMessageBitCounter();
+    }
+
+    private void UpdateFabStates()
+    {
+        var canNew = (!_busy || _capture.IsRecording) && !_verifying;
+        NewEmbedFab.IsEnabled = canNew;
+        UpdateResultActionButtons();
+    }
+
+    private void UpdateResultActionButtons()
+    {
+        var enabled = _stego is not null && !_verifying;
+        SaveButton.IsEnabled = enabled;
+        ShareButton.IsEnabled = enabled;
+        VerifyButton.IsEnabled = enabled;
+        CopyMessageButton.IsEnabled = enabled && !string.IsNullOrWhiteSpace(MessageTextBox.Text);
+        if (!enabled || _verifying)
+        {
+            PlayButton.IsEnabled = false;
+            PauseButton.IsEnabled = false;
+            StopPlaybackButton.IsEnabled = false;
+        }
+        else
+            UpdatePlaybackButtons();
+    }
+
+    private void CopyMessageButton_Click(object sender, RoutedEventArgs e)
+    {
+        var text = MessageTextBox.Text;
+        if (string.IsNullOrWhiteSpace(text)) return;
+        Clipboard.SetText(text);
+        StatusText.Text = ThemeManager.Strings.Copied;
+    }
+
+    private void HelpFab_Click(object sender, RoutedEventArgs e)
+    {
+        var owner = Window.GetWindow(this);
+        var dlg = new HelpDialog(HelpSection.Embed);
+        if (owner is not null)
+            dlg.Owner = owner;
+        dlg.ShowDialog();
+    }
+
+    private void NewEmbedFab_Click(object sender, RoutedEventArgs e)
+    {
+        if (_verifying) return;
+        if (_busy && !_capture.IsRecording) return;
+
+        if (_capture.IsRecording)
+        {
+            _capture.Cancel();
+            StopRecordTimer();
+            RecordBtn.IsRecording = false;
+            Equalizer.IsActive = false;
+            Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
+            StatusText.Text = string.Empty;
+            MessageTextBox.IsEnabled = true;
+            _busy = false;
+            UpdateFabStates();
+            return;
+        }
+
+        try { _playback.Stop(); }
+        catch { /* ignore */ }
+        MessageTextBox.Clear();
+        ResetForNewEmbed();
+        SessionLog.Write("Embed: new session");
+        UpdateFabStates();
+    }
+
+    private Task OnAudioFileDroppedAsync(string path)
+    {
+        if (_busy || _capture.IsRecording) return Task.CompletedTask;
+        if (ResultPanel.Visibility == Visibility.Visible)
+            ResetForNewEmbed();
+        return LoadAndEmbedFromPathAsync(path);
+    }
+
+    private void ShareButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_stego is null || _outcome is null) return;
+        var s = ThemeManager.Strings;
+        var owner = Window.GetWindow(this);
+        if (StegoShareService.TryShare(_stego, _outcome.BitsEmbedded, owner, s, out var status) && status is not null)
+            StatusText.Text = status;
     }
 
     private void MetricsItems_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -111,6 +207,7 @@ public partial class EmbedView : UserControl
         MessageTextBox.IsEnabled = true;
         _busy = false;
         StatusText.Text = string.Empty;
+        UpdateFabStates();
     }
 
     private void MessageTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -154,8 +251,9 @@ public partial class EmbedView : UserControl
 
     private void ApplyEmbedLayout()
     {
-        var showLoad = AppConfig.Current.ShowEmbedLoadFileButton;
+        var showLoad = AppConfig.ShowEmbedLoadFileForUi;
         LoadFileBtn.Visibility = showLoad ? Visibility.Visible : Visibility.Collapsed;
+        AudioSourceOrLabel.Visibility = showLoad ? Visibility.Visible : Visibility.Collapsed;
         if (showLoad)
         {
             Grid.SetColumn(RecordBtn, 0);
@@ -230,6 +328,7 @@ public partial class EmbedView : UserControl
             }
             catch (Exception ex)
             {
+                SessionLog.Write("Embed: record stop failed", ex);
                 StatusText.Text = ex.Message;
             }
             finally
@@ -266,9 +365,11 @@ public partial class EmbedView : UserControl
             Equalizer.IsActive = true;
             MessageTextBox.IsEnabled = false;
             StartRecordTimer();
+            SessionLog.Write("Embed: record start");
         }
         catch (Exception ex)
         {
+            SessionLog.Write("Embed: record start failed", ex);
             StatusText.Text = ex.Message;
             RecordBtn.IsRecording = false;
             StopRecordTimer();
@@ -296,8 +397,17 @@ public partial class EmbedView : UserControl
     private async void LoadFileBtn_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _capture.IsRecording) return;
+        var dlg = new OpenFileDialog { Filter = AudioInputLoader.OpenDialogFilter };
+        if (dlg.ShowDialog() != true) return;
+        await LoadAndEmbedFromPathAsync(dlg.FileName);
+    }
+
+    private async Task LoadAndEmbedFromPathAsync(string filePath)
+    {
+        if (_busy || _capture.IsRecording) return;
         if (ResultPanel.Visibility == Visibility.Visible)
             ResetForNewEmbed();
+
         var s = ThemeManager.Strings;
         var messageText = MessageTextBox.Text.Trim();
         if (string.IsNullOrEmpty(messageText))
@@ -306,14 +416,12 @@ public partial class EmbedView : UserControl
             return;
         }
 
-        var dlg = new OpenFileDialog { Filter = AudioInputLoader.OpenDialogFilter };
-        if (dlg.ShowDialog() != true) return;
-
         _busy = true;
         BusyBar.Visibility = Visibility.Visible;
         StatusText.Text = s.Processing;
         LoadFileBtn.IsEnabled = false;
         RecordBtn.IsEnabled = false;
+        UpdateFabStates();
 
         WavFile? cover = null;
         string? error = null;
@@ -321,11 +429,11 @@ public partial class EmbedView : UserControl
         {
             try
             {
-                cover = AudioInputLoader.LoadFromPath(dlg.FileName);
+                cover = AudioInputLoader.LoadFromPath(filePath);
             }
             catch (Exception ex)
             {
-                error = ex.Message;
+                error = AudioLoadErrors.Format(ThemeManager.Strings, ex);
             }
         });
 
@@ -341,7 +449,7 @@ public partial class EmbedView : UserControl
                 _eqBands = preview[0];
                 Equalizer.SetBands(preview[0]);
             }
-            await RunEmbedAsync(cover, messageText, Path.GetFileName(dlg.FileName));
+            await RunEmbedAsync(cover, messageText, Path.GetFileName(filePath));
         }
 
         ReleaseEmbedInteractionLocks();
@@ -406,6 +514,8 @@ public partial class EmbedView : UserControl
 
     private void ResetForNewEmbed()
     {
+        try { _playback.Stop(); }
+        catch { /* ignore */ }
         _cover = null;
         _stego = null;
         _outcome = null;
@@ -416,6 +526,7 @@ public partial class EmbedView : UserControl
         StatusText.Text = string.Empty;
         Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
         UpdatePlaybackButtons();
+        UpdateFabStates();
     }
 
     private void ShowResult(WatermarkOutcome outcome, WavFile? cover)
@@ -461,9 +572,20 @@ public partial class EmbedView : UserControl
 
         VerifyBanner.Visibility = Visibility.Collapsed;
         UpdatePlaybackButtons();
+        UpdateResultActionButtons();
         var showRecovery = !AppState.Settings.DefaultFixedMessageBitLimit &&
                            AppConfig.Current.ShowEmbedRecoveryDialog;
         ShowEmbedCompleteDialog(outcome.BitsEmbedded, outcome.CapacityBits, showRecovery);
+        ScrollResultIntoView();
+        SessionLog.Write($"Embed: success bits={outcome.BitsEmbedded}");
+    }
+
+    private void ScrollResultIntoView()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            ResultPanel.BringIntoView();
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private void ShowEmbedCompleteDialog(int msgBitLength, int capacityBits, bool showRecoveryReminder)
@@ -527,8 +649,13 @@ public partial class EmbedView : UserControl
 
     private async void VerifyButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_stego is null || _outcome is null) return;
+        if (_stego is null || _outcome is null || _verifying) return;
         var s = ThemeManager.Strings;
+        _verifying = true;
+        UpdateFabStates();
+        UpdateResultActionButtons();
+        VerifyProgress.Visibility = Visibility.Visible;
+        VerifyIcon.Visibility = Visibility.Collapsed;
         VerifyBanner.Visibility = Visibility.Visible;
         VerifyText.Text = s.Verifying;
         VerifyBanner.Background = (Brush)FindResource("SurfaceVariantBrush");
@@ -538,7 +665,19 @@ public partial class EmbedView : UserControl
         var original = MessageTextBox.Text.Trim();
         var bits = _outcome.BitsEmbedded;
         var stego = _stego;
-        var extracted = await Task.Run(() => AppState.Watermarking.Extract(stego, bits));
+        string? extracted = null;
+        try
+        {
+            extracted = await Task.Run(() => AppState.Watermarking.Extract(stego, bits));
+        }
+        finally
+        {
+            _verifying = false;
+            VerifyProgress.Visibility = Visibility.Collapsed;
+            VerifyIcon.Visibility = Visibility.Visible;
+            UpdateFabStates();
+            UpdateResultActionButtons();
+        }
 
         if (string.IsNullOrEmpty(extracted))
         {

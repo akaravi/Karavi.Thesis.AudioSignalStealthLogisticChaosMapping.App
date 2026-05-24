@@ -19,7 +19,7 @@
 | بیلد آماده بازار | `\_build-cafebazaar-release.ps1` (ریشه مخزن) |
 | bundle-signer (رسمی کافه‌بازار) | `src/audio_stegano_app/android/scripts/Invoke-CafeBazaarBundleSigner.ps1` |
 | JAR ابزار bundle-signer | `CAFEBAZAAR_BUNDLESIGNER_JAR` یا `-BundleSignerJarPath`؛ وگرنه `android/tools/` (دانلود خودکار) |
-| خروجی بیلد | `publish/cafebazaar/` |
+| خروجی بیلد | `publish/cafebazaar_yyyyMMdd_HHmmss/` (هر اجرا پوشهٔ جدید با تاریخ و ساعت) |
 | متن پیشنهادی فروشگاه | `publish/cafebazaar/LISTING.fa.md` |
 | ProGuard | `src/audio_stegano_app/android/app/proguard-rules.pro` |
 
@@ -74,7 +74,7 @@ storeFile=upload-keystore.jks
 .\_build-cafebazaar-release.ps1
 ```
 
-خروجی معمول در `publish/cafebazaar/`:
+خروجی معمول در `publish/cafebazaar_yyyyMMdd_HHmmss/` (مثال: `publish/cafebazaar_20260524_143052/`):
 
 | فایل | کاربرد |
 |------|--------|

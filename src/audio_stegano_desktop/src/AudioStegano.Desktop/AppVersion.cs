@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace AudioStegano.Desktop;
 
-/// <summary>Matches Flutter <c>pubspec.yaml</c> version (e.g. 1.0.0+1).</summary>
+/// <summary>Matches Flutter <c>pubspec.yaml</c> version (e.g. 1.2.3).</summary>
 public static class AppVersion
 {
     public static string Display =>

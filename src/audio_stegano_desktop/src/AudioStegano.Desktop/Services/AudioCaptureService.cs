@@ -95,6 +95,14 @@ public sealed class AudioCaptureService : IDisposable
         SpectrumBands?.Invoke(SpectrumAnalyzer.BandsFromPcm(snapshot));
     }
 
+    /// <summary>Stops recording and discards captured samples (Flutter <c>cancel()</c> parity).</summary>
+    public void Cancel()
+    {
+        Stop();
+        lock (_lock)
+            _buffer.Clear();
+    }
+
     public void Dispose() => Stop();
 
     private void Stop()

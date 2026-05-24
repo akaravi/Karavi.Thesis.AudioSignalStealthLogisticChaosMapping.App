@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using AudioStegano.Core.Audio;
 using AudioStegano.Core.Stego;
+using AudioStegano.Desktop.Dialogs;
+using AudioStegano.Desktop.Localization;
 using AudioStegano.Desktop.Services;
 using Microsoft.Win32;
 
@@ -18,7 +20,61 @@ public partial class ExtractView : UserControl
     {
         InitializeComponent();
         _playback.PlaybackStateChanged += UpdatePlaybackButtons;
-        Loaded += (_, _) => ApplyStrings();
+        Loaded += (_, _) =>
+        {
+            ApplyStrings();
+            AudioFileDropHelper.Enable(ExtractCard, OnAudioFileDroppedAsync);
+        };
+    }
+
+    private Task OnAudioFileDroppedAsync(string path) => LoadAudioFromPathAsync(path);
+
+    private async Task LoadAudioFromPathAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) return;
+
+        var s = ThemeManager.Strings;
+        SetBusy(true);
+        StatusText.Text = s.Processing;
+        ResultPanel.Visibility = Visibility.Collapsed;
+
+        WavFile? wav = null;
+        string? error = null;
+        await Task.Run(() =>
+        {
+            try
+            {
+                wav = AudioInputLoader.LoadFromPath(filePath);
+            }
+            catch (Exception ex)
+            {
+                error = AudioLoadErrors.Format(ThemeManager.Strings, ex);
+            }
+        });
+
+        _playback.Stop();
+        _loadedWav = wav;
+        PlaybackPanel.Visibility = wav is not null ? Visibility.Visible : Visibility.Collapsed;
+        SetBusy(false);
+
+        if (error is not null)
+        {
+            StatusText.Text = error;
+            ExtractButton.IsEnabled = false;
+        }
+        else if (wav is null)
+        {
+            StatusText.Text = s.KeyMismatch;
+            ExtractButton.IsEnabled = false;
+        }
+        else
+        {
+            StatusText.Text = s.AudioFileLoaded(Path.GetFileName(filePath));
+            ExtractButton.IsEnabled = true;
+        }
+
+        UpdatePlaybackButtons();
+        UpdateFabStates();
     }
 
     public void ApplyStrings()
@@ -34,8 +90,43 @@ public partial class ExtractView : UserControl
         ToolTipService.SetToolTip(PlayButton, s.Play);
         ToolTipService.SetToolTip(PauseButton, s.Pause);
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
+        ToolTipService.SetToolTip(NewExtractFab, s.ExtractNew);
+        ToolTipService.SetToolTip(HelpFab, s.HelpTooltip);
         ApplyBitLengthPanelVisibility();
+        UpdateFabStates();
     }
+
+    private void UpdateFabStates()
+    {
+        var busy = BusyBar.Visibility == Visibility.Visible;
+        NewExtractFab.IsEnabled = !busy;
+    }
+
+    private void HelpFab_Click(object sender, RoutedEventArgs e)
+    {
+        var owner = Window.GetWindow(this);
+        var dlg = new HelpDialog(HelpSection.Extract);
+        if (owner is not null)
+            dlg.Owner = owner;
+        dlg.ShowDialog();
+    }
+
+    private void NewExtractFab_Click(object sender, RoutedEventArgs e)
+    {
+        if (BusyBar.Visibility == Visibility.Visible) return;
+        _playback.Stop();
+        _loadedWav = null;
+        BitLengthBox.Clear();
+        ResultPanel.Visibility = Visibility.Collapsed;
+        PlaybackPanel.Visibility = Visibility.Collapsed;
+        StatusText.Text = string.Empty;
+        ExtractButton.IsEnabled = false;
+        UpdatePlaybackButtons();
+        UpdateFabStates();
+    }
+
+    public void LoadAudioFromPath(string filePath) =>
+        _ = LoadAudioFromPathAsync(filePath);
 
     private void ApplyBitLengthPanelVisibility()
     {
@@ -83,54 +174,14 @@ public partial class ExtractView : UserControl
         BusyBar.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
         PickButton.IsEnabled = !busy;
         ExtractButton.IsEnabled = !busy && _loadedWav is not null;
+        UpdateFabStates();
     }
 
     private async void PickButton_Click(object sender, RoutedEventArgs e)
     {
-        var s = ThemeManager.Strings;
         var dlg = new OpenFileDialog { Filter = AudioInputLoader.OpenDialogFilter };
         if (dlg.ShowDialog() != true) return;
-
-        SetBusy(true);
-        StatusText.Text = s.Processing;
-        ResultPanel.Visibility = Visibility.Collapsed;
-
-        WavFile? wav = null;
-        string? error = null;
-        await Task.Run(() =>
-        {
-            try
-            {
-                wav = AudioInputLoader.LoadFromPath(dlg.FileName);
-            }
-            catch (Exception ex)
-            {
-                error = ex.Message;
-            }
-        });
-
-        _playback.Stop();
-        _loadedWav = wav;
-        PlaybackPanel.Visibility = wav is not null ? Visibility.Visible : Visibility.Collapsed;
-        SetBusy(false);
-        UpdatePlaybackButtons();
-
-        if (error is not null)
-        {
-            StatusText.Text = error;
-            ExtractButton.IsEnabled = false;
-            return;
-        }
-
-        if (wav is null)
-        {
-            StatusText.Text = s.KeyMismatch;
-            ExtractButton.IsEnabled = false;
-            return;
-        }
-
-        StatusText.Text = s.AudioFileLoaded(Path.GetFileName(dlg.FileName));
-        ExtractButton.IsEnabled = true;
+        await LoadAudioFromPathAsync(dlg.FileName);
     }
 
     private async void ExtractButton_Click(object sender, RoutedEventArgs e)
@@ -174,12 +225,14 @@ public partial class ExtractView : UserControl
 
         if (error is not null)
         {
+            SessionLog.Write("Extract: failed", new InvalidOperationException(error));
             StatusText.Text = error;
             return;
         }
 
         if (text is null)
         {
+            SessionLog.Write("Extract: key mismatch or empty");
             StatusText.Text = s.KeyMismatch;
             ResultText.Text = s.NoText;
             ResultHeaderIcon.Text = "\uE783";
@@ -198,6 +251,7 @@ public partial class ExtractView : UserControl
         ResultTitle.Foreground = (Brush)FindResource("TextBrush");
         ResultText.Foreground = (Brush)FindResource("TextBrush");
         ResultPanel.Visibility = Visibility.Visible;
+        SessionLog.Write($"Extract: success length={text.Length}");
     }
 
     private void PlayButton_Click(object sender, RoutedEventArgs e)

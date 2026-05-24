@@ -25,6 +25,10 @@ public sealed class AppConfig
 
     public static AppConfig Current { get; private set; } = new();
 
+    /// <summary>Embed tab: on Windows desktop, file load stays available even when deploy flag is false (mobile-oriented default).</summary>
+    public static bool ShowEmbedLoadFileForUi =>
+        Current.ShowEmbedLoadFileButton || OperatingSystem.IsWindows();
+
     private static string AppSettingsFilePath =>
         Path.Combine(AppContext.BaseDirectory, "appsettings.json");
 

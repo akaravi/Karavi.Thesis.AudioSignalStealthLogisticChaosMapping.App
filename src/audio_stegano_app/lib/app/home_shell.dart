@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/android_open_file_intent.dart';
+import '../core/platform/desktop_open_audio_args.dart';
+import '../core/platform/windows_open_file_intent.dart';
+import 'session_log.dart';
 import '../features/about/about_screen.dart';
 import '../features/embed/embed_screen.dart';
 import '../features/extract/extract_screen.dart';
@@ -22,6 +25,7 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
   StreamSubscription<OpenedAudioFile>? _androidOpenSub;
+  StreamSubscription<OpenedAudioFile>? _windowsOpenSub;
 
   static const _extractTabIndex = 1;
 
@@ -29,6 +33,24 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   void initState() {
     super.initState();
     unawaited(_bindAndroidOpenWith());
+    unawaited(_bindDesktopOpenWith());
+    unawaited(_bindWindowsOpenWith());
+  }
+
+  Future<void> _bindWindowsOpenWith() async {
+    if (!WindowsOpenFileIntent.isSupported) return;
+    _windowsOpenSub = WindowsOpenFileIntent.watchOpens().listen((file) {
+      SessionLog.write('Open with (pipe): ${file.path}');
+      _scheduleOpenFile(file);
+    });
+  }
+
+  Future<void> _bindDesktopOpenWith() async {
+    final initial = DesktopOpenAudioArgs.consumeInitial();
+    if (initial != null) {
+      SessionLog.write('Open with: ${initial.path}');
+      _scheduleOpenFile(initial);
+    }
   }
 
   Future<void> _bindAndroidOpenWith() async {
@@ -50,6 +72,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void dispose() {
     unawaited(_androidOpenSub?.cancel());
+    unawaited(_windowsOpenSub?.cancel());
     super.dispose();
   }
 

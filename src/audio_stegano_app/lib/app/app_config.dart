@@ -27,6 +27,19 @@ class AppConfig {
     required this.logisticX0,
   });
 
+  /// UI flag: on Windows desktop, file load stays available when deploy flag is false.
+  static bool showEmbedLoadFileForUiValue({
+    required bool showEmbedLoadFileButton,
+    required bool isNativeWindowsDesktop,
+  }) =>
+      showEmbedLoadFileButton || isNativeWindowsDesktop;
+
+  bool get showEmbedLoadFileForUi => showEmbedLoadFileForUiValue(
+        showEmbedLoadFileButton: showEmbedLoadFileButton,
+        isNativeWindowsDesktop:
+            !kIsWeb && defaultTargetPlatform == TargetPlatform.windows,
+      );
+
   static const AppConfig defaults = AppConfig(
     showEmbedLoadFileButton: false,
     showEmbedRecoveryDialog: true,

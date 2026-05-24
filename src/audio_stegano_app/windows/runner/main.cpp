@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include "flutter_window.h"
+#include "single_instance.h"
 #include "utils.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
@@ -17,12 +18,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
-  flutter::DartProject project(L"data");
-
-  std::vector<std::string> command_line_arguments =
+  const std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
 
-  project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
+  if (!single_instance::TryBecomePrimary()) {
+    const auto audio_path =
+        single_instance::FindAudioPathInArgs(command_line_arguments);
+    if (audio_path.has_value()) {
+      single_instance::SendPathToPrimary(*audio_path);
+    }
+    ::CoUninitialize();
+    return EXIT_SUCCESS;
+  }
+
+  single_instance::EnsurePipeServerRunning();
+
+  flutter::DartProject project(L"data");
+
+  std::vector<std::string> dart_entrypoint_arguments = command_line_arguments;
+  project.set_dart_entrypoint_arguments(std::move(dart_entrypoint_arguments));
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);

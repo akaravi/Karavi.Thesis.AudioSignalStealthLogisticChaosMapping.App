@@ -1624,3 +1624,276 @@
 - ℹ️ **مجاز (غیر CDN UI):** `url_launcher` برای GitHub/ntk.ir در صفحه درباره؛ xmlns استاندارد XAML/Android
 - ℹ️ **فقط build-time:** Gradle/Maven mirrors، `pub.flutter-io.cn`, دانلود `bundle-signer` از GitHub — در زمان باز شدن اپ توسط کاربر فراخوانی نمی‌شوند
 - ✅ قانون فعال: `.cursor/rules/no-external-cdn-assets.mdc`
+
+---
+
+## Part 78 — رفع flutter-plugin-loader (init.gradle + buildDir cross-drive)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع assembleRelease: Error resolving plugin dev.flutter.flutter-plugin-loader — repository maven added by settings.gradle.kts"
+}
+```
+
+### Result 78
+- ✅ **علت:** `%USERPROFILE%\.gradle\init.gradle` با `allprojects.repositories` / `settingsEvaluated` با `FAIL_ON_PROJECT_REPOS` در `flutter_tools/gradle/settings.gradle.kts` تداخل داشت (issue flutter#174035)
+- ✅ **SDK:** بازگردانی `packages/flutter_tools/gradle/settings.gradle.kts` به upstream (حذف آینه Aliyun اضافه‌شده)
+- ✅ **`settings.gradle.kts`:** الگوی استاندارد Flutter (`google`/`mavenCentral`/`gradlePluginPortal` در pluginManagement؛ بدون dependencyResolutionManagement سفارشی)
+- ✅ **`build.gradle.kts`:** حذف `subprojects.repositories`؛ redirect مسیر build فقط برای subprojectهای داخل `android/` (pub cache روی درایو C: در مقابل پروژه روی D:)
+- ✅ **`init.gradle`:** skip خودکار بیلدهای Flutter Android؛ قالب در `android/scripts/gradle-init.gradle.template`
+- ✅ **تأیید:** `flutter build apk --release --split-per-abi` → arm64/armeabi-v7a/x86_64 APK (~488s)
+
+---
+
+## Part 79 — افزایش نسخه فرعی (update ver)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "update ver — minor +1, patch → 0, build +1"
+}
+```
+
+### Result 79
+- ✅ `1.1.0+2` → `1.2.0+3`
+- ✅ `pubspec.yaml` (source of truth)
+- ✅ `AudioStegano.Desktop.csproj`: `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion`
+- ✅ اسکریپت: `._update-ver.ps1`
+
+---
+
+## Part 80 — قانون versioning: MAJOR.MINOR.PATCH (بدون +BUILD)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "اصلاح update ver: version: 1.2.3 به‌جای 1.2.0+3 — افزایش رقم سوم، بدون suffix +BUILD"
+}
+```
+
+### Result 80
+- ✅ فرمت: `MAJOR.MINOR.PATCH` — مثال صحیح `1.2.3`؛ غلط `1.2.0+3`
+- ✅ `_update-ver.ps1`: patch+1؛ نرمال‌سازی legacy `+BUILD` → رقم سوم
+- ✅ `.cursor/rules/update-ver.mdc`: قانون به‌روز
+- ✅ `pubspec.yaml` + WPF csproj: `1.2.3`
+- ✅ Android `versionCode`: `major*1_000_000 + minor*1_000 + patch` در `app/build.gradle.kts`
+- ✅ UI: `AppVersion.display` فقط `info.version` (بدون `+buildNumber`)
+- ✅ بعدی با update ver: `1.2.3` → `1.2.4`
+
+---
+
+## Part 81 — افزایش نسخه (update ver)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "update ver — patch +1"
+}
+```
+
+### Result 81
+- ✅ `1.2.3` → `1.2.4`
+- ✅ `pubspec.yaml`, `AudioStegano.Desktop.csproj` (همگام)
+- ✅ Android `versionCode` = `1002004` (از semver در Gradle)
+
+---
+
+## Part 81 — هم‌ترازی کامل WPF با Flutter (UX / onboarding / help)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "نرم‌افزار دات‌نت دسکتاپ باید همه چیز و جزء به جزء مانند نرم‌افزار فلاتر باشد"
+}
+```
+
+### Result 81
+- ✅ **Bootstrap** (`BootstrapWindow`): اسپلش دو مرحله‌ای + نسخه در پایین؛ انتخاب زبان یک‌بار (`LocaleConfigured`)؛ راهنمای سریع یک‌بار (`UsageGuideSeen`) — مانند `AppBootstrap`
+- ✅ **راهنمای کامل**: `HelpDialog` + `HelpStrings.cs` (fa/en/ar/fr)؛ FAB راهنما در Embed و Extract
+- ✅ **FAB جلسه جدید**: «نهان‌نگاری جدید» / «رمزگشایی جدید» در بالای تب‌ها
+- ✅ **اشتراک‌گذاری**: دکمه Share + `StegoShareService` (Save dialog با عنوان share — fallback دسکتاپ فلاتر)
+- ✅ **Open with**: `AppState.PendingOpenAudioPath` از args؛ `ExtractView.LoadAudioFromPath`؛ تب Extract
+- ✅ `AppState`: فیلدهای onboarding در `settings.json`
+- ✅ `SettingsView.ApplyStrings()` در `RefreshUi`
+- ✅ `dotnet build` + تست **۵/۵** سبز
+
+---
+
+## Part 82 — WPF: Open with ویندوز + MP4 + تک‌نمونه
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ادامه هم‌ترازی: ثبت Open with در ویندوز برای wav/mp3/mp4 مانند اندروید"
+}
+```
+
+### Result 82
+- ✅ `WindowsFileAssociationService` — ثبت/حذف HKCU (`OpenWithProgids`, `RegisteredApplications`) برای `.wav` `.mp3` `.mp4`
+- ✅ `SingleInstanceService` — Named Pipe؛ باز کردن فایل در نمونهٔ در حال اجرا → تب Extract
+- ✅ `OpenAudioFileRouter` + `MainWindow.OpenPendingAudioFile()`
+- ✅ `AudioInputLoader` — MP4 با `MediaFoundationReader` (ویندوز)
+- ✅ تنظیمات: `RegisterWindowsFileAssociations` + CheckBox (فقط ویندوز)
+- ✅ اسکریپت: `_register-windows-open-with.ps1` (`-Unregister`, `-ExePath`)
+- ✅ `dotnet build` + تست **۵/۵** سبز
+
+---
+
+## Part 83 — WPF: UX جزئیات Embed/Extract (Flutter parity)
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ادامه هم‌ترازی: لغو ضبط، FAB جدید حین ضبط، Drag&Drop، تأیید فوری"
+}
+```
+
+### Result 83
+- ✅ `AudioCaptureService.Cancel()` — دور انداختن ضبط (مثل Flutter `cancel()`)
+- ✅ FAB «نهان‌نگاری جدید» در حین ضبط فعال → لغو ضبط
+- ✅ برچسب متن پیام + جداکننده «یا» بین ضبط/بارگذاری (`ShowEmbedLoadFileButton`)
+- ✅ `AudioFileDropHelper` — کشیدن فایل روی کارت Embed/Extract
+- ✅ حین `Verify` دکمه‌های Share/Save/Verify غیرفعال
+- ✅ `dotnet build` + تست **۵/۵** سبز
+
+---
+
+## Part 84 — WPF: پیام‌های decode، کپی، Verify UX، Open with اولین اجرا
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ادامه هم‌ترازی Flutter: audio_load_errors، دکمه کپی، اسپینر Verify، ثبت Open with"
+}
+```
+
+### Result 84
+- ✅ `AudioLoadErrors.cs` + `ErrorMp3Decode` / `ErrorMp4Decode` در `AppStrings` — مانند `audio_load_errors.dart`
+- ✅ `AudioInputLoader` — استثنا با پیشوند `MP3 decode failed` / `MP4 decode failed`
+- ✅ Embed/Extract — `AudioLoadErrors.Format` به‌جای `ex.Message` خام
+- ✅ دکمه **کپی** پیام در کارت نتیجه Embed + `Copied` در وضعیت
+- ✅ حین Verify: غیرفعال‌سازی Play/Pause/Stop؛ `ProgressBar` روی دکمه Verify
+- ✅ پس از راهنمای اولیه: پیشنهاد یک‌باره ثبت Open with (بله/خیر) → `WindowsFileAssociationService`
+- ✅ `_build-all-projects.ps1` — سوییچ `-RegisterWindowsOpenWith` پس از publish
+- ✅ `dotnet build` + تست **۵/۵** سبز
+
+---
+
+## Part 85 — WPF: SessionLog، اسکرول نتیجه، بارگذاری فایل دسکتاپ، Open with یک‌بار
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ادامه هم‌ترازی: لاگ جلسه، اسکرول به نتیجه، دکمه بارگذاری در ویندوز، پیشنهاد Open with برای کاربران قدیمی"
+}
+```
+
+### Result 85
+- ✅ `SessionLog` → `%LocalAppData%\AudioStegano.Desktop\logs\desktop_session.log`؛ رویدادهای Embed/Extract/App
+- ✅ `WindowsOpenWithPrompt` + `WindowsOpenWithOfferSeen` — یک‌بار (بله/خیر)؛ پس از راهنما یا اولین `MainWindow`
+- ✅ `AppConfig.ShowEmbedLoadFileForUi` — روی ویندوز دکمه بارگذاری همیشه در دسترس (`appsettings` موبایل همچنان `false`)
+- ✅ اسکرول خودکار به کارت نتیجه پس از embed موفق (`BringIntoView`)
+- ✅ `README.md` دسکتاپ به‌روز شد
+- ✅ `dotnet build` + تست **۵/۵** سبز
+
+---
+
+## Part 86 — Flutter Windows + WPF: Open with CLI، بارگذاری فایل، لاگ خطاهای سراسری
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "هم‌ترازی Flutter Windows با WPF: showEmbedLoadFileForUi، args باز کردن فایل، SessionLog برای exception"
+}
+```
+
+### Result 86
+- ✅ Flutter `AppConfig.showEmbedLoadFileForUi` + تست `showEmbedLoadFileForUiValue` — مانند WPF روی ویندوز
+- ✅ `embed_screen` از `showEmbedLoadFileForUi` استفاده می‌کند
+- ✅ `DesktopOpenAudioArgs` + `HomeShell._bindDesktopOpenWith` — مسیر wav/mp3/mp4 از `Platform.executableArguments`
+- ✅ WPF: `HookGlobalExceptionLogging` (AppDomain / Dispatcher / Task) → `SessionLog`
+- ✅ `OpenAudioFileRouter` → لاگ `Open with`
+- ✅ `dotnet build` + تست **۵/۵** سبز
+
+---
+
+## Part 87 — Flutter Windows: تک‌نمونه + Named Pipe Open with
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "Flutter Windows single instance مانند WPF: نمونه دوم مسیر را به اولی بفرستد و خارج شود"
+}
+```
+
+### Result 87
+- ✅ `single_instance.cpp` — Named Pipe `Karavi.AudioStegano.Flutter.OpenFile.v1`؛ `TryBecomePrimary` / `SendPathToPrimary`
+- ✅ `main.cpp` — نمونه ثانویه مسیر wav/mp3/mp4 را فوروارد و `EXIT_SUCCESS`؛ سرور pipe قبل از Flutter
+- ✅ `windows_open_file_channel.cpp` — `EventChannel` به Dart
+- ✅ `WindowsOpenFileIntent` + `HomeShell._bindWindowsOpenWith` — تب Extract + `ActivateMainWindow`
+- ✅ صف مسیر تا آماده‌شدن Flutter (`AttachPathHandler`)
+
+---
+
+## Part 88 — Flutter: Drag&Drop دسکتاپ + ثبت Open with + thread-safe pipe
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "ادامه هم‌ترازی: کشیدن فایل روی Embed/Extract، اسکریپت ثبت Open with برای Flutter Windows"
+}
+```
+
+### Result 88
+- ✅ `desktop_drop` + `AudioFileDropSurface` — Embed و Extract (دسکتاپ wav/mp3/mp4)
+- ✅ `embed_screen`: `_embedFromDroppedPath` / `_loadAndEmbedPicked`
+- ✅ `_register-flutter-windows-open-with.ps1` — ProgId `Karavi.AudioStegano.Flutter.AudioFile`
+- ✅ `flutter_window.cpp` — `EventChannel` روی `engine->task_runner()->PostTask`
+
+---
+
+## Part 89 — رفع flutter pub get در _build-cafebazaar-release.ps1
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "رفع شکست _build-cafebazaar-release.ps1 روی flutter pub get — Windows symlink warning و pub.dev 403"
+}
+```
+
+### Result 89
+- ✅ علت: `flutter pub get` exit غیرصفر به‌خاطر «Building with plugins requires symlink support» در حالی که `.dart_tool/package_config.json` ساخته شده (برای بیلد Android لازم نیست)
+- ✅ `_build-cafebazaar-release.ps1`: همان منطق `_build-flutter-android.ps1` — نادیده symlink اگر پکیج‌ها resolve شدند؛ retry آینه flutter-io.cn و Tsinghua؛ `-OpenDeveloperSettings` / `-DisableAutoMirrorRetry`
+- ✅ بیلد موفق: `AudioStegano_1.2.4_arm64-v8a.apk`, `.aab`, `.bin`, `mapping_1.2.4.txt` در `publish\cafebazaar`
+- ℹ️ برای بیلد Windows native همچنان Developer Mode یا `ensure_windows_plugin_junctions.ps1` لازم است
+
+---
+
+## Part 90 — پسوند تاریخ/ساعت برای پوشه خروجی کافه‌بازار
+
+### دستور
+```json
+{
+  "kind": "json-prompt",
+  "task": "فولدر خروجی cafebazaar با پسوند yyyyMMdd_HHmmss ساخته شود"
+}
+```
+
+### Result 90
+- ✅ `_build-cafebazaar-release.ps1`: `New-CafeBazaarTimestampedOutputPath` — پیش‌فرض `publish\cafebazaar_yyyyMMdd_HHmmss`؛ با `-OutputDirectory` → `{path}_yyyyMMdd_HHmmss`
+- ✅ قالب ثابت `publish\cafebazaar\LISTING.fa.md` (در صورت وجود) به پوشهٔ timestamped کپی می‌شود
+- ✅ `docs/cafebazaar-publish-guide.md` به‌روز

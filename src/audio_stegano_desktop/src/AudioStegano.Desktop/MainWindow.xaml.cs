@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using AudioStegano.Desktop.Services;
 using AudioStegano.Desktop.Views;
 
 namespace AudioStegano.Desktop;
@@ -18,6 +19,23 @@ public partial class MainWindow : Window
         RefreshUi();
         BuildNavigation();
         SelectTab(0);
+        Loaded += MainWindow_Loaded;
+    }
+
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        OpenPendingAudioFile();
+        WindowsOpenWithPrompt.OfferIfNeeded();
+    }
+
+    public void OpenPendingAudioFile()
+    {
+        var path = AppState.PendingOpenAudioPath;
+        if (string.IsNullOrEmpty(path)) return;
+        AppState.PendingOpenAudioPath = null;
+        Activate();
+        SelectTab(1);
+        ExtractPage.LoadAudioFromPath(path);
     }
 
     public void RefreshUi()
@@ -32,6 +50,7 @@ public partial class MainWindow : Window
         EmbedPage.ApplyStrings();
         EmbedPage.UpdateMessageBitCounter();
         ExtractPage.ApplyStrings();
+        SettingsPage.ApplyStrings();
         AboutPage.ApplyStrings();
     }
 

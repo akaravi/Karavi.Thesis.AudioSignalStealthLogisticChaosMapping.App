@@ -26,4 +26,28 @@ void main() {
   test('AppConfig.bundledAssetPaths includes stable asset key', () {
     expect(AppConfig.bundledAssetPaths, contains('assets/appsettings.json'));
   });
+
+  test('showEmbedLoadFileForUiValue enables load on Windows desktop', () {
+    expect(
+      AppConfig.showEmbedLoadFileForUiValue(
+        showEmbedLoadFileButton: false,
+        isNativeWindowsDesktop: true,
+      ),
+      isTrue,
+    );
+    expect(
+      AppConfig.showEmbedLoadFileForUiValue(
+        showEmbedLoadFileButton: false,
+        isNativeWindowsDesktop: false,
+      ),
+      isFalse,
+    );
+    expect(
+      AppConfig.showEmbedLoadFileForUiValue(
+        showEmbedLoadFileButton: true,
+        isNativeWindowsDesktop: false,
+      ),
+      isTrue,
+    );
+  });
 }

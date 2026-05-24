@@ -4,6 +4,15 @@
 
 | تاریخ | ساعت | Part | تغییر | فایل/مسیر |
 |---|---|---|---|---|
+| 2026-05-24 | — | 90 | خروجی `_build-cafebazaar-release.ps1`: پوشه `publish/cafebazaar_yyyyMMdd_HHmmss`؛ قالب `LISTING.fa.md` در `publish/cafebazaar/` | `_build-cafebazaar-release.ps1`, `docs/cafebazaar-publish-guide.md` |
+| 2026-05-24 | — | 89 | رفع `_build-cafebazaar-release.ps1`: نادیده گرفتن هشدار symlink ویندوز اگر پکیج‌ها resolve شدند؛ retry خودکار آینه pub (flutter-io.cn/Tsinghua) | `_build-cafebazaar-release.ps1` |
+| 2026-05-24 | — | 83 | WPF UX parity: لغو ضبط، FAB نهان‌نگاری جدید حین ضبط، برچسب پیام/«یا»، Drag&Drop wav/mp3/mp4، قفل دکمه‌ها هنگام تأیید | `AudioCaptureService.Cancel`, `AudioFileDropHelper`, `EmbedView`, `ExtractView` |
+| 2026-05-24 | — | 82 | WPF: Open with ویندوز (HKCU) برای wav/mp3/mp4؛ تک‌نمونه + Named Pipe؛ MP4 با MediaFoundation؛ تنظیمات ثبت Open with؛ اسکریپت `_register-windows-open-with.ps1` | `WindowsFileAssociationService`, `SingleInstanceService`, `OpenAudioFileRouter`, `AudioInputLoader`, `SettingsView`, `_register-windows-open-with.ps1` |
+| 2026-05-24 | — | 81 | هم‌ترازی WPF با Flutter: اسپلش دوصفحه‌ای، انتخاب زبان، راهنمای سریع، راهنمای کامل (Help)، FAB نهان‌نگاری/رمزگشایی جدید، اشتراک WAV، Open with از خط فرمان | `BootstrapWindow`, `HelpDialog`, `ExtraStrings.cs`, `HelpStrings.cs`, `EmbedView`, `ExtractView`, `AppState`, `StegoShareService` |
+| 2026-05-24 | 07:32 | 81 | افزایش نسخه (update ver): `1.2.3` → `1.2.4` (patch +1) | `pubspec.yaml`, `AudioStegano.Desktop.csproj` (`_update-ver.ps1`) |
+| 2026-05-24 | 06:45 | 80 | قانون versioning: فقط `MAJOR.MINOR.PATCH` (بدون `+BUILD`); `1.2.0+3` → `1.2.3`؛ patch+1 در update ver؛ versionCode از semver در Gradle | `_update-ver.ps1`, `.cursor/rules/update-ver.mdc`, `pubspec.yaml`, `AudioStegano.Desktop.csproj`, `app/build.gradle.kts`, `app_version.dart` |
+| 2026-05-24 | 06:38 | 79 | افزایش نسخه فرعی (update ver): `1.1.0+2` → `1.2.0+3` (minor +1، patch → 0، build +1) — **جایگزین شد با Part 80** | `pubspec.yaml`, `AudioStegano.Desktop.csproj` (`_update-ver.ps1`) |
+| 2026-05-24 | 06:15 | 78 | رفع `flutter-plugin-loader` / `assembleRelease`: init.gradle سراسری با FAIL_ON_PROJECT_REPOS فلاتر؛ بازگردانی settings استاندارد؛ buildDir فقط برای subprojectهای درون‌درختی (pub cache روی درایو دیگر) | `settings.gradle.kts`, `build.gradle.kts`, `gradle-init.gradle.template`, `%USERPROFILE%\.gradle\init.gradle` |
 | 2026-05-23 | 23:45 | 76 | رفع `flutter build apk`: Gradle wrapper ناقص + mirror Maven/Gradle (Tencent/Aliyun/Huawei) | `gradle-wrapper.properties`, `settings.gradle.kts`, `ensure_gradle_wrapper_dist.ps1`, `flutter_android_build.ps1` |
 | 2026-05-23 | 22:14 | 75 | رفع `flutter build windows --release` exit 69: بیلد عادی پس از junction (بدون gate symlink)؛ retry mirror pub.dev؛ env mirror در elevated؛ `exit 0` junction script | `invoke_flutter_windows_build.ps1`, `ensure_windows_plugin_junctions.ps1` |
 | 2026-05-23 | 17:59 | 74 | run all: dotnet 5/5، flutter analyze صفر، flutter test 41/41؛ WPF + Flutter Web اجرا؛ HTTP 200؛ بیلد windows debug سبز؛ pub.dev با mirror | `logs/*`, `wpf.pid`, `flutter_web.pid` |
@@ -185,3 +194,8 @@
 | 2026-05-21 | — | release | یکپارچه‌سازی Cafe Bazaar bundle-signer: `Invoke-CafeBazaarBundleSigner.ps1`، خروجی `.bin` در `_build-cafebazaar-release.ps1`، به‌روزرسانی راهنما | `android/scripts/`, `docs/cafebazaar-publish-guide.md`, `LISTING.fa.md` |
 | 2026-05-21 | — | build | حذف مسیر ثابت E: از جستجوی JAR؛ فقط `CAFEBAZAAR_BUNDLESIGNER_JAR` / `-BundleSignerJarPath` / `android/tools/` | `Invoke-CafeBazaarBundleSigner.ps1`, `cafebazaar-publish-guide.md` |
 | 2026-05-23 | — | audit | ممیزی سراسری CDN: بدون فونت/CSS/JS خارجی در runtime — Flutter Web، WPF، build/publish تأیید شد | `Cursor.01.plan.md` Part 77 |
+| 2026-05-24 | — | feat | WPF Part 84: `AudioLoadErrors`، دکمه کپی نتیجه Embed، اسپینر/قفل پخش حین Verify، پیشنهاد Open with پس از راهنما، `-RegisterWindowsOpenWith` در build | `AudioLoadErrors.cs`, `EmbedView.*`, `BootstrapWindow.xaml.cs`, `_build-all-projects.ps1` |
+| 2026-05-24 | — | feat | WPF Part 85: `SessionLog`، `WindowsOpenWithPrompt`/`OfferSeen`، `ShowEmbedLoadFileForUi`، اسکرول نتیجه Embed | `SessionLog.cs`, `AppConfig.cs`, `MainWindow.xaml.cs`, `EmbedView.*` |
+| 2026-05-24 | — | feat | Part 86: Flutter `showEmbedLoadFileForUi` + `DesktopOpenAudioArgs`؛ WPF global exception → SessionLog | `app_config.dart`, `home_shell.dart`, `desktop_open_audio_args.dart`, `App.xaml.cs` |
+| 2026-05-24 | — | feat | Part 87: Flutter Windows تک‌نمونه + Named Pipe Open with (runner C++ + EventChannel) | `windows/runner/single_instance.*`, `windows_open_file_intent*.dart`, `home_shell.dart` |
+| 2026-05-24 | — | feat | Part 88: Flutter `AudioFileDropSurface` (desktop_drop)؛ `_register-flutter-windows-open-with.ps1`؛ pipe روی UI thread | `embed_screen.dart`, `extract_screen.dart`, `audio_file_drop_surface*.dart` |

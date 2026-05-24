@@ -1,4 +1,4 @@
-/// Audio file opened from Android «Open with» (ACTION_VIEW).
+/// Audio file opened from «Open with» (Android ACTION_VIEW or desktop CLI args).
 class OpenedAudioFile {
   const OpenedAudioFile({required this.path, required this.displayName});
 
