@@ -152,6 +152,12 @@ Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App/
 │   ├── GITHUB_RELEASE.md
 │   └── cafebazaar/screenshots_16x9/   # اسکرین‌شات فروشگاه
 ├── publish/cafebazaar/          # خروجی بیلد بازار (پس از build)
+├── _dev-ports.ps1               # پورت‌های لوکال 5320–5329
+├── _last-run-info.ps1           # تولید LastRunInfo.html
+├── _last-run-info.template.html # قالب UTF-8 (عناوین فارسی)
+├── _run-all-local.ps1           # اجرای همهٔ سرویس‌های dev + health
+├── LastRunInfo.html             # گزارش آخرین اجرا (تولید خودکار)
+├── _build-all-projects.ps1
 ├── _build-cafebazaar-release.ps1
 ├── _build-github-release.ps1
 ├── _update-ver.ps1
@@ -161,12 +167,33 @@ Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App/
 
 ### اجرای سریع
 
+#### پورت‌های توسعهٔ لوکال (5320–5329)
+
+| پورت | سرویس |
+|------|--------|
+| **5320** | Flutter Web (`web-server`) — `http://127.0.0.1:5320/` |
+| **5321** | Flutter Web (`chrome` / `edge`) |
+| **5322** | رزرو — WPF (بدون HTTP) |
+| **5323** | Flutter Windows — VM service |
+| **5324** | Dart DevTools |
+| **5325–5329** | رزرو |
+
+منبع واحد: [`_dev-ports.ps1`](_dev-ports.ps1). اجرای همهٔ سرویس‌های لوکال:
+
+```powershell
+.\_run-all-local.ps1
+# توقف و اجرای مجدد: .\_run-all-local.ps1 -RestartAll
+```
+
+پس از هر اجرای لوکال، گزارش **`LastRunInfo.html`** در ریشه مخزن به‌روز می‌شود (سه جدول: نتیجه اجرا، آدرس سرویس‌ها، تخصیص پورت‌ها). قانون: `.cursor/rules/last-run-info-html.mdc`.
+
 #### Flutter (توسعه)
 
 ```powershell
 cd src/audio_stegano_app
 flutter pub get
-flutter run -d windows    # یا android / linux
+flutter run -d windows --host-vmservice-port=5323 --devtools-port=5324
+flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1
 ```
 
 #### دسکتاپ .NET (WPF)
@@ -368,12 +395,32 @@ See the tree in the [Persian section](#ساختار-مخزن) above — paths ar
 
 ### Quick start
 
+#### Local dev ports (5320–5329)
+
+| Port | Service |
+|------|---------|
+| **5320** | Flutter Web (`web-server`) — `http://127.0.0.1:5320/` |
+| **5321** | Flutter Web (`chrome` / `edge`) |
+| **5322** | Reserved — WPF (no HTTP) |
+| **5323** | Flutter Windows — VM service |
+| **5324** | Dart DevTools |
+| **5325–5329** | Reserved |
+
+Single source: [`_dev-ports.ps1`](_dev-ports.ps1). Run all local dev targets:
+
+```powershell
+.\_run-all-local.ps1
+```
+
+After each local run, **`LastRunInfo.html`** at the repo root is updated (execution results, service URLs, port map). See `.cursor/rules/last-run-info-html.mdc`.
+
 #### Flutter (development)
 
 ```powershell
 cd src/audio_stegano_app
 flutter pub get
-flutter run -d windows    # or android / linux
+flutter run -d windows --host-vmservice-port=5323 --devtools-port=5324
+flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1
 ```
 
 #### .NET desktop (WPF)

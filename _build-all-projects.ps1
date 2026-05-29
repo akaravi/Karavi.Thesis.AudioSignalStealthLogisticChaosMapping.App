@@ -31,6 +31,9 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOrWhiteSpace($PubHostedUrl))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $root "_dev-ports.ps1")
+. (Join-Path $root "_last-run-info.ps1")
+$lastRunInfoPath = Join-Path $root "LastRunInfo.html"
 $solutionPath = Join-Path $root "src\audio_stegano_desktop\AudioStegano.sln"
 $desktopProj = Join-Path $root "src\audio_stegano_desktop\src\AudioStegano.Desktop\AudioStegano.Desktop.csproj"
 $desktopPath = Split-Path -Parent $desktopProj
@@ -634,18 +637,52 @@ if (-not $SkipDevServers) {
         Stop-RunningProjectProcess -ProcessName "audio_stegano_app"
     }
 
+    $webPort = Get-KaraviDevPort -Name "FlutterWeb"
+    $vmPort = Get-KaraviDevPort -Name "FlutterWindowsVm"
+    $devtoolsPort = Get-KaraviDevPort -Name "FlutterDevTools"
+    $webUrl = Get-KaraviDevHttpUrl -Port $webPort
+
     Start-ProjectTerminal `
         -WorkingDirectory $desktopPath `
         -Command "dotnet run --project `"$desktopProj`"" `
-        -RestartMessage "Started: AudioStegano.Desktop (WPF) — dotnet run"
+        -RestartMessage "Started: AudioStegano.Desktop (WPF) — dotnet run [port $(Get-KaraviDevPort WpfDesktop) reserved, no HTTP]"
 
     Start-ProjectTerminal `
         -WorkingDirectory $flutterAppPath `
-        -Command ("& `"$flutterCommand`" run -d windows") `
-        -RestartMessage "Started: audio_stegano_app — flutter run -d windows"
+        -Command ("& `"$flutterCommand`" run -d windows --host-vmservice-port=$vmPort --device-vmservice-port=$vmPort --devtools-port=$devtoolsPort") `
+        -RestartMessage "Started: audio_stegano_app — flutter run -d windows (VM $vmPort, DevTools $devtoolsPort)"
+
+    Start-ProjectTerminal `
+        -WorkingDirectory $flutterAppPath `
+        -Command ("& `"$flutterCommand`" run -d web-server --web-port=$webPort --web-hostname=127.0.0.1") `
+        -RestartMessage "Started: audio_stegano_app — flutter web-server at $webUrl"
+
+    Write-KaraviDevPortLegend
+
+    $devtoolsUrl = Get-KaraviDevHttpUrl -Port $devtoolsPort
+    $runResults = @(
+        (New-KaraviRunResultRow -Step "AudioStegano.Desktop (WPF)" -Status "Started" -Detail "separate terminal, dotnet run")
+        (New-KaraviRunResultRow -Step "Flutter Windows" -Status "Started" -Detail "VM $vmPort, DevTools $devtoolsPort")
+        (New-KaraviRunResultRow -Step "Flutter Web (web-server)" -Status "Started" -Detail $webUrl)
+    )
+    $services = @(
+        [ordered]@{ Service = "WPF - AudioStegano.Desktop"; Address = "terminal, no HTTP"; Notes = ("port " + (Get-KaraviDevPort WpfDesktop) + " reserved") }
+        [ordered]@{ Service = "Flutter Windows"; Address = "http://127.0.0.1:$vmPort/"; Notes = "DevTools: $devtoolsUrl" }
+        [ordered]@{ Service = "Flutter Web"; Address = $webUrl; Notes = "web-server" }
+    )
+    Write-KaraviLastRunInfoHtml `
+        -OutputPath $lastRunInfoPath `
+        -InvokedBy "_build-all-projects.ps1 (dev servers)" `
+        -RunResults $runResults `
+        -ServiceAddresses $services `
+        -OverallSuccess $true `
+        -Summary "Dev servers started in separate terminals"
 }
 
 Write-Host "`nDone." -ForegroundColor Yellow
+if (Test-Path -LiteralPath $lastRunInfoPath) {
+    Write-Host "LastRunInfo: $lastRunInfoPath" -ForegroundColor DarkCyan
+}
 Write-Host "Tip: -SkipPackage for deps-only / skip release ZIP; -PackageOnly ends before dev servers; -SkipDevServers to skip spawning terminals." -ForegroundColor DarkYellow
 Write-Host "Android: default arm64 split APK (smaller); -FatAndroidApk for universal; -AndroidArtifact AppBundle|Both -SkipFlutterAndroid" -ForegroundColor DarkYellow
 Write-Host "Pub get auto-retries with flutter-io.cn once on failure unless -DisableAutoMirrorRetry or mirror env/param already set." -ForegroundColor DarkYellow

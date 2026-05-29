@@ -15,7 +15,8 @@ param(
     [string]$WebBaseHref = "/",
     [string]$OutputDirectory = "",
     [ValidateSet("chrome", "edge", "web-server")]
-    [string]$DevServerDevice = "chrome"
+    [string]$DevServerDevice = "chrome",
+    [int]$WebPort = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,6 +25,15 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOrWhiteSpace($PubHostedUrl))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $root "_dev-ports.ps1")
+if ($WebPort -le 0) {
+    if ($DevServerDevice -eq "web-server") {
+        $WebPort = Get-KaraviDevPort -Name "FlutterWeb"
+    }
+    else {
+        $WebPort = Get-KaraviDevPort -Name "FlutterWebChrome"
+    }
+}
 $flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $flutterWebBuildDir = Join-Path $flutterAppPath "build\web"
 $defaultPublishDir = Join-Path $root "publish\flutter\web"
@@ -169,15 +179,13 @@ function Start-FlutterWebDevTerminal {
         [Parameter(Mandatory = $true)][string]$Device
     )
 
-    $runArgs = "run -d $Device"
-    if ($Device -eq "web-server") {
-        $runArgs += " --web-port=8080"
-    }
+    $runArgs = "run -d $Device --web-port=$WebPort --web-hostname=127.0.0.1"
 
     $encoded = [Convert]::ToBase64String(
         [Text.Encoding]::Unicode.GetBytes("Set-Location '$WorkingDirectory'; & `"$FlutterExe`" $runArgs"))
     Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $encoded | Out-Null
-    Write-Host "Started: audio_stegano_app - flutter $runArgs" -ForegroundColor Green
+    $url = Get-KaraviDevHttpUrl -Port $WebPort
+    Write-Host "Started: audio_stegano_app - flutter $runArgs ($url)" -ForegroundColor Green
 }
 
 $flutterCandidates = @(
@@ -455,4 +463,4 @@ if (-not $SkipDevServers) {
 
 Write-Host "`nDone." -ForegroundColor Yellow
 Write-Host 'Tip: -SkipPackage skips ZIP; -SkipDevServers skips flutter run; default copy path is publish\flutter\web.' -ForegroundColor DarkYellow
-Write-Host 'Dev server: -DevServerDevice chrome, edge, or web-server; web-server listens on port 8080.' -ForegroundColor DarkYellow
+Write-Host "Dev server: -DevServerDevice chrome|edge|web-server; default web ports 5320 (web-server) / 5321 (chrome|edge); see _dev-ports.ps1." -ForegroundColor DarkYellow

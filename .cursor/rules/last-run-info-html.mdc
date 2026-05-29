@@ -1,0 +1,45 @@
+---
+description: After local run scripts finish, write or update LastRunInfo.html with run results, service URLs, and port map.
+globs:
+  - "_run-all-local.ps1"
+  - "_build-all-projects.ps1"
+  - "_build-flutter-web.ps1"
+  - "_last-run-info.ps1"
+  - "_dev-ports.ps1"
+alwaysApply: false
+---
+
+# LastRunInfo.html after local run
+
+## Trigger (must)
+
+When a script **starts or finishes** local dev execution and assigns ports (`_dev-ports.ps1`, range **5320–5329**), it **must** create or update **`LastRunInfo.html`** at the **repository root** (same folder as `_dev-ports.ps1`).
+
+Applies to at least:
+
+- `_run-all-local.ps1`
+- `_build-all-projects.ps1` when `-SkipDevServers` is **not** set (dev terminals spawned)
+- Any new “run all local” / dev orchestrator scripts
+
+## Content (must)
+
+Single HTML file, UTF-8 **without BOM**, **no CDN** (inline CSS only; `prefers-color-scheme` for light/dark). Page `lang="fa"` and `dir="rtl"`.
+
+Three sections, each a **table**:
+
+| Section (heading) | Columns |
+|-------------------|---------|
+| **نتیجه اجرا** | مرحله / وضعیت / جزئیات (build, test, analyze, process start, health check) |
+| **آدرس‌های سرویس** | سرویس / آدرس / توضیح (URLs, `pid`, or «بدون HTTP») |
+| **تخصیص پورت‌ها** | نام / پورت / کاربرد (from `$script:KaraviDevPorts`) |
+
+## Implementation (must)
+
+- Use `Write-KaraviLastRunInfoHtml` in `_last-run-info.ps1` (dot-source `_dev-ports.ps1` if needed).
+- Persian UI strings live in `_last-run-info.template.html` (UTF-8, no BOM); PowerShell fills `__PLACEHOLDER__` tokens.
+- Write the file in a **`finally`** block so partial failures still update the report.
+- On overall failure, set overall status to ناموفق but still list completed steps.
+
+## Git
+
+`LastRunInfo.html` is generated output; keep it in `.gitignore` unless the user explicitly commits run reports.
