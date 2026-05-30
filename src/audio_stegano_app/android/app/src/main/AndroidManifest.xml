@@ -90,6 +90,20 @@
                 <data android:pathPattern=".*\\.MP4"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".WidgetCaptureActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/WidgetCaptureTheme"
+            android:windowSoftInputMode="adjustResize"
+            android:hardwareAccelerated="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"/>
+        </activity>
         <receiver
             android:name=".QuickActionsWidgetProvider"
             android:exported="true"

@@ -12,11 +12,9 @@ import 'package:path_provider/path_provider.dart';
 import '../../app/app_config_provider.dart';
 import '../../app/app_strings.dart';
 import '../../app/metric_help_strings.dart';
-import '../../app/pending_widget_action_provider.dart';
 import '../../core/io/native_file.dart';
 import '../../app/session_log.dart';
 import '../../app/settings_controller.dart';
-import '../../core/platform/android_widget_action.dart';
 import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_load_errors.dart';
 import '../../core/audio/audio_player.dart';
@@ -127,38 +125,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       if (!mounted) return;
       setState(() => _eqBands = List<double>.from(bands));
     });
-  }
-
-  Future<void> _handleWidgetQuickAction(AndroidWidgetQuickAction action) async {
-    if (!mounted) return;
-    final s = AppStrings.of(context);
-    if (_embedInputHidden) {
-      await _startNewEmbed();
-      if (!mounted) return;
-    }
-    switch (action) {
-      case AndroidWidgetQuickAction.record:
-        if (_textCtrl.text.trim().isEmpty) {
-          _textFocus.requestFocus();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(s.widgetRecordHint)),
-          );
-          return;
-        }
-        if (!_recorder.isRecording && !_processing && !_busy) {
-          await _toggleRecord();
-        }
-        return;
-      case AndroidWidgetQuickAction.embed:
-        if (_textCtrl.text.trim().isEmpty) {
-          _textFocus.requestFocus();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(s.widgetEmbedHint)),
-          );
-          return;
-        }
-        await _loadAndEmbed();
-    }
   }
 
   Future<void> _toggleRecord() async {
@@ -851,18 +817,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AndroidWidgetQuickAction?>(pendingWidgetActionProvider, (
-      prev,
-      next,
-    ) {
-      if (next == null) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        unawaited(_handleWidgetQuickAction(next));
-      });
-      ref.read(pendingWidgetActionProvider.notifier).clear();
-    });
-
     final s = AppStrings.of(context);
     final settings = ref.watch(settingsProvider);
     final deploy = ref.watch(appConfigProvider);

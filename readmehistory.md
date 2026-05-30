@@ -31,3 +31,34 @@ Flutter:
 - `app_strings.dart` — `widgetRecordHint` / `widgetEmbedHint` (fa/en/ar/fr).
 
 Verification: `flutter analyze` clean; `flutter build apk --debug` succeeded.
+
+## 2026-05-30 18:50 (UTC+3:30) — Fix Android widget «Can't load widget»
+
+Root cause: `RemoteViews` cannot inflate plain `<View>`, ripple backgrounds, nested `layout_weight` with `0dp` height, or vector icons on some launchers.
+
+Fixes:
+- Replaced divider `<View>` with 1dp `TextView`.
+- Replaced ripple button backgrounds with simple `shape` drawables.
+- Fixed action row height to `72dp` (no `0dp` + weight chain on root).
+- Replaced vector icons with shape drawables.
+- Removed `previewLayout` / `targetCell*` from widget provider XML.
+- Added `widget_quick_actions_fallback.xml` + try/catch in `QuickActionsWidgetProvider`.
+
+Verification: `flutter build apk --debug` succeeded.
+
+## 2026-05-30 — Widget direct text + record capture (`WidgetCaptureActivity`)
+
+Widget taps now open a dedicated capture sheet (not the main app tabs):
+- `WidgetCaptureActivity` + `WidgetCaptureScreen` — text field, record/stop, auto-embed on stop; embed mode picks file.
+- Skips splash/onboarding when launched from widget.
+- Widget provider targets `WidgetCaptureActivity` instead of `MainActivity`.
+
+Verification: `flutter analyze` + `flutter build apk --debug` OK.
+
+
+## 2026-05-30 — Version bump `1.2.4` → `1.2.5`
+
+Ran `.\_update-ver.ps1` (patch +1). Synced:
+- `src/audio_stegano_app/pubspec.yaml` → `1.2.5`
+- `src/audio_stegano_desktop/src/AudioStegano.Desktop/AudioStegano.Desktop.csproj` → `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion`
+

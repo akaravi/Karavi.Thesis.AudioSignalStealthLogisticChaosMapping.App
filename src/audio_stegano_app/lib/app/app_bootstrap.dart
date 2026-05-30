@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/platform/android_widget_capture_launch.dart';
+import '../core/platform/widget_capture_launch.dart';
 import '../features/onboarding/language_onboarding_screen.dart';
 import '../features/onboarding/splash_flow_screen.dart';
 import '../features/onboarding/usage_guide_splash_screen.dart';
+import '../features/widget/widget_capture_screen.dart';
 import 'home_shell.dart';
 import 'settings_controller.dart';
 
@@ -18,6 +21,7 @@ class AppBootstrap extends ConsumerStatefulWidget {
 class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   bool _hydrated = false;
   bool _splashDone = false;
+  WidgetCaptureLaunch? _widgetCaptureLaunch;
 
   @override
   void initState() {
@@ -26,8 +30,14 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   }
 
   Future<void> _hydrate() async {
+    final capture = await AndroidWidgetCaptureLaunchBridge.consumeInitial();
     await ref.read(settingsProvider.notifier).waitForHydrate();
-    if (mounted) setState(() => _hydrated = true);
+    if (mounted) {
+      setState(() {
+        _widgetCaptureLaunch = capture;
+        _hydrated = true;
+      });
+    }
   }
 
   void _onLanguageDone() => setState(() {});
@@ -40,6 +50,11 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   Widget build(BuildContext context) {
     if (!_hydrated) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final widgetCapture = _widgetCaptureLaunch;
+    if (widgetCapture != null) {
+      return WidgetCaptureScreen(initialAction: widgetCapture.action);
     }
 
     final settings = ref.watch(settingsProvider);

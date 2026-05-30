@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_name">دسترسی سریع</string>
-    <string name="widget_description">ضبط صوت و نهان‌نگاری پیام از صفحهٔ اصلی</string>
+    <string name="widget_description">متن پیام و ضبط صدا — مستقیم از ویجت</string>
     <string name="widget_title">صوت‌نهان</string>
-    <string name="widget_subtitle">دسترسی سریع</string>
+    <string name="widget_subtitle">متن + ضبط مستقیم</string>
     <string name="widget_action_record">ضبط</string>
     <string name="widget_action_embed">نهان‌نگاری</string>
 </resources>

@@ -87,3 +87,87 @@
   "usage": "Long-press home screen → Widgets → صوت‌نهان → دسترسی سریع; tap ضبط or نهان‌نگاری."
 }
 ```
+
+## Part 3 — Fix widget «Can't load widget»
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 3,
+  "title": "Fix RemoteViews-incompatible widget layout",
+  "issue": "Android home screen showed Cannot load widget",
+  "rootCause": "RemoteViews does not support plain View, ripple backgrounds, 0dp+weight sizing, or some vector drawables",
+  "fixes": [
+    "Divider View replaced with TextView",
+    "Ripple backgrounds replaced with shape drawables",
+    "Fixed action row height; removed nested 0dp weight",
+    "Icons changed to shape drawables",
+    "Removed previewLayout from appwidget-provider",
+    "Added fallback layout and provider try/catch"
+  ],
+  "status": "done"
+}
+```
+
+## Result 3
+
+```json
+{
+  "part": 3,
+  "status": "done",
+  "verification": "flutter build apk --debug exit 0 after widget layout fixes."
+}
+```
+
+## Part 4 — update ver
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 4,
+  "title": "update ver",
+  "command": ".\\_update-ver.ps1",
+  "from": "1.2.4",
+  "to": "1.2.5",
+  "bump": "patch +1",
+  "files": [
+    "src/audio_stegano_app/pubspec.yaml",
+    "src/audio_stegano_desktop/src/AudioStegano.Desktop/AudioStegano.Desktop.csproj"
+  ]
+}
+```
+
+## Result 4
+
+```json
+{
+  "part": 4,
+  "status": "done",
+  "verification": "pubspec.yaml and AudioStegano.Desktop.csproj both at 1.2.5; script exit 0."
+}
+```
+
+## Part 5 — Widget direct text + record capture
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 5,
+  "title": "Widget must capture text and record audio directly",
+  "solution": "WidgetCaptureActivity opens WidgetCaptureScreen immediately (skip splash); user enters text and records in compact UI; auto-embed on stop",
+  "status": "done"
+}
+```
+
+## Result 5
+
+```json
+{
+  "part": 5,
+  "status": "done",
+  "verification": "flutter build apk --debug exit 0; WidgetCaptureActivity registered in manifest."
+}
+```

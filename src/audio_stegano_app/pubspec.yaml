@@ -7,7 +7,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # App version: MAJOR.MINOR.PATCH (three segments, no +BUILD suffix).
 # Android versionCode is derived from semver in android/app/build.gradle.kts.
 # Keep in sync with AudioStegano.Desktop.csproj InformationalVersion.
-version: 1.2.4
+version: 1.2.5
 
 environment:
   sdk: ^3.11.5

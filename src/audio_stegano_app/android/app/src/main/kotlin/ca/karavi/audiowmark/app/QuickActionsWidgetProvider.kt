@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 
 class QuickActionsWidgetProvider : AppWidgetProvider() {
@@ -24,8 +25,23 @@ class QuickActionsWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
     ) {
-        val views = RemoteViews(context.packageName, R.layout.widget_quick_actions)
+        try {
+            val views = RemoteViews(context.packageName, R.layout.widget_quick_actions)
+            bindClickTargets(context, views, appWidgetId)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+        } catch (error: Exception) {
+            Log.e(TAG, "Widget inflate/update failed for id=$appWidgetId", error)
+            val fallback = RemoteViews(context.packageName, R.layout.widget_quick_actions_fallback)
+            bindClickTargets(context, fallback, appWidgetId)
+            appWidgetManager.updateAppWidget(appWidgetId, fallback)
+        }
+    }
 
+    private fun bindClickTargets(
+        context: Context,
+        views: RemoteViews,
+        appWidgetId: Int,
+    ) {
         views.setOnClickPendingIntent(
             R.id.widget_action_record,
             pendingAction(context, ACTION_RECORD, appWidgetId * 10 + 1),
@@ -38,8 +54,6 @@ class QuickActionsWidgetProvider : AppWidgetProvider() {
             R.id.widget_header,
             pendingAction(context, null, appWidgetId * 10 + 3),
         )
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
     private fun pendingAction(
@@ -48,11 +62,12 @@ class QuickActionsWidgetProvider : AppWidgetProvider() {
         requestCode: Int,
     ): PendingIntent {
         val intent =
-            Intent(context, MainActivity::class.java).apply {
+            Intent(context, WidgetCaptureActivity::class.java).apply {
                 this.action = WIDGET_ACTION
-                if (action != null) {
-                    putExtra(EXTRA_WIDGET_ACTION, action)
-                }
+                putExtra(
+                    EXTRA_WIDGET_ACTION,
+                    action ?: ACTION_RECORD,
+                )
                 flags =
                     Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
@@ -67,6 +82,7 @@ class QuickActionsWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        private const val TAG = "QuickActionsWidget"
         const val WIDGET_ACTION = "ca.karavi.audiowmark.app.WIDGET_ACTION"
         const val EXTRA_WIDGET_ACTION = "widget_action"
         const val ACTION_RECORD = "record"

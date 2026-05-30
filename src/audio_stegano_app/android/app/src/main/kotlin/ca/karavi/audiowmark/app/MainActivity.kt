@@ -14,13 +14,9 @@ import java.io.FileOutputStream
 class MainActivity : FlutterActivity() {
     private val methodChannelName = "ca.karavi.audiowmark.app/open_file"
     private val eventChannelName = "ca.karavi.audiowmark.app/open_file_events"
-    private val widgetMethodChannelName = "ca.karavi.audiowmark.app/widget"
-    private val widgetEventChannelName = "ca.karavi.audiowmark.app/widget_events"
 
     private var eventSink: EventChannel.EventSink? = null
-    private var widgetEventSink: EventChannel.EventSink? = null
     private var initialOpenPayload: Map<String, String>? = null
-    private var initialWidgetAction: String? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -47,34 +43,10 @@ class MainActivity : FlutterActivity() {
                 }
             },
         )
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            widgetMethodChannelName,
-        ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "getInitialWidgetAction" -> result.success(initialWidgetAction)
-                else -> result.notImplemented()
-            }
-        }
-        EventChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            widgetEventChannelName,
-        ).setStreamHandler(
-            object : EventChannel.StreamHandler {
-                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-                    widgetEventSink = events
-                }
-
-                override fun onCancel(arguments: Any?) {
-                    widgetEventSink = null
-                }
-            },
-        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         captureViewIntent(intent)
-        captureWidgetIntent(intent)
         super.onCreate(savedInstanceState)
     }
 
@@ -82,7 +54,6 @@ class MainActivity : FlutterActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         captureViewIntent(intent)
-        captureWidgetIntent(intent)
     }
 
     private fun captureViewIntent(intent: Intent?) {
@@ -91,20 +62,6 @@ class MainActivity : FlutterActivity() {
         val payload = resolveOpenPayload(uri) ?: return
         initialOpenPayload = payload
         eventSink?.success(payload)
-    }
-
-    private fun captureWidgetIntent(intent: Intent?) {
-        if (intent?.action != QuickActionsWidgetProvider.WIDGET_ACTION) return
-        val action = intent.getStringExtra(QuickActionsWidgetProvider.EXTRA_WIDGET_ACTION)
-            ?: return
-        if (
-            action != QuickActionsWidgetProvider.ACTION_RECORD &&
-            action != QuickActionsWidgetProvider.ACTION_EMBED
-        ) {
-            return
-        }
-        initialWidgetAction = action
-        widgetEventSink?.success(action)
     }
 
     private fun resolveOpenPayload(uri: Uri): Map<String, String>? {

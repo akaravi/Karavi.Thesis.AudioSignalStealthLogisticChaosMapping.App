@@ -9,3 +9,4 @@
 
 # Home-screen widget
 -keep class ca.karavi.audiowmark.app.QuickActionsWidgetProvider { *; }
+-keep class ca.karavi.audiowmark.app.WidgetCaptureActivity { *; }

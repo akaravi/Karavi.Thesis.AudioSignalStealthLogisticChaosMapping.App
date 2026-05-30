@@ -94,6 +94,41 @@ class AppStrings {
       'Saisissez d’abord votre message, puis choisissez un fichier audio.',
     ),
   );
+  String get widgetCaptureRecordTitle => _t(
+    const _S(
+      'ضبط و نهان‌نگاری',
+      'Record & embed',
+      'تسجيل وإخفاء',
+      'Enregistrer et intégrer',
+    ),
+  );
+  String get widgetCaptureEmbedTitle => _t(
+    const _S(
+      'نهان‌نگاری از فایل',
+      'Embed from file',
+      'إخفاء من ملف',
+      'Intégrer depuis un fichier',
+    ),
+  );
+  String get widgetCaptureSuccessTitle => _t(
+    const _S(
+      'نهان‌نگاری انجام شد',
+      'Embed complete',
+      'اكتمل الإخفاء',
+      'Intégration terminée',
+    ),
+  );
+  String get widgetCaptureSuccessBody => _t(
+    const _S(
+      'فایل صوتی با پیام مخفی آمادهٔ اشتراک‌گذاری است.',
+      'Your stego audio with the hidden message is ready to share.',
+      'ملف الصوت مع الرسالة المخفية جاهز للمشاركة.',
+      'Votre audio stégo avec le message secret est prêt à partager.',
+    ),
+  );
+  String get widgetCaptureClose => _t(
+    const _S('بستن', 'Close', 'إغلاق', 'Fermer'),
+  );
   String get stopRecording => _t(
     const _S(
       'پایان ضبط',
