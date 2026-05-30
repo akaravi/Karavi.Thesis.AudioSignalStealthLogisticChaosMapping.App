@@ -6,3 +6,6 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 -dontwarn io.flutter.embedding.**
+
+# Home-screen widget
+-keep class ca.karavi.audiowmark.app.QuickActionsWidgetProvider { *; }

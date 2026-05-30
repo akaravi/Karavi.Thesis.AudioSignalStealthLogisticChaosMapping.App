@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/android_open_file_intent.dart';
+import '../core/platform/android_widget_action.dart';
+import '../core/platform/android_widget_intent.dart';
 import '../core/platform/desktop_open_audio_args.dart';
 import '../core/platform/windows_open_file_intent.dart';
 import 'session_log.dart';
@@ -14,6 +16,7 @@ import '../features/settings/settings_screen.dart';
 import 'app_strings.dart';
 import 'opened_audio_file.dart';
 import 'pending_open_audio_provider.dart';
+import 'pending_widget_action_provider.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -26,13 +29,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
   StreamSubscription<OpenedAudioFile>? _androidOpenSub;
   StreamSubscription<OpenedAudioFile>? _windowsOpenSub;
+  StreamSubscription<AndroidWidgetQuickAction>? _androidWidgetSub;
 
+  static const _embedTabIndex = 0;
   static const _extractTabIndex = 1;
 
   @override
   void initState() {
     super.initState();
     unawaited(_bindAndroidOpenWith());
+    unawaited(_bindAndroidWidget());
     unawaited(_bindDesktopOpenWith());
     unawaited(_bindWindowsOpenWith());
   }
@@ -51,6 +57,24 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       SessionLog.write('Open with: ${initial.path}');
       _scheduleOpenFile(initial);
     }
+  }
+
+  Future<void> _bindAndroidWidget() async {
+    if (!AndroidWidgetIntent.isSupported) return;
+    final initial = await AndroidWidgetIntent.consumeInitial();
+    if (initial != null) {
+      _scheduleWidgetAction(initial);
+    }
+    _androidWidgetSub = AndroidWidgetIntent.watchActions().listen(
+      _scheduleWidgetAction,
+    );
+  }
+
+  void _scheduleWidgetAction(AndroidWidgetQuickAction action) {
+    if (!mounted) return;
+    SessionLog.write('Widget action: ${action.name}');
+    ref.read(pendingWidgetActionProvider.notifier).setPending(action);
+    setState(() => _index = _embedTabIndex);
   }
 
   Future<void> _bindAndroidOpenWith() async {
@@ -72,6 +96,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void dispose() {
     unawaited(_androidOpenSub?.cancel());
+    unawaited(_androidWidgetSub?.cancel());
     unawaited(_windowsOpenSub?.cancel());
     super.dispose();
   }

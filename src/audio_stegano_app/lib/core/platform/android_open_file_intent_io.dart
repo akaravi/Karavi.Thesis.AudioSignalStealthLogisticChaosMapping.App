@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 
 import '../../app/opened_audio_file.dart';
 
-const _methodChannel = MethodChannel('ir.ntk.audiowmark.app/open_file');
-const _eventChannel = EventChannel('ir.ntk.audiowmark.app/open_file_events');
+const _methodChannel = MethodChannel('ca.karavi.audiowmark.app/open_file');
+const _eventChannel = EventChannel('ca.karavi.audiowmark.app/open_file_events');
 
 /// Android ACTION_VIEW (Open with) for WAV / MP4.
 abstract final class AndroidOpenFileIntent {

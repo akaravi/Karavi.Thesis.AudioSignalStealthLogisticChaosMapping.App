@@ -1,7 +1,7 @@
 # صوت‌نهان · Audio Stegano
 
 **نسخه / Version:** `1.0.0+1`  
-**شناسه اندروید / Android ID:** `ir.ntk.audiowmark.app`  
+**شناسه اندروید / Android ID:** `ca.karavi.audiowmark.app`  
 **مخزن / Repository:** [github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App](https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App)
 
 ## فهرست | Table of contents

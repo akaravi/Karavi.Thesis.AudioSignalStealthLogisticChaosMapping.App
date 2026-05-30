@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home-screen widget (dark home wallpaper) -->
+    <color name="widget_bg">#121826</color>
+    <color name="widget_surface">#1E2433</color>
+    <color name="widget_on_surface">#E8EAED</color>
+    <color name="widget_muted">#9AA0A6</color>
+    <color name="widget_record_accent">#FF6B6B</color>
+    <color name="widget_record_surface">#2A1F22</color>
+    <color name="widget_embed_accent">#4ECDC4</color>
+    <color name="widget_embed_surface">#1A2A28</color>
+    <color name="widget_divider">#2E3444</color>
+</resources>

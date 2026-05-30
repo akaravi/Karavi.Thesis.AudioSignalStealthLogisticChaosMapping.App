@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#121212</color>
+
+    <!-- Home-screen widget (light home wallpaper) -->
+    <color name="widget_bg">#F3F4F8</color>
+    <color name="widget_surface">#FFFFFF</color>
+    <color name="widget_on_surface">#1A1D26</color>
+    <color name="widget_muted">#5F6577</color>
+    <color name="widget_record_accent">#E53935</color>
+    <color name="widget_record_surface">#FFEBEE</color>
+    <color name="widget_embed_accent">#00897B</color>
+    <color name="widget_embed_surface">#E0F2F1</color>
+    <color name="widget_divider">#E3E6EE</color>
 </resources>

@@ -78,6 +78,22 @@ class AppStrings {
       'Démarrer l’enregistrement',
     ),
   );
+  String get widgetRecordHint => _t(
+    const _S(
+      'ابتدا متن پیام را وارد کنید، سپس ضبط را بزنید.',
+      'Enter your message first, then tap record.',
+      'أدخل رسالتك أولًا، ثم اضغط على التسجيل.',
+      'Saisissez d’abord votre message, puis enregistrez.',
+    ),
+  );
+  String get widgetEmbedHint => _t(
+    const _S(
+      'ابتدا متن پیام را وارد کنید، سپس فایل صوتی را انتخاب کنید.',
+      'Enter your message first, then pick an audio file.',
+      'أدخل رسالتك أولًا، ثم اختر ملفًا صوتيًا.',
+      'Saisissez d’abord votre message, puis choisissez un fichier audio.',
+    ),
+  );
   String get stopRecording => _t(
     const _S(
       'پایان ضبط',

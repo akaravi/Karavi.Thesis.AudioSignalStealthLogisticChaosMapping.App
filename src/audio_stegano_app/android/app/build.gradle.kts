@@ -23,7 +23,7 @@ fun semverToVersionCode(versionName: String): Int {
 }
 
 android {
-    namespace = "ir.ntk.audiowmark.app"
+    namespace = "ca.karavi.audiowmark.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -48,7 +48,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "ir.ntk.audiowmark.app"
+        applicationId = "ca.karavi.audiowmark.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = semverToVersionCode(flutter.versionName)

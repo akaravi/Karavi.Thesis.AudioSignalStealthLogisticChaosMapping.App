@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import '../../app/opened_audio_file.dart';
 
 const _eventChannel =
-    EventChannel('ir.ntk.audiowmark.app/windows_open_file_events');
+    EventChannel('ca.karavi.audiowmark.app/windows_open_file_events');
 
 /// Secondary-instance «Open with» forwarded via named pipe (WPF parity).
 abstract final class WindowsOpenFileIntent {
