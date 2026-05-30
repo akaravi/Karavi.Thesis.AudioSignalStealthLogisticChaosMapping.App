@@ -19,7 +19,7 @@ All of the following must come from **this repository** (or build output copied 
 
 - Relative / same-origin paths: `assets/`, `web/`, `build/web/`, `icons/`, `flutter_bootstrap.js`, `canvaskit/` (local Flutter web renderer), etc.
 - Flutter: `pubspec.yaml` `fonts:` and `assets:`; Material/Cupertino icons bundled by Flutter
-- Flutter web builds **must** use `--no-web-resources-cdn` so CanvasKit is bundled under `build/web/canvaskit/` with `useLocalCanvasKit: true` in `flutter_bootstrap.js` (never `www.gstatic.com` at runtime). Enforced by `_flutter-web-no-cdn.ps1` and post-build scan in `_build-flutter-web.ps1` / `_build-all-projects.ps1`. Flutter’s minified loader may still contain a dormant gstatic fallback string; the scan checks runtime config and HTML, not dead JS literals.
+- Flutter web builds **must** use `--no-web-resources-cdn` so CanvasKit is bundled under `build/web/canvaskit/` with `useLocalCanvasKit: true`. Post-build `_flutter-web-no-cdn.ps1` strips any remaining CDN literals from deploy output and fails the build if any CDN host remains (zero CDN policy).
 - WPF: local `Themes/`, embedded resources, system fonts
 - Dependencies installed at **build time** (pub, NuGet) — not fetched from CDN when the user opens the app
 - `url_launcher` / hyperlinks that open external sites in the browser (not embedding CDN assets in the app shell)

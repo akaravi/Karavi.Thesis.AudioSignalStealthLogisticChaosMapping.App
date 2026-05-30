@@ -571,8 +571,8 @@ if (-not $SkipPackage) {
         New-KaraviFlutterWebBuildArgumentList -BaseHref $normalizedWebBaseHref
     )
     $webReleaseCheck = Join-Path $flutterAppPath "build\web"
-    Assert-KaraviFlutterWebOutputNoExternalCdn -WebOutputDirectory $webReleaseCheck
-    Write-Host "Verified: Flutter web output has local canvaskit/ and no external CDN URLs." -ForegroundColor Green
+    Invoke-KaraviFlutterWebNoCdnPostProcess -WebOutputDirectory $webReleaseCheck
+    Write-Host "Verified: Flutter web output has local canvaskit/ and zero CDN literals." -ForegroundColor Green
     if (Test-Path -LiteralPath $flutterAppSettingsScript) {
         Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
     }

@@ -28,7 +28,11 @@ Fixed web startup failures when `www.gstatic.com` is blocked (`ERR_CONNECTION_CL
 
 ## 2026-05-30 — Enforce no-CDN law for Flutter web (`_flutter-web-no-cdn.ps1`)
 
-Central module `_flutter-web-no-cdn.ps1`: build/run args always include `--no-web-resources-cdn`; post-build scan verifies local `canvaskit/`, `useLocalCanvasKit:true` in `flutter_bootstrap.js`, and no external CDN in HTML. Wired into `_build-flutter-web.ps1`, `_build-all-projects.ps1`, `_run-all-local.ps1`. Updated `.cursor/rules/no-external-cdn-assets.mdc` and README.
+Central module `_flutter-web-no-cdn.ps1`: build/run args always include `--no-web-resources-cdn`; post-build repair strips CDN literals from deploy output; strict scan fails if any CDN host remains. Wired into `_build-flutter-web.ps1`, `_build-all-projects.ps1`, `_run-all-local.ps1`. Updated `.cursor/rules/no-external-cdn-assets.mdc` and README.
+
+## 2026-05-30 — Zero CDN: patch Flutter web deploy output
+
+`Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals` removes gstatic CanvasKit/font URLs from `flutter.js`, `flutter_bootstrap.js`, `main.dart.js`; `Assert-KaraviFlutterWebOutputNoExternalCdn` now fails on any CDN host in deploy files. `web/index.html` comment no longer mentions gstatic.
 
 
 

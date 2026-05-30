@@ -225,6 +225,29 @@
 {
   "part": 7,
   "status": "done",
-  "verification": "flutter build web --release --no-web-resources-cdn exit 0; Assert-KaraviFlutterWebOutputNoExternalCdn passes (local canvaskit/, useLocalCanvasKit:true); README flutter run includes --no-web-resources-cdn."
+  "verification": "flutter build web --release --no-web-resources-cdn exit 0; Invoke-KaraviFlutterWebNoCdnPostProcess passes (local canvaskit/, useLocalCanvasKit:true); README flutter run includes --no-web-resources-cdn."
+}
+
+## Part 8 — Zero CDN in deploy output (strict)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 8,
+  "title": "هیچ cdn مجاز نیست — zero CDN in deploy output",
+  "userRequest": "هیچ cdn مجاز نیست",
+  "solution": "Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals patches gstatic CanvasKit/font URLs; Assert scans all deploy JS/HTML/JSON for forbidden CDN hosts; Invoke-KaraviFlutterWebNoCdnPostProcess wired in build scripts",
+  "status": "done"
+}
+```
+
+## Result 8
+
+```json
+{
+  "part": 8,
+  "status": "done",
+  "verification": "Invoke-KaraviFlutterWebNoCdnPostProcess on build/web: patched files, findstr zero gstatic in deploy output."
 }
 ```

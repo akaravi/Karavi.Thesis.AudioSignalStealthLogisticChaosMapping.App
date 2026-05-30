@@ -441,8 +441,8 @@ Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList (
 )
 
 $webRelease = Resolve-FlutterWebReleasePath -FlutterRoot $flutterAppPath
-Assert-KaraviFlutterWebOutputNoExternalCdn -WebOutputDirectory $webRelease
-Write-Host "Verified: Flutter web output has local canvaskit/ and no external CDN URLs." -ForegroundColor Green
+Invoke-KaraviFlutterWebNoCdnPostProcess -WebOutputDirectory $webRelease
+Write-Host "Verified: Flutter web output has local canvaskit/ and zero CDN literals." -ForegroundColor Green
 
 . (Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1")
 Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
