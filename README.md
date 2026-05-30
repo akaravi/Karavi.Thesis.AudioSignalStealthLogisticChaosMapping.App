@@ -1,7 +1,7 @@
 # صوت‌نهان · Audio Stegano
 
 **نسخه / Version:** `1.0.0+1`  
-**شناسه اندروید / Android ID:** `ca.karavi.audiowmark.app`  
+**شناسه اندروید / Android ID:** `ir.ntk.audiowmark.app`  
 **مخزن / Repository:** [github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App](https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App)
 
 ## فهرست | Table of contents
@@ -193,7 +193,7 @@ Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App/
 cd src/audio_stegano_app
 flutter pub get
 flutter run -d windows --host-vmservice-port=5323 --devtools-port=5324
-flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1
+flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1 --no-web-resources-cdn
 ```
 
 #### دسکتاپ .NET (WPF)
@@ -420,7 +420,7 @@ After each local run, **`LastRunInfo.html`** at the repo root is updated (execut
 cd src/audio_stegano_app
 flutter pub get
 flutter run -d windows --host-vmservice-port=5323 --devtools-port=5324
-flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1
+flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1 --no-web-resources-cdn
 ```
 
 #### .NET desktop (WPF)

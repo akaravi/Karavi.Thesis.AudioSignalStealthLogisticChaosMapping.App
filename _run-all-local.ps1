@@ -11,6 +11,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $root '_dev-ports.ps1')
 . (Join-Path $root '_last-run-info.ps1')
+. (Join-Path $root '_flutter-web-no-cdn.ps1')
 
 $lastRunInfoPath = Join-Path $root 'LastRunInfo.html'
 $script:RunResults = New-Object System.Collections.Generic.List[object]
@@ -249,11 +250,7 @@ try {
         -Notes ('DevTools: ' + $devtoolsUrl + '، pid ' + $flutterWinProc.Id)
 
     $flutterWebLog = Join-Path $logDir 'flutter_web_run.log'
-    $flutterWebArgs = @(
-        'run', '-d', 'web-server',
-        "--web-port=$webPort",
-        '--web-hostname=127.0.0.1'
-    )
+    $flutterWebArgs = New-KaraviFlutterWebRunArgumentList -Device 'web-server' -WebPort $webPort
     $flutterWebProc = Start-Process -FilePath $flutterCommand `
         -ArgumentList $flutterWebArgs `
         -WorkingDirectory $flutterAppPath `

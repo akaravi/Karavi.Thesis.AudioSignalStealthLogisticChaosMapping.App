@@ -26,6 +26,7 @@ $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOr
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $root "_dev-ports.ps1")
+. (Join-Path $root "_flutter-web-no-cdn.ps1")
 if ($WebPort -le 0) {
     if ($DevServerDevice -eq "web-server") {
         $WebPort = Get-KaraviDevPort -Name "FlutterWeb"
@@ -94,7 +95,7 @@ function Resolve-FlutterWebReleasePath {
     $releaseDir = Join-Path $FlutterRoot "build\web"
     $indexPath = Join-Path $releaseDir "index.html"
     if (-not (Test-Path $indexPath)) {
-        throw "Flutter web release output was not found. Expected '$indexPath'. Run 'flutter build web --release'."
+        throw "Flutter web release output was not found. Expected '$indexPath'. Run 'flutter build web --release --no-web-resources-cdn'."
     }
 
     return $releaseDir
@@ -179,7 +180,7 @@ function Start-FlutterWebDevTerminal {
         [Parameter(Mandatory = $true)][string]$Device
     )
 
-    $runArgs = "run -d $Device --web-port=$WebPort --web-hostname=127.0.0.1"
+    $runArgs = (New-KaraviFlutterWebRunArgumentList -Device $Device -WebPort $WebPort) -join ' '
 
     $encoded = [Convert]::ToBase64String(
         [Text.Encoding]::Unicode.GetBytes("Set-Location '$WorkingDirectory'; & `"$FlutterExe`" $runArgs"))
@@ -435,9 +436,13 @@ if (Test-Path -LiteralPath $appSettingsScript) {
 
 $normalizedWebBaseHref = Normalize-WebBaseHref -BaseHref $WebBaseHref
 Write-Host "Building Flutter web [$flutterAppPath] release base-href=$normalizedWebBaseHref ..." -ForegroundColor Cyan
-Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
-    "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
+Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList (
+    New-KaraviFlutterWebBuildArgumentList -BaseHref $normalizedWebBaseHref
 )
+
+$webRelease = Resolve-FlutterWebReleasePath -FlutterRoot $flutterAppPath
+Assert-KaraviFlutterWebOutputNoExternalCdn -WebOutputDirectory $webRelease
+Write-Host "Verified: Flutter web output has local canvaskit/ and no external CDN URLs." -ForegroundColor Green
 
 . (Join-Path $flutterAppPath "scripts\copy_appsettings_to_flutter_outputs.ps1")
 Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb

@@ -1,4 +1,4 @@
-package ca.karavi.audiowmark.app
+package ir.ntk.audiowmark.app
 
 import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
@@ -35,6 +35,6 @@ class WidgetCaptureActivity : FlutterActivity() {
     }
 
     companion object {
-        private const val channelName = "ca.karavi.audiowmark.app/widget_capture"
+        private const val channelName = "ir.ntk.audiowmark.app/widget_capture"
     }
 }

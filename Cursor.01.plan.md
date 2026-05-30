@@ -171,3 +171,60 @@
   "verification": "flutter build apk --debug exit 0; WidgetCaptureActivity registered in manifest."
 }
 ```
+
+## Part 6 — Revert package name to ir.ntk.audiowmark.app
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 6,
+  "title": "Revert package name to ir.ntk.audiowmark.app",
+  "from": "ca.karavi.audiowmark.app",
+  "to": "ir.ntk.audiowmark.app",
+  "status": "done"
+}
+```
+
+## Result 6
+
+```json
+{
+  "part": 6,
+  "status": "done",
+  "verification": "grep: zero ca.karavi.audiowmark references; kotlin/ir/ntk/audiowmark/app restored."
+}
+```
+
+## Part 7 — Enforce no-CDN law for Flutter web
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 7,
+  "title": "No external CDN at runtime (repo law)",
+  "userRequest": "در قوانین آمده است که ما مجاز به استفاده از هیچ cdn نیستیم",
+  "solution": "_flutter-web-no-cdn.ps1 centralizes --no-web-resources-cdn for build/run; post-build Assert-KaraviFlutterWebOutputNoExternalCdn scans build/web for gstatic and missing canvaskit/",
+  "files": [
+    "_flutter-web-no-cdn.ps1",
+    "_build-flutter-web.ps1",
+    "_build-all-projects.ps1",
+    "_run-all-local.ps1",
+    ".cursor/rules/no-external-cdn-assets.mdc",
+    "src/audio_stegano_app/web/index.html",
+    "README.md"
+  ],
+  "status": "done"
+}
+```
+
+## Result 7
+
+```json
+{
+  "part": 7,
+  "status": "done",
+  "verification": "flutter build web --release --no-web-resources-cdn exit 0; Assert-KaraviFlutterWebOutputNoExternalCdn passes (local canvaskit/, useLocalCanvasKit:true); README flutter run includes --no-web-resources-cdn."
+}
+```

@@ -33,6 +33,7 @@ $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOr
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $root "_dev-ports.ps1")
 . (Join-Path $root "_last-run-info.ps1")
+. (Join-Path $root "_flutter-web-no-cdn.ps1")
 $lastRunInfoPath = Join-Path $root "LastRunInfo.html"
 $solutionPath = Join-Path $root "src\audio_stegano_desktop\AudioStegano.sln"
 $desktopProj = Join-Path $root "src\audio_stegano_desktop\src\AudioStegano.Desktop\AudioStegano.Desktop.csproj"
@@ -190,7 +191,7 @@ function Resolve-FlutterWebReleasePath {
     $releaseDir = Join-Path $FlutterRoot "build\web"
     $indexPath = Join-Path $releaseDir "index.html"
     if (-not (Test-Path $indexPath)) {
-        throw "Flutter web release output was not found. Expected '$indexPath'. Run 'flutter build web --release'."
+        throw "Flutter web release output was not found. Expected '$indexPath'. Run 'flutter build web --release --no-web-resources-cdn'."
     }
 
     return $releaseDir
@@ -565,10 +566,13 @@ if (-not $SkipPackage) {
     if (-not $normalizedWebBaseHref.StartsWith("/")) {
         $normalizedWebBaseHref = "/$normalizedWebBaseHref"
     }
-    Write-Host "Building Flutter web ($flutterAppPath, release, base-href=$normalizedWebBaseHref) ..." -ForegroundColor Cyan
-    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @(
-        "build", "web", "--release", "--base-href=$normalizedWebBaseHref"
+    Write-Host "Building Flutter web ($flutterAppPath, release, base-href=$normalizedWebBaseHref, no CDN) ..." -ForegroundColor Cyan
+    Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList (
+        New-KaraviFlutterWebBuildArgumentList -BaseHref $normalizedWebBaseHref
     )
+    $webReleaseCheck = Join-Path $flutterAppPath "build\web"
+    Assert-KaraviFlutterWebOutputNoExternalCdn -WebOutputDirectory $webReleaseCheck
+    Write-Host "Verified: Flutter web output has local canvaskit/ and no external CDN URLs." -ForegroundColor Green
     if (Test-Path -LiteralPath $flutterAppSettingsScript) {
         Copy-AppSettingsToFlutterDeployOutputs -RepoRoot $root -FlutterProjectPath $flutterAppPath -IncludeWeb
     }
@@ -652,9 +656,10 @@ if (-not $SkipDevServers) {
         -Command ("& `"$flutterCommand`" run -d windows --host-vmservice-port=$vmPort --device-vmservice-port=$vmPort --devtools-port=$devtoolsPort") `
         -RestartMessage "Started: audio_stegano_app — flutter run -d windows (VM $vmPort, DevTools $devtoolsPort)"
 
+    $webRunArgs = New-KaraviFlutterWebRunArgumentList -Device 'web-server' -WebPort $webPort
     Start-ProjectTerminal `
         -WorkingDirectory $flutterAppPath `
-        -Command ("& `"$flutterCommand`" run -d web-server --web-port=$webPort --web-hostname=127.0.0.1") `
+        -Command ("& `"$flutterCommand`" " + ($webRunArgs -join ' ')) `
         -RestartMessage "Started: audio_stegano_app — flutter web-server at $webUrl"
 
     Write-KaraviDevPortLegend

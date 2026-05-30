@@ -8,5 +8,5 @@
 -dontwarn io.flutter.embedding.**
 
 # Home-screen widget
--keep class ca.karavi.audiowmark.app.QuickActionsWidgetProvider { *; }
--keep class ca.karavi.audiowmark.app.WidgetCaptureActivity { *; }
+-keep class ir.ntk.audiowmark.app.QuickActionsWidgetProvider { *; }
+-keep class ir.ntk.audiowmark.app.WidgetCaptureActivity { *; }

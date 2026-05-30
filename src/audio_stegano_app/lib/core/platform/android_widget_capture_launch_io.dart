@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'android_widget_action.dart';
 import 'widget_capture_launch.dart';
 
-const _channel = MethodChannel('ca.karavi.audiowmark.app/widget_capture');
+const _channel = MethodChannel('ir.ntk.audiowmark.app/widget_capture');
 
 abstract final class AndroidWidgetCaptureLaunchBridge {
   static bool get isSupported => Platform.isAndroid;

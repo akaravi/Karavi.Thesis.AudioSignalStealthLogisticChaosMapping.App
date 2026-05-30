@@ -56,7 +56,7 @@ void RegisterWindowsOpenFileChannel(flutter::FlutterEngine* engine) {
   auto messenger = engine->messenger();
   static auto channel =
       std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-          messenger, "ca.karavi.audiowmark.app/windows_open_file_events",
+          messenger, "ir.ntk.audiowmark.app/windows_open_file_events",
           &flutter::StandardMethodCodec::GetInstance());
 
   static bool registered = false;

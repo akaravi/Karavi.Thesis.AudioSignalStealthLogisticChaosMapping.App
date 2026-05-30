@@ -1,4 +1,4 @@
-package ca.karavi.audiowmark.app
+package ir.ntk.audiowmark.app
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -83,7 +83,7 @@ class QuickActionsWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val TAG = "QuickActionsWidget"
-        const val WIDGET_ACTION = "ca.karavi.audiowmark.app.WIDGET_ACTION"
+        const val WIDGET_ACTION = "ir.ntk.audiowmark.app.WIDGET_ACTION"
         const val EXTRA_WIDGET_ACTION = "widget_action"
         const val ACTION_RECORD = "record"
         const val ACTION_EMBED = "embed"

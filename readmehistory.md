@@ -14,6 +14,24 @@ Files changed:
 
 Verification: repo-wide search shows no remaining `ir.ntk.audiowmark` references in source.
 
+## 2026-05-30 — Revert package name to `ir.ntk.audiowmark.app`
+
+Changed application package id from `ca.karavi.audiowmark.app` back to `ir.ntk.audiowmark.app`.
+
+Updated: `build.gradle.kts`, Kotlin sources moved to `kotlin/ir/ntk/audiowmark/app/` (MainActivity, QuickActionsWidgetProvider, WidgetCaptureActivity), Dart/Windows MethodChannel names, ProGuard rules, README.
+
+Verification: grep confirms zero remaining `ca.karavi.audiowmark` in source.
+
+## 2026-05-30 — Flutter web: bundle CanvasKit locally (`--no-web-resources-cdn`)
+
+Fixed web startup failures when `www.gstatic.com` is blocked (`ERR_CONNECTION_CLOSED` on canvaskit.js/wasm). Build/run scripts now pass `--no-web-resources-cdn`; `web/index.html` comment updated.
+
+## 2026-05-30 — Enforce no-CDN law for Flutter web (`_flutter-web-no-cdn.ps1`)
+
+Central module `_flutter-web-no-cdn.ps1`: build/run args always include `--no-web-resources-cdn`; post-build scan verifies local `canvaskit/`, `useLocalCanvasKit:true` in `flutter_bootstrap.js`, and no external CDN in HTML. Wired into `_build-flutter-web.ps1`, `_build-all-projects.ps1`, `_run-all-local.ps1`. Updated `.cursor/rules/no-external-cdn-assets.mdc` and README.
+
+
+
 ## 2026-05-30 18:15 (UTC+3:30) — Android home-screen quick-actions widget
 
 Added a home-screen widget «دسترسی سریع» with two shortcuts: **ضبط** (record) and **نهان‌نگاری** (embed).

@@ -1,4 +1,4 @@
-package ca.karavi.audiowmark.app
+package ir.ntk.audiowmark.app
 
 import android.content.Intent
 import android.net.Uri
@@ -12,8 +12,8 @@ import java.io.File
 import java.io.FileOutputStream
 
 class MainActivity : FlutterActivity() {
-    private val methodChannelName = "ca.karavi.audiowmark.app/open_file"
-    private val eventChannelName = "ca.karavi.audiowmark.app/open_file_events"
+    private val methodChannelName = "ir.ntk.audiowmark.app/open_file"
+    private val eventChannelName = "ir.ntk.audiowmark.app/open_file_events"
 
     private var eventSink: EventChannel.EventSink? = null
     private var initialOpenPayload: Map<String, String>? = null

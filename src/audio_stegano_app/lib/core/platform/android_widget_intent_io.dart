@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 
 import 'android_widget_action.dart';
 
-const _methodChannel = MethodChannel('ca.karavi.audiowmark.app/widget');
-const _eventChannel = EventChannel('ca.karavi.audiowmark.app/widget_events');
+const _methodChannel = MethodChannel('ir.ntk.audiowmark.app/widget');
+const _eventChannel = EventChannel('ir.ntk.audiowmark.app/widget_events');
 
 /// Android home-screen widget quick actions (record / embed).
 abstract final class AndroidWidgetIntent {
