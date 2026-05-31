@@ -17,6 +17,10 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
+      // Web CanvasKit (--no-web-resources-cdn) cannot fetch fonts.gstatic.com at
+      // runtime; bundled families below must match pubspec.yaml fonts: entries.
+      fontFamily: 'Roboto',
+      fontFamilyFallback: const ['Noto Sans Arabic'],
       visualDensity: VisualDensity.adaptivePlatformDensity,
       scaffoldBackgroundColor: scheme.surface,
       appBarTheme: AppBarTheme(

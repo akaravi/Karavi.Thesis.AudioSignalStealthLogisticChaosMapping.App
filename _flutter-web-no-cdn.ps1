@@ -187,11 +187,43 @@ function Assert-KaraviFlutterWebOutputNoExternalCdn {
     }
 }
 
+function Copy-KaraviFlutterWebBundledNotoFonts {
+    param(
+        [Parameter(Mandatory = $true)][string]$WebOutputDirectory
+    )
+
+    $projectRoot = Split-Path (Split-Path $WebOutputDirectory -Parent) -Parent
+    $sourceRoot = Join-Path $projectRoot 'web\fonts'
+    $destRoot = Join-Path $WebOutputDirectory 'assets\fonts'
+
+    if (-not (Test-Path -LiteralPath $sourceRoot)) {
+        Write-Warning "Bundled web fonts folder not found: $sourceRoot (CanvasKit fallback text may be invisible)."
+        return
+    }
+
+    $copied = 0
+    Get-ChildItem -Path $sourceRoot -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        $relative = $_.FullName.Substring($sourceRoot.Length).TrimStart('\', '/')
+        $destination = Join-Path $destRoot $relative
+        $destinationDir = Split-Path -Parent $destination
+        if (-not (Test-Path -LiteralPath $destinationDir)) {
+            New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
+        $copied++
+    }
+
+    if ($copied -gt 0) {
+        Write-Host "Copied $copied bundled font file(s) to assets/fonts/ for offline CanvasKit text." -ForegroundColor DarkCyan
+    }
+}
+
 function Invoke-KaraviFlutterWebNoCdnPostProcess {
     param(
         [Parameter(Mandatory = $true)][string]$WebOutputDirectory
     )
 
     Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals -WebOutputDirectory $WebOutputDirectory
+    Copy-KaraviFlutterWebBundledNotoFonts -WebOutputDirectory $WebOutputDirectory
     Assert-KaraviFlutterWebOutputNoExternalCdn -WebOutputDirectory $WebOutputDirectory
 }

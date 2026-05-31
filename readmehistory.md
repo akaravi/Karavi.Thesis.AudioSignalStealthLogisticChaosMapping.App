@@ -1,5 +1,17 @@
 # Change History
 
+## 2026-05-31 (UTC+3:30) — Flutter web: fix invisible text (offline CanvasKit fonts)
+
+Root cause: `_flutter-web-no-cdn.ps1` rewrites `fonts.gstatic.com/s/` → `assets/fonts/` for zero-CDN deploy, but no font files were placed there. CanvasKit could not load Roboto/Noto fallbacks, so **all UI text rendered blank** (icons/layout still visible).
+
+Fix:
+- Bundled `Roboto` (Regular/Medium/Bold) + `Noto Sans Arabic` TTF under `src/audio_stegano_app/assets/fonts/` and registered in `pubspec.yaml`.
+- `AppTheme`: `fontFamily: Roboto`, `fontFamilyFallback: ['Noto Sans Arabic']`.
+- Offline CanvasKit woff2 fallbacks committed under `src/audio_stegano_app/web/fonts/` (roboto, notosansarabic, notosansoldpersian).
+- `_flutter-web-no-cdn.ps1`: new `Copy-KaraviFlutterWebBundledNotoFonts` copies `web/fonts/**` → `build/web/assets/fonts/**` after CDN literal repair.
+
+Verification: `flutter build web --release --no-web-resources-cdn` + post-process exit 0; HTTP 200 for bundled font URLs on local server.
+
 ## 2026-05-31 (UTC+3:30) — Version bump 1.2.5 → 1.2.6
 
 Ran `.\_update-ver.ps1` (patch +1). Synced:

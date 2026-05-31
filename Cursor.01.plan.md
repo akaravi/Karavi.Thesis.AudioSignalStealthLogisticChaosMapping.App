@@ -313,3 +313,35 @@
   "verification": "_update-ver.ps1 exit 0; pubspec.yaml version 1.2.6; WPF Version/AssemblyVersion/FileVersion/InformationalVersion 1.2.6; readmehistory.md entry added."
 }
 ```
+
+## Part 11 — Flutter web invisible text (offline fonts)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 11,
+  "title": "Flutter web — fix blank text in no-CDN CanvasKit build",
+  "userRequest": "در بیلد وب هیچ نوشته ای پیدا نیست",
+  "rootCause": "_flutter-web-no-cdn.ps1 patches fonts.gstatic.com/s/ to assets/fonts/ without shipping woff2/ttf files; CanvasKit font fallback fails silently",
+  "solution": "Bundle Roboto + Noto Sans Arabic in pubspec; AppTheme fontFamily/fallback; commit web/fonts woff2; Copy-KaraviFlutterWebBundledNotoFonts in post-process",
+  "files": [
+    "src/audio_stegano_app/pubspec.yaml",
+    "src/audio_stegano_app/lib/app/app_theme.dart",
+    "src/audio_stegano_app/assets/fonts/*.ttf",
+    "src/audio_stegano_app/web/fonts/**/*.woff2",
+    "_flutter-web-no-cdn.ps1"
+  ],
+  "status": "done"
+}
+```
+
+## Result 11
+
+```json
+{
+  "part": 11,
+  "status": "done",
+  "verification": "flutter build web --release --no-web-resources-cdn + Invoke-KaraviFlutterWebNoCdnPostProcess exit 0; FontManifest lists Roboto + Noto Sans Arabic; assets/fonts/roboto|notosansarabic|notosansoldpersian woff2 present; local HTTP 200 for font URLs."
+}
+```
