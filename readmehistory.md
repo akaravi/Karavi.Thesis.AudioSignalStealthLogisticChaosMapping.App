@@ -1,5 +1,17 @@
 # Change History
 
+## 2026-05-31 09:53 (UTC+3:30) — Fix Android app stuck on bootstrap loading spinner
+
+Root cause: on a normal launcher start the app runs `MainActivity`, which only registers the `ir.ntk.audiowmark.app/open_file` channel. The widget-capture channel `ir.ntk.audiowmark.app/widget_capture` is registered only in `WidgetCaptureActivity`. App bootstrap always calls `AndroidWidgetCaptureLaunchBridge.consumeInitial()`, which invoked `getWidgetCaptureLaunch` on that channel without error handling. On launcher start this throws `MissingPluginException`, so `_hydrate()` aborted before setting `_hydrated = true` and the app hung forever on the `CircularProgressIndicator`. Not a CDN/internet issue (Android manifest has no `INTERNET` permission).
+
+Also verified no CDN/network runtime assets exist: no `google_fonts`/CDN deps in `pubspec.yaml`, no `Image.network`/`NetworkImage`/`GoogleFonts`/CDN hosts in `lib`, `web/index.html` loads only local `flutter_bootstrap.js`.
+
+Files changed:
+- `src/audio_stegano_app/lib/core/platform/android_widget_capture_launch_io.dart` — wrap `invokeMethod('getWidgetCaptureLaunch')` in try/catch for `MissingPluginException` and `PlatformException`, returning null (treated as "no widget launch").
+- `src/audio_stegano_app/lib/app/app_bootstrap.dart` — `_hydrate()` now try/catch around channel + settings hydration, logs via `SessionLog`, and always sets `_hydrated = true` in `finally`-style so the spinner never blocks startup; added `session_log.dart` import.
+
+Verification: `flutter analyze` on both files → No issues found.
+
 ## 2026-05-30 17:57 (UTC+3:30) — Rename package name to `ca.karavi.audiowmark.app`
 
 Changed the application package id from `ir.ntk.audiowmark.app` to `ca.karavi.audiowmark.app`.

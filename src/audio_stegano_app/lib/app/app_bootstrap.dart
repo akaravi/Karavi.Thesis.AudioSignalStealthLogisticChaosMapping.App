@@ -8,6 +8,7 @@ import '../features/onboarding/splash_flow_screen.dart';
 import '../features/onboarding/usage_guide_splash_screen.dart';
 import '../features/widget/widget_capture_screen.dart';
 import 'home_shell.dart';
+import 'session_log.dart';
 import 'settings_controller.dart';
 
 /// Cold start: main splash → one-time language → one-time usage guide → home.
@@ -30,8 +31,15 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   }
 
   Future<void> _hydrate() async {
-    final capture = await AndroidWidgetCaptureLaunchBridge.consumeInitial();
-    await ref.read(settingsProvider.notifier).waitForHydrate();
+    WidgetCaptureLaunch? capture;
+    try {
+      capture = await AndroidWidgetCaptureLaunchBridge.consumeInitial();
+      await ref.read(settingsProvider.notifier).waitForHydrate();
+    } catch (error, stack) {
+      // Never leave the user on the bootstrap spinner: log and continue with
+      // safe defaults (no widget launch, persisted settings best-effort).
+      SessionLog.write('AppBootstrap hydrate failed', error: error, stack: stack);
+    }
     if (mounted) {
       setState(() {
         _widgetCaptureLaunch = capture;

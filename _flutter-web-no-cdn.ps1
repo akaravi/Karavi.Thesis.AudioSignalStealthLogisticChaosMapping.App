@@ -22,7 +22,7 @@ function Get-KaraviFlutterWebDeployScanExtensions {
 function New-KaraviFlutterWebBuildArgumentList {
     param(
         [Parameter(Mandatory = $true)][string]$BaseHref,
-        [switch]$Debug
+        [switch]$DebugBuild
     )
 
     $normalized = $BaseHref.Trim()
@@ -31,7 +31,7 @@ function New-KaraviFlutterWebBuildArgumentList {
     if (-not $normalized.StartsWith('/')) { $normalized = "/$normalized" }
 
     $args = @('build', 'web')
-    if (-not $Debug) { $args += '--release' }
+    if (-not $DebugBuild) { $args += '--release' }
     $args += Get-KaraviFlutterWebNoCdnSwitch
     $args += "--base-href=$normalized"
     return $args

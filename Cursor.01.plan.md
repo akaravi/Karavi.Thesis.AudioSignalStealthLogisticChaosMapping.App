@@ -251,3 +251,35 @@
   "verification": "Invoke-KaraviFlutterWebNoCdnPostProcess on build/web: patched files, findstr zero gstatic in deploy output."
 }
 ```
+
+## Part 9 — Android app stuck on loading spinner (not CDN)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 9,
+  "title": "اجرای اندروید در حالت لودینگ می‌ماند — بررسی CDN/آفلاین",
+  "userRequest": "در اجرای برنامه اندروید خیلی در حالت لودینگ می‌ماند. بررسی کن از cdn استفاده نکرده باشی چون در اجرا اینترنتی دسترسی ندارد",
+  "investigation": [
+    "No CDN/network runtime assets: pubspec has no google_fonts/CDN deps; lib has no Image.network/NetworkImage/GoogleFonts/CDN hosts; web/index.html loads only local flutter_bootstrap.js; AndroidManifest has no INTERNET permission.",
+    "Root cause is a platform-channel bug: widget_capture channel registered only in WidgetCaptureActivity, not MainActivity (launcher). consumeInitial() invoked getWidgetCaptureLaunch without try/catch, so normal launch threw MissingPluginException and _hydrate aborted before _hydrated=true -> infinite CircularProgressIndicator."
+  ],
+  "solution": "android_widget_capture_launch_io.dart: catch MissingPluginException/PlatformException and return null. app_bootstrap.dart: _hydrate try/catch + SessionLog, always set _hydrated=true so bootstrap never hangs.",
+  "files": [
+    "src/audio_stegano_app/lib/core/platform/android_widget_capture_launch_io.dart",
+    "src/audio_stegano_app/lib/app/app_bootstrap.dart"
+  ],
+  "status": "done"
+}
+```
+
+## Result 9
+
+```json
+{
+  "part": 9,
+  "status": "done",
+  "verification": "flutter analyze on app_bootstrap.dart + android_widget_capture_launch_io.dart -> No issues found. No CDN usage confirmed across deps, lib, web/index.html, and Android manifest (no INTERNET permission)."
+}
+```

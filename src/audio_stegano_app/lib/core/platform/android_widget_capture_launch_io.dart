@@ -12,9 +12,20 @@ abstract final class AndroidWidgetCaptureLaunchBridge {
 
   static Future<WidgetCaptureLaunch?> consumeInitial() async {
     if (!isSupported) return null;
-    final raw = await _channel.invokeMethod<Map<dynamic, dynamic>?>(
-      'getWidgetCaptureLaunch',
-    );
+    // Normal launcher start runs MainActivity, which does not register the
+    // widget-capture channel; only WidgetCaptureActivity does. Calling the
+    // method there throws MissingPluginException, so swallow channel failures
+    // and treat them as "no widget launch" to avoid hanging app bootstrap.
+    final Map<dynamic, dynamic>? raw;
+    try {
+      raw = await _channel.invokeMethod<Map<dynamic, dynamic>?>(
+        'getWidgetCaptureLaunch',
+      );
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
     if (raw == null || raw['active'] != true) return null;
     final action = _parseAction(raw['action']?.toString());
     if (action == null) return null;
