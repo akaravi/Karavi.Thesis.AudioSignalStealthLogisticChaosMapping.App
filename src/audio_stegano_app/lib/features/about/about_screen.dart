@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../app/about_constants.dart';
 import '../../app/app_strings.dart';
 import '../../app/app_version.dart';
+import '../shared/directional_latin_text.dart';
 import '../shared/tab_scroll_body.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -245,8 +246,11 @@ class _LinkTile extends StatelessWidget {
       leading: Icon(icon, color: scheme.primary),
       title: Text(label),
       subtitle: subtitle != null
-          ? Text(subtitle!, style: TextStyle(color: scheme.primary))
-          : Text(
+          ? DirectionalLatinText(
+              subtitle!,
+              style: TextStyle(color: scheme.primary),
+            )
+          : DirectionalLatinText(
               url,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

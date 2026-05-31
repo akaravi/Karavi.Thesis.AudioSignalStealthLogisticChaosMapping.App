@@ -213,6 +213,7 @@ public partial class EmbedView : UserControl
     private void MessageTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_updatingMessageText) return;
+        ContentTextDirectionHelper.ApplyTo(MessageTextBox, MessageTextBox.Text);
         EnforceMessageBitLimitIfNeeded();
         UpdateMessageBitCounter();
     }

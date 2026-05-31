@@ -40,12 +40,49 @@ public partial class AboutView : UserControl
         LinksPanel.Children.Add(CreateLinkRow(s.AboutCompanySite, AboutConstants.CompanySite));
 
         ContactPanel.Children.Clear();
-        ContactPanel.Children.Add(CreateLinkRow(
-            $"{s.AboutCall}: {AboutConstants.PhoneNumber}",
+        ContactPanel.Children.Add(CreateContactRow(
+            s.AboutCall,
+            AboutConstants.PhoneNumber,
             $"tel:{AboutConstants.PhoneNumber}"));
-        ContactPanel.Children.Add(CreateLinkRow(
-            $"{s.AboutEmail}: {AboutConstants.Email}",
+        ContactPanel.Children.Add(CreateContactRow(
+            s.AboutEmail,
+            AboutConstants.Email,
             $"mailto:{AboutConstants.Email}"));
+    }
+
+    private static UIElement CreateContactRow(string label, string latinValue, string url)
+    {
+        var panel = new StackPanel { Margin = new Thickness(8, 6, 8, 6) };
+        panel.Children.Add(new TextBlock
+        {
+            Text = label,
+            TextWrapping = TextWrapping.Wrap,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (Brush)Application.Current.FindResource("TextBrush"),
+            Margin = new Thickness(28, 0, 0, 2),
+        });
+
+        var valueHost = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(28, 0, 0, 0),
+        };
+        ContentTextDirectionHelper.ApplyTo(valueHost, latinValue, forceLatinLtr: true);
+        var href = new Hyperlink(new Run(latinValue)) { NavigateUri = new Uri(url) };
+        href.RequestNavigate += (_, e) =>
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            }
+            catch
+            {
+                MessageBox.Show(url, label, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        };
+        valueHost.Inlines.Add(href);
+        panel.Children.Add(valueHost);
+        return panel;
     }
 
     private static UIElement CreateInfoRow(string text, string mdl2Icon)
@@ -93,6 +130,7 @@ public partial class AboutView : UserControl
             TextWrapping = TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        ContentTextDirectionHelper.ApplyTo(link, label);
         var href = new Hyperlink(new Run(label)) { NavigateUri = new Uri(url) };
         href.RequestNavigate += (_, e) =>
         {

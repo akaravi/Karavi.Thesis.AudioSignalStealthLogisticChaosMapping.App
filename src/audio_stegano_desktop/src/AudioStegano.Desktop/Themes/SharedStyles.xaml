@@ -48,6 +48,11 @@
     </Setter>
   </Style>
 
+  <!-- Numeric / Latin-only inputs stay LTR even when the window is RTL (fa/ar). -->
+  <Style x:Key="LatinInputTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialTextBox}">
+    <Setter Property="FlowDirection" Value="LeftToRight" />
+  </Style>
+
   <Style x:Key="FilledButton" TargetType="Button">
     <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />

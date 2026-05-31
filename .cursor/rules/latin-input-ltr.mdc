@@ -1,0 +1,61 @@
+---
+description: Latin-only input and display (email, username, password, numbers, URLs) must stay LTR in every UI locale
+globs: src/audio_stegano_app/**/*.dart,src/audio_stegano_desktop/**/*.xaml,src/audio_stegano_desktop/**/*.cs
+alwaysApply: true
+---
+
+# Latin-only content → LTR (all locales)
+
+## Rule (must)
+
+Any control whose **content is Latin-only** must render **left-to-right** even when the app UI locale is RTL (`fa`, `ar`).
+
+Applies to:
+- **Credentials / identifiers:** email, username, password, API keys, tokens.
+- **Numeric / parameter fields:** logistic `r`, `x0`, message bit length.
+- **Latin URLs and phone numbers** when shown as values (About / contact / links).
+- **Free-text message and extract result:** dynamic — LTR while Latin-only; RTL when Arabic/Persian/Hebrew is present; empty → follow UI locale.
+
+Do **not** rely on app-wide `Directionality` / window RTL alone for these controls.
+
+## Flutter (must)
+
+- Resolve direction with `ContentTextDirection.resolve()` (`lib/core/ui/content_text_direction.dart`).
+- **Input:** `DirectionalTextField` (not raw `TextField` / `TextFormField`).
+  - Always LTR: `forceLatinLtr: true` (email, username, password, numbers).
+- **Read-only Latin values:** `DirectionalLatinText` or `DirectionalSelectableText`.
+- Password: `DirectionalTextField(forceLatinLtr: true, obscureText: true, ...)`.
+
+```dart
+// GOOD — email / username / password
+DirectionalTextField(
+  forceLatinLtr: true,
+  controller: _emailCtrl,
+  keyboardType: TextInputType.emailAddress,
+)
+
+DirectionalTextField(
+  forceLatinLtr: true,
+  obscureText: true,
+  controller: _passwordCtrl,
+)
+
+// GOOD — displayed email or URL in About screen
+DirectionalLatinText('karavi@ntk.ir', style: ...)
+```
+
+```dart
+// BAD — inherits RTL from fa locale while typing "user@mail.com"
+TextField(controller: _emailCtrl)
+```
+
+## WPF (must)
+
+- Dynamic message/result: `ContentTextDirectionHelper.ApplyTo(TextBox, text)` on `TextChanged` or when text is assigned.
+- Fixed Latin-only inputs: `Style="{StaticResource LatinInputTextBox}"` (`FlowDirection="LeftToRight"`).
+- Latin display values (email, URL, phone): `FlowDirection="LeftToRight"` on the value `TextBlock` / `Hyperlink`, or `ContentTextDirectionHelper.ApplyTo(FrameworkElement, text, forceLatinLtr: true)`.
+
+## Completion check
+
+- New TextField/TextBox for email, username, password, numbers, or Latin-only values: direction wired before merge.
+- Manual test in **fa** locale: type `user@mail.com` / `3.99` → LTR; type Persian → RTL; About email/URL values stay LTR.

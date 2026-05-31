@@ -283,3 +283,33 @@
   "verification": "flutter analyze on app_bootstrap.dart + android_widget_capture_launch_io.dart -> No issues found. No CDN usage confirmed across deps, lib, web/index.html, and Android manifest (no INTERNET permission)."
 }
 ```
+
+## Part 10 — update ver (1.2.5 → 1.2.6)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 10,
+  "title": "update ver — patch bump",
+  "userRequest": "update ver",
+  "command": ".\\_update-ver.ps1",
+  "previousVersion": "1.2.5",
+  "nextVersion": "1.2.6",
+  "filesUpdated": [
+    "src/audio_stegano_app/pubspec.yaml",
+    "src/audio_stegano_desktop/src/AudioStegano.Desktop/AudioStegano.Desktop.csproj"
+  ],
+  "status": "done"
+}
+```
+
+## Result 10
+
+```json
+{
+  "part": 10,
+  "status": "done",
+  "verification": "_update-ver.ps1 exit 0; pubspec.yaml version 1.2.6; WPF Version/AssemblyVersion/FileVersion/InformationalVersion 1.2.6; readmehistory.md entry added."
+}
+```

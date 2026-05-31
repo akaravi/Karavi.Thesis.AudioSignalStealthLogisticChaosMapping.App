@@ -19,6 +19,7 @@ import '../../core/platform/android_widget_action.dart';
 import '../../core/stego/stego.dart';
 import '../shared/audio_equalizer_view.dart';
 import '../shared/circle_action_button.dart';
+import '../shared/directional_text_field.dart';
 import '../shared/embed_warning_dialog.dart';
 import '../shared/message_bit_length_formatter.dart';
 import '../shared/record_button.dart';
@@ -340,7 +341,7 @@ class _WidgetCaptureScreenState extends ConsumerState<WidgetCaptureScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
+                DirectionalTextField(
                   controller: _textCtrl,
                   focusNode: _textFocus,
                   maxLines: 4,

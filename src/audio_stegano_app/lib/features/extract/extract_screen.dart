@@ -19,6 +19,8 @@ import '../../core/audio/audio_player.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/stego/stego.dart';
 import '../shared/audio_file_drop_surface.dart';
+import '../shared/directional_selectable_text.dart';
+import '../shared/directional_text_field.dart';
 import '../shared/help_sheet.dart';
 import '../shared/tab_scroll_body.dart';
 
@@ -414,7 +416,8 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                     ),
                     if (!useFixedLen) ...[
                       const SizedBox(height: 16),
-                      TextField(
+                      DirectionalTextField(
+                        forceLatinLtr: true,
                         controller: _bitLenCtrl,
                         keyboardType: TextInputType.number,
                         scrollPhysics: const NeverScrollableScrollPhysics(),
@@ -531,7 +534,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            SelectableText(_resultBody(s), style: theme.textTheme.bodyLarge),
+            DirectionalSelectableText(_resultBody(s), style: theme.textTheme.bodyLarge),
             if (_extractSucceeded) ...[
               const SizedBox(height: 12),
               Align(

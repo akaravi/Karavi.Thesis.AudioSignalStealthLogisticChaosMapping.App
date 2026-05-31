@@ -11,7 +11,7 @@
             <TextBlock x:Name="PickTitle" Style="{StaticResource SectionTitle}"
                        HorizontalAlignment="Center" Margin="0,12,0,16" TextAlignment="Center" />
             <StackPanel x:Name="BitLengthPanel">
-              <TextBox x:Name="BitLengthBox" Style="{StaticResource MaterialTextBox}" />
+              <TextBox x:Name="BitLengthBox" Style="{StaticResource LatinInputTextBox}" />
               <TextBlock x:Name="BitLengthHelper" Style="{StaticResource BodySmall}" Margin="0,8,0,16" />
             </StackPanel>
             <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,12">

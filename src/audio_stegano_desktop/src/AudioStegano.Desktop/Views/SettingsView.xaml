@@ -54,7 +54,7 @@
             </Grid.ColumnDefinitions>
             <Slider x:Name="RSlider" Grid.Column="0" Minimum="3.5" Maximum="4.0" TickFrequency="0.01"
                     IsSnapToTickEnabled="True" ValueChanged="RSlider_ValueChanged" VerticalAlignment="Center" />
-            <TextBox x:Name="RTextBox" Grid.Column="1" Style="{StaticResource MaterialTextBox}"
+            <TextBox x:Name="RTextBox" Grid.Column="1" Style="{StaticResource LatinInputTextBox}"
                      Margin="8,0,0,0" HorizontalContentAlignment="Center"
                      LostFocus="RTextBox_LostFocus" KeyDown="ParamTextBox_KeyDown" />
           </Grid>
@@ -67,7 +67,7 @@
             </Grid.ColumnDefinitions>
             <Slider x:Name="X0Slider" Grid.Column="0" Minimum="0.01" Maximum="0.99" TickFrequency="0.01"
                     IsSnapToTickEnabled="True" ValueChanged="X0Slider_ValueChanged" VerticalAlignment="Center" />
-            <TextBox x:Name="X0TextBox" Grid.Column="1" Style="{StaticResource MaterialTextBox}"
+            <TextBox x:Name="X0TextBox" Grid.Column="1" Style="{StaticResource LatinInputTextBox}"
                      Margin="8,0,0,0" HorizontalContentAlignment="Center"
                      LostFocus="X0TextBox_LostFocus" KeyDown="ParamTextBox_KeyDown" />
           </Grid>

@@ -28,6 +28,7 @@ import '../shared/audio_file_drop_surface.dart';
 import '../shared/audio_equalizer_view.dart';
 import '../shared/dual_waveform_chart.dart';
 import '../shared/circle_action_button.dart';
+import '../shared/directional_text_field.dart';
 import '../shared/embed_metric_kind.dart';
 import '../shared/help_sheet.dart';
 import '../shared/embed_warning_dialog.dart';
@@ -852,7 +853,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
               if (!_embedInputHidden) ...[
-                TextField(
+                DirectionalTextField(
                   controller: _textCtrl,
                   focusNode: _textFocus,
                   maxLines: 4,

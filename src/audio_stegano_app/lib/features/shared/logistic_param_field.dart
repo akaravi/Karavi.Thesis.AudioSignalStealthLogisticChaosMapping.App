@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/logistic_param_bounds.dart';
+import 'directional_text_field.dart';
 
 /// Slider + manual numeric field for one logistic parameter with range guard.
 class LogisticParamField extends StatefulWidget {
@@ -104,7 +105,8 @@ class _LogisticParamFieldState extends State<LogisticParamField> {
             const SizedBox(width: 12),
             SizedBox(
               width: 96,
-              child: TextField(
+              child: DirectionalTextField(
+                forceLatinLtr: true,
                 controller: _ctrl,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,

@@ -235,6 +235,7 @@ public partial class ExtractView : UserControl
             SessionLog.Write("Extract: key mismatch or empty");
             StatusText.Text = s.KeyMismatch;
             ResultText.Text = s.NoText;
+            ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text);
             ResultHeaderIcon.Text = "\uE783";
             ResultPanel.Style = (Style)FindResource("MaterialCard");
             ResultPanel.Background = (Brush)FindResource("ErrorContainerBrush");
@@ -246,6 +247,7 @@ public partial class ExtractView : UserControl
 
         StatusText.Text = string.Empty;
         ResultText.Text = text;
+        ContentTextDirectionHelper.ApplyTo(ResultText, text);
         ResultHeaderIcon.Text = "\uE73E";
         ResultPanel.Style = (Style)FindResource("ResultCard");
         ResultTitle.Foreground = (Brush)FindResource("TextBrush");
