@@ -1,7 +1,11 @@
 # Copy to key.properties (never commit). Used for Cafe Bazaar / Play release signing.
-# Generate keystore: see scripts/create_release_keystore.ps1
+# Repo law: release builds MUST use the official publish keystore (not upload-keystore.jks in this folder).
+# Keystore: E:\BANK Android Key publish\key.jks
+# Passwords: E:\BANK Android Key publish\key_password.txt (line 1 = storePassword, line 2 = keyPassword)
+# Or run: Sync-KaraviAndroidKeyProperties -AndroidRoot (path to this android folder) -Force
+# See .cursor/rules/android-release-signing.mdc and _android-release-signing.ps1
 
+storeFile=E:/BANK Android Key publish/key.jks
 storePassword=YOUR_KEYSTORE_PASSWORD
 keyPassword=YOUR_KEY_PASSWORD
-keyAlias=upload
-storeFile=upload-keystore.jks
+keyAlias=elective ntk

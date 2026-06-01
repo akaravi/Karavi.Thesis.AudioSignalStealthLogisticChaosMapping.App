@@ -3,10 +3,10 @@
   Build signed Android release artifacts for Cafe Bazaar (AAB + arm64 APK).
 
 .EXAMPLE
-  # One-time: create keystore
-  .\src\audio_stegano_app\android\scripts\create_release_keystore.ps1
-  Copy-Item src\audio_stegano_app\android\key.properties.example src\audio_stegano_app\android\key.properties
-  # Edit key.properties with your passwords
+  # One-time: key.properties (official publish key — repo law)
+  #   E:\BANK Android Key publish\key.jks
+  #   Passwords: E:\BANK Android Key publish\key_password.txt
+  # Scripts auto-write android/key.properties via _android-release-signing.ps1
 
   .\_build-cafebazaar-release.ps1
   .\_build-cafebazaar-release.ps1 -OutputDirectory D:\PublishKaravi\CafeBazaar
@@ -31,10 +31,12 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $root "_android-release-signing.ps1")
 $flutterAppPath = Join-Path $root "src\audio_stegano_app"
 $androidRoot = Join-Path $flutterAppPath "android"
 $keyProperties = Join-Path $androidRoot "key.properties"
 $cafeBazaarTemplateRoot = Join-Path $root "publish\cafebazaar"
+$defaultBundleSignerJar = Get-KaraviAndroidPublishBundleSignerJarPath
 
 function New-CafeBazaarTimestampedOutputPath {
     param(
@@ -48,14 +50,8 @@ function New-CafeBazaarTimestampedOutputPath {
     return "${OutputDirectory}_$stamp"
 }
 
-if (-not (Test-Path -LiteralPath $keyProperties)) {
-    throw @"
-Release signing not configured.
-  1. Run: .\src\audio_stegano_app\android\scripts\create_release_keystore.ps1
-  2. Copy key.properties.example to android\key.properties and fill passwords
-  3. Re-run this script
-"@
-}
+Sync-KaraviAndroidKeyProperties -AndroidRoot $androidRoot -KeyPropertiesPath $keyProperties
+Assert-KaraviAndroidReleaseSigningConfigured -AndroidRoot $androidRoot -KeyPropertiesPath $keyProperties
 
 $flutterCandidates = @(
     if ($env:FLUTTER_HOME) { Join-Path $env:FLUTTER_HOME "bin\flutter.bat" }
@@ -242,6 +238,9 @@ if ($buildsAab -and -not $SkipBundleSigner) {
     $signerArgs = @{
         BundlePath      = $aabCandidates[0].FullName
         OutputDirectory = $outDir
+    }
+    if ([string]::IsNullOrWhiteSpace($BundleSignerJarPath) -and (Test-Path -LiteralPath $defaultBundleSignerJar)) {
+        $BundleSignerJarPath = $defaultBundleSignerJar
     }
     if (-not [string]::IsNullOrWhiteSpace($BundleSignerJarPath)) {
         $signerArgs["BundleSignerJarPath"] = $BundleSignerJarPath

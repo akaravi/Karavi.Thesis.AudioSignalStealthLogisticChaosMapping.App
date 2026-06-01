@@ -1,0 +1,60 @@
+---
+description: Android release APK/AAB must use the official BANK publish keystore on E:
+alwaysApply: true
+---
+
+# Android release signing (official publish key)
+
+## Rule (must)
+
+All **release** Android builds for this repo (APK, App Bundle, Cafe Bazaar `.bin`) **must** be signed with the **official publish keystore** on the dev machine — not `upload-keystore.jks` under `android/`, not debug keys, and not ad-hoc keystores.
+
+| Item | Path |
+|------|------|
+| Publish folder | `E:\BANK Android Key publish` |
+| Keystore | `E:\BANK Android Key publish\key.jks` |
+| Passwords | `E:\BANK Android Key publish\key_password.txt` |
+| Cafe Bazaar bundle-signer (optional) | `E:\BANK Android Key publish\bundlesigner-0.1.13.jar` |
+
+Override folder only via environment variable `KARAVI_ANDROID_PUBLISH_KEY_DIR` (same layout inside that directory).
+
+## Password file (must)
+
+- **Never** commit `key.properties`, `key_password.txt`, `*.jks`, or `*.keystore` to git.
+- `key_password.txt` format on this machine:
+  - **Line 1** → keystore (`storePassword`)
+  - **Line 2** → key (`keyPassword`)
+  - Optional `key=value` lines (`storePassword`, `keyPassword`, `keyAlias`) are also supported.
+- `keyAlias` is read from `key.properties` if set; otherwise resolved from `key.jks` via `keytool` when syncing `key.properties`.
+
+## Build workflow (must)
+
+1. Ensure `E:\BANK Android Key publish\key.jks` and `key_password.txt` exist.
+2. From repo root, use scripts that dot-source `_android-release-signing.ps1`:
+   - `.\_build-flutter-android.ps1` (release APK / AAB)
+   - `.\_build-cafebazaar-release.ps1` (Cafe Bazaar release + `.bin`)
+3. Scripts call `Sync-KaraviAndroidKeyProperties` then `Assert-KaraviAndroidReleaseSigningConfigured` before `flutter build … --release`.
+4. Gradle reads `src/audio_stegano_app/android/key.properties` (generated locally, gitignored).
+
+Manual one-time template (if you prefer hand-editing):
+
+```powershell
+Copy-Item src\audio_stegano_app\android\key.properties.example src\audio_stegano_app\android\key.properties
+# Fill storeFile, passwords, keyAlias from E:\BANK Android Key publish\
+```
+
+`key.properties.example` documents the official `storeFile` path; passwords must come from `key_password.txt`, not placeholders in git.
+
+## Forbidden (must)
+
+- `flutter build apk --release` / `appbundle --release` without official signing configured.
+- `android/upload-keystore.jks` or any other keystore for **store** release artifacts.
+- Committing secrets or copying `key.jks` into the repository.
+
+## CI exception
+
+GitHub Actions / CI without `E:\` uses `scripts/ci/Prepare-AndroidReleaseSigning.ps1` and repository secrets (`ANDROID_KEYSTORE_BASE64`, etc.). That is **not** a substitute on developer machines — local release builds **must** use `E:\BANK Android Key publish`.
+
+## Completion check
+
+Before publishing APK/AAB: `key.properties` `storeFile` resolves to `…\BANK Android Key publish\key.jks`; build log shows `signingConfig release`, not debug.

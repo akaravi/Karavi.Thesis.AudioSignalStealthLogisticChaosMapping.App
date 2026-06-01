@@ -1,5 +1,19 @@
-# Creates upload-keystore.jks for release signing (run once, keep secret).
+# Legacy: creates upload-keystore.jks in the android module (dev / experiments only).
+# Store release builds MUST use: E:\BANK Android Key publish\key.jks (see android-release-signing.mdc).
 $ErrorActionPreference = "Stop"
+
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
+$signingModule = Join-Path $repoRoot "_android-release-signing.ps1"
+if (Test-Path -LiteralPath $signingModule) {
+    . $signingModule
+    $official = Get-KaraviAndroidPublishKeystorePath
+    if (Test-Path -LiteralPath $official) {
+        Write-Host "Official publish keystore already exists — use that for release builds:" -ForegroundColor Yellow
+        Write-Host "  $official" -ForegroundColor White
+        Write-Host "Aborting local upload-keystore creation." -ForegroundColor Yellow
+        exit 0
+    }
+}
 
 $androidRoot = Split-Path -Parent $PSScriptRoot
 $keystorePath = Join-Path $androidRoot "upload-keystore.jks"

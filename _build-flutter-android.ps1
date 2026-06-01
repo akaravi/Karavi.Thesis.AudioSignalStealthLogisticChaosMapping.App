@@ -33,7 +33,9 @@ $savedEnvPubHostedAtScriptStart = $env:PUB_HOSTED_URL
 $userSuppliedMirrorViaParam = $UseFlutterIoCnMirror -or (-not [string]::IsNullOrWhiteSpace($PubHostedUrl))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $root "_android-release-signing.ps1")
 $flutterAppPath = Join-Path $root "src\audio_stegano_app"
+$androidRoot = Join-Path $flutterAppPath "android"
 $defaultAndroidPublishDir = Join-Path $root "publish\flutter\android"
 
 function Resolve-CommandPath {
@@ -324,6 +326,9 @@ if (-not $SkipTests) {
     Write-Host "Flutter test..." -ForegroundColor Cyan
     Invoke-FlutterInProject -ProjectDirectory $flutterAppPath -ArgumentList @("test")
 }
+
+Sync-KaraviAndroidKeyProperties -AndroidRoot $androidRoot
+Assert-KaraviAndroidReleaseSigningConfigured -AndroidRoot $androidRoot
 
 $androidBuildResult = Invoke-FlutterAndroidReleaseBuild `
     -FlutterProjectPath $flutterAppPath `

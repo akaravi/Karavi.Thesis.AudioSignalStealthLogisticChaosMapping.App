@@ -40,8 +40,17 @@ function Get-BundleSignerJarCandidates {
     param([string]$AndroidRoot)
 
     $jarName = "bundlesigner-0.1.13.jar"
+    $publishJar = $null
+    $repoRoot = (Resolve-Path (Join-Path $AndroidRoot "..\..\..")).Path
+    $signingModule = Join-Path $repoRoot "_android-release-signing.ps1"
+    if (Test-Path -LiteralPath $signingModule) {
+        . $signingModule
+        $publishJar = Get-KaraviAndroidPublishBundleSignerJarPath
+    }
+
     @(
         if ($env:CAFEBAZAAR_BUNDLESIGNER_JAR) { $env:CAFEBAZAAR_BUNDLESIGNER_JAR }
+        $publishJar
         (Join-Path $AndroidRoot "tools\$jarName")
     ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 }

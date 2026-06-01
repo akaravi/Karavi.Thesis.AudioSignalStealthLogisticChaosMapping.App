@@ -117,6 +117,13 @@ function Invoke-FlutterAndroidReleaseBuild {
         throw "Android module not found: $androidModule"
     }
 
+    $repoRoot = (Resolve-Path (Join-Path $FlutterProjectPath "..\..")).Path
+    $signingModule = Join-Path $repoRoot "_android-release-signing.ps1"
+    if (Test-Path -LiteralPath $signingModule) {
+        . $signingModule
+        Assert-KaraviAndroidReleaseSigningConfigured -AndroidRoot $androidModule
+    }
+
     Assert-AndroidSdkAvailable
 
     $ensureGradleScript = Join-Path $androidModule "scripts\ensure_gradle_wrapper_dist.ps1"

@@ -218,9 +218,10 @@ dotnet run --project src/AudioStegano.Desktop
 **کافه‌بازار — خلاصه:**
 
 ```powershell
-# یک‌بار: keystore + key.properties
-.\src\audio_stegano_app\android\scripts\create_release_keystore.ps1
-Copy-Item src\audio_stegano_app\android\key.properties.example src\audio_stegano_app\android\key.properties
+# کلید رسمی انتشار (الزام قانون پروژه — .cursor/rules/android-release-signing.mdc)
+#   Keystore: E:\BANK Android Key publish\key.jks
+#   Passwords: E:\BANK Android Key publish\key_password.txt (خط ۱ = storePassword، خط ۲ = keyPassword)
+# اسکریپت‌ها android/key.properties را خودکار می‌سازند (_android-release-signing.ps1)
 # بیلد
 .\_build-cafebazaar-release.ps1
 # خروجی: publish/cafebazaar/  (فایل .bin برای App Bundle)
@@ -567,7 +568,7 @@ flowchart LR
 |--------------|--------------|
 | پیام بازیابی نمی‌شود / Cannot extract | طول بیت، `r`، `x0` و `seed` را با زمان embed مقایسه کنید |
 | فایل بعد از ارسال خراب است / File corrupted after share | WAV را به‌صورت **فایل** بفرستید، نه Voice |
-| `Release signing not configured` | `key.properties` + `upload-keystore.jks` (راهنمای کافه‌بازار) |
+| `Release signing not configured` | وجود `E:\BANK Android Key publish\key.jks` و `key_password.txt`؛ قانون: `.cursor/rules/android-release-signing.mdc`؛ `Sync-KaraviAndroidKeyProperties -Force` |
 | `ANDROID_HOME` not found | Android SDK را نصب و متغیر محیطی را تنظیم کنید |
 | GitHub Actions متوقف / Actions blocked | `.\_publish-local-github-release.ps1` یا self-hosted runner — [`docs/GITHUB_RELEASE.md`](docs/GITHUB_RELEASE.md) |
 | ظرفیت صوت کم / Low audio capacity | پیام کوتاه‌تر یا فایل صوتی بلندتر انتخاب کنید |

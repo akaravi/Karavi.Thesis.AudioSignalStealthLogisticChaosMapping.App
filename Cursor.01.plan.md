@@ -345,3 +345,31 @@
   "verification": "flutter build web --release --no-web-resources-cdn + Invoke-KaraviFlutterWebNoCdnPostProcess exit 0; FontManifest lists Roboto + Noto Sans Arabic; assets/fonts/roboto|notosansarabic|notosansoldpersian woff2 present; local HTTP 200 for font URLs."
 }
 ```
+
+## Part 12 — Android release signing law (E:\BANK publish key)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 12,
+  "title": "Android release must use E:\\BANK Android Key publish",
+  "userRequest": "به قانون پروژه اضافه کن که بیلد های ریلیز اندروید با کلید E:\\BANK Android Key publish و پسورد key_password.txt",
+  "solution": ".cursor/rules/android-release-signing.mdc (alwaysApply); _android-release-signing.ps1; Sync/Assert in _build-flutter-android.ps1 and _build-cafebazaar-release.ps1",
+  "paths": {
+    "keystore": "E:\\BANK Android Key publish\\key.jks",
+    "passwords": "E:\\BANK Android Key publish\\key_password.txt"
+  },
+  "status": "done"
+}
+```
+
+## Result 12
+
+```json
+{
+  "part": 12,
+  "status": "done",
+  "verification": "Sync-KaraviAndroidKeyProperties + Assert-KaraviAndroidReleaseSigningConfigured exit 0; key.properties storeFile=E:/BANK Android Key publish/key.jks (gitignored)."
+}
+```

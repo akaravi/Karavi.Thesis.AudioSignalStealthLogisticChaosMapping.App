@@ -1,5 +1,13 @@
 # Change History
 
+## 2026-06-01 16:49 (UTC+3:30) — Android release build 1.2.6 (Cafe Bazaar, official key)
+
+`.\_build-cafebazaar-release.ps1` exit 0. Signed with `E:\BANK Android Key publish\key.jks`. Output: `publish\cafebazaar_20260601_164348\` — `AudioStegano_1.2.6.bin` (upload), `AudioStegano_1.2.6.aab`, `AudioStegano_1.2.6_arm64-v8a.apk`, `mapping_1.2.6.txt`.
+
+## 2026-05-31 (UTC+3:30) — Android release signing project law (E:\BANK publish key)
+
+Added mandatory rule `.cursor/rules/android-release-signing.mdc`: all release APK/AAB/Cafe Bazaar builds must sign with `E:\BANK Android Key publish\key.jks`; passwords from `key_password.txt` (line 1 = store, line 2 = key). Implemented `_android-release-signing.ps1` (`Sync-KaraviAndroidKeyProperties`, `Assert-KaraviAndroidReleaseSigningConfigured`). Wired into `_build-flutter-android.ps1` and `_build-cafebazaar-release.ps1`. Updated `key.properties.example` and README.
+
 ## 2026-05-31 (UTC+3:30) — Flutter web: fix invisible text (offline CanvasKit fonts)
 
 Root cause: `_flutter-web-no-cdn.ps1` rewrites `fonts.gstatic.com/s/` → `assets/fonts/` for zero-CDN deploy, but no font files were placed there. CanvasKit could not load Roboto/Noto fallbacks, so **all UI text rendered blank** (icons/layout still visible).
