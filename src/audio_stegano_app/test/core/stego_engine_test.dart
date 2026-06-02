@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:audio_stegano_app/core/audio/wav_io.dart';
 import 'package:audio_stegano_app/core/stego/stego.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 WavFile _sineCover({int seconds = 4}) {
@@ -19,6 +20,31 @@ WavFile _sineCover({int seconds = 4}) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('StegoEngine — ae_xor + trained autoencoder', () {
+    test('loads weights and runs embed/extract pipeline', () async {
+      final json = await rootBundle.loadString(
+        TrainedAutoencoderLoader.assetPath,
+      );
+      final ae = MessageBlockAutoencoder.fromJsonString(json);
+      expect(ae, isNotNull);
+      final wm = AudioWatermarking(
+        embedMode: StegoEmbedMode.aeXor,
+        autoencoder: ae,
+      );
+      final cover = _sineCover();
+      const msg = 'Test';
+      final out = wm.embed(text: msg, cover: cover);
+      expect(out.bitsEmbedded, MessageBits.fromUtf8Text(msg).length);
+      final extracted = wm.extract(
+        stego: out.stego,
+        msgBitLength: out.bitsEmbedded,
+      );
+      expect(extracted, isNotNull);
+    });
+  });
+
   group('StegoEngine — main_steganography.m flow', () {
     test('embed and extract round-trip with msg_len', () {
       final eng = StegoEngine();

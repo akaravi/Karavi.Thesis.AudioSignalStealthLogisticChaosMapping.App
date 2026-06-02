@@ -376,6 +376,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         r: settings.r,
         x0: settings.x0,
         fixedMsgBitLength: useFixedLen ? fixedBits : null,
+        embedMode: settings.stegoEmbedMode,
       );
     } catch (e) {
       error = e.toString();
@@ -551,6 +552,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         msgBitLength: result.msgBitLength,
         r: settings.r,
         x0: settings.x0,
+        embedMode: settings.stegoEmbedMode,
       );
     } catch (e) {
       if (!mounted) return;

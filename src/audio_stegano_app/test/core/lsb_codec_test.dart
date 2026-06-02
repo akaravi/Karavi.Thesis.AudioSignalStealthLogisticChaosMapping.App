@@ -61,6 +61,24 @@ void main() {
     });
   });
 
+  group('LogisticPositions (train/logistic_positions.m)', () {
+    test('positions are scattered not sequential prefix', () {
+      final cover = _sineCover(seconds: 4);
+      const msg = 'Hello World';
+      final n = MessageBits.fromUtf8Text(msg).length;
+      final pos = LogisticPositions.compute(
+        n: n,
+        maxPos: cover.samples.length,
+        x0: 0.45,
+        r: 3.99,
+      );
+      final sequential = List<int>.generate(n, (i) => i);
+      expect(pos, isNot(equals(sequential)));
+      expect(pos.length, n);
+      expect(pos.toSet().length, n);
+    });
+  });
+
   group('LSB Codec security', () {
     test('wrong key (different x0) fails to recover correct text', () {
       final cover = _sineCover();

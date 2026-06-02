@@ -3,13 +3,19 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import '../../audio/wav_io.dart';
-import '../audio_watermarking.dart';
+import '../embed_message.dart';
+import '../extract_message.dart';
+import '../message_block_autoencoder.dart';
+import '../stego_embed_mode.dart';
+import '../trained_autoencoder_loader.dart';
 
 class _EmbedRequest {
   final String text;
   final double r;
   final double x0;
   final int? fixedMsgBitLength;
+  final int embedModeIndex;
+  final String? autoencoderJson;
   final int sampleRate;
   final int numChannels;
   final int bitsPerSample;
@@ -20,6 +26,8 @@ class _EmbedRequest {
     required this.r,
     required this.x0,
     this.fixedMsgBitLength,
+    required this.embedModeIndex,
+    this.autoencoderJson,
     required this.sampleRate,
     required this.numChannels,
     required this.bitsPerSample,
@@ -104,6 +112,8 @@ class _EmbedResponse {
 class _ExtractRequest {
   final double r;
   final double x0;
+  final int embedModeIndex;
+  final String? autoencoderJson;
   final int sampleRate;
   final int numChannels;
   final int bitsPerSample;
@@ -113,6 +123,8 @@ class _ExtractRequest {
   const _ExtractRequest({
     required this.r,
     required this.x0,
+    required this.embedModeIndex,
+    this.autoencoderJson,
     required this.sampleRate,
     required this.numChannels,
     required this.bitsPerSample,
@@ -121,6 +133,35 @@ class _ExtractRequest {
   });
 }
 
+EmbedMessage _embedMessageFromRequest({
+  required double r,
+  required double x0,
+  required int embedModeIndex,
+  String? autoencoderJson,
+}) {
+  final mode = StegoEmbedMode.values[embedModeIndex];
+  MessageBlockAutoencoder? ae;
+  if (mode == StegoEmbedMode.aeXor && autoencoderJson != null) {
+    ae = TrainedAutoencoderLoader.fromJsonString(autoencoderJson);
+  }
+  return EmbedMessage(r: r, x0: x0, embedMode: mode, autoencoder: ae);
+}
+
+ExtractMessage _extractMessageFromRequest({
+  required double r,
+  required double x0,
+  required int embedModeIndex,
+  String? autoencoderJson,
+}) {
+  final mode = StegoEmbedMode.values[embedModeIndex];
+  MessageBlockAutoencoder? ae;
+  if (mode == StegoEmbedMode.aeXor && autoencoderJson != null) {
+    ae = TrainedAutoencoderLoader.fromJsonString(autoencoderJson);
+  }
+  return ExtractMessage(r: r, x0: x0, embedMode: mode, autoencoder: ae);
+}
+
+/// اجرای isolate روی [EmbedMessage] / [ExtractMessage]
 class StegoRunner {
   const StegoRunner._();
 
@@ -130,12 +171,19 @@ class StegoRunner {
     double r = 3.99,
     double x0 = 0.45,
     int? fixedMsgBitLength,
+    StegoEmbedMode embedMode = StegoEmbedMode.xorOnly,
   }) async {
+    String? aeJson;
+    if (embedMode == StegoEmbedMode.aeXor) {
+      aeJson = await TrainedAutoencoderLoader.loadJsonString();
+    }
     final req = _EmbedRequest(
       text: text,
       r: r,
       x0: x0,
       fixedMsgBitLength: fixedMsgBitLength,
+      embedModeIndex: embedMode.index,
+      autoencoderJson: aeJson,
       sampleRate: cover.sampleRate,
       numChannels: cover.numChannels,
       bitsPerSample: cover.bitsPerSample,
@@ -150,10 +198,17 @@ class StegoRunner {
     required int msgBitLength,
     double r = 3.99,
     double x0 = 0.45,
+    StegoEmbedMode embedMode = StegoEmbedMode.xorOnly,
   }) async {
+    String? aeJson;
+    if (embedMode == StegoEmbedMode.aeXor) {
+      aeJson = await TrainedAutoencoderLoader.loadJsonString();
+    }
     final req = _ExtractRequest(
       r: r,
       x0: x0,
+      embedModeIndex: embedMode.index,
+      autoencoderJson: aeJson,
       sampleRate: stego.sampleRate,
       numChannels: stego.numChannels,
       bitsPerSample: stego.bitsPerSample,
@@ -165,14 +220,19 @@ class StegoRunner {
 }
 
 _EmbedResponse _embedOnIsolate(_EmbedRequest req) {
-  final wm = AudioWatermarking(r: req.r, x0: req.x0);
+  final embed = _embedMessageFromRequest(
+    r: req.r,
+    x0: req.x0,
+    embedModeIndex: req.embedModeIndex,
+    autoencoderJson: req.autoencoderJson,
+  );
   final cover = WavFile(
     sampleRate: req.sampleRate,
     numChannels: req.numChannels,
     bitsPerSample: req.bitsPerSample,
     samples: req.samples,
   );
-  final outcome = wm.embed(
+  final outcome = embed.runWithMetrics(
     text: req.text,
     cover: cover,
     fixedMsgBitLength: req.fixedMsgBitLength,
@@ -195,12 +255,17 @@ _EmbedResponse _embedOnIsolate(_EmbedRequest req) {
 }
 
 String? _extractOnIsolate(_ExtractRequest req) {
-  final wm = AudioWatermarking(r: req.r, x0: req.x0);
+  final extract = _extractMessageFromRequest(
+    r: req.r,
+    x0: req.x0,
+    embedModeIndex: req.embedModeIndex,
+    autoencoderJson: req.autoencoderJson,
+  );
   final stego = WavFile(
     sampleRate: req.sampleRate,
     numChannels: req.numChannels,
     bitsPerSample: req.bitsPerSample,
     samples: req.samples,
   );
-  return wm.extract(stego: stego, msgBitLength: req.msgBitLength);
+  return extract.runText(stego: stego, msgBitLength: req.msgBitLength);
 }

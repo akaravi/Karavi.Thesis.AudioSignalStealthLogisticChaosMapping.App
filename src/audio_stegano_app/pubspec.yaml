@@ -86,6 +86,8 @@ flutter:
     - assets/appsettings.json
     - ../../appsettings.json
     - assets/images/about_profile.png
+    - assets/stego/trained_autoencoder.json
+    - assets/stego/trained_autoencoder.mat
 
   fonts:
     - family: Roboto

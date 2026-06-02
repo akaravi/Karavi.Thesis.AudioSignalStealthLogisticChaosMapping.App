@@ -554,7 +554,7 @@ flowchart LR
 | مرحله | فایل مرجع (MATLAB) | Dart / C# |
 |-------|-------------------|-----------|
 | نقشه لاجستیک | `logistic_map_keygen.m` | `logistic_map.dart` |
-| LSB نهان‌نگاری | `embed_extract_data.m` | `lsb_codec.dart` |
+| LSB نهان‌نگاری | `train/embed_message.m`, `train/extract_message.m` | `embed_message.dart`, `extract_message.dart` |
 | متریک‌ها | `evaluate_stego.m` | `metrics.dart` |
 | جریان اصلی | `main_steganography.m` | `stego_engine.dart` |
 

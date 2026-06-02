@@ -1,5 +1,30 @@
 # Change History
 
+## 2026-06-01 — Rename stego files to embed_message / extract_message (MATLAB parity)
+
+Flutter (`lib/core/stego/`): `embed_message.dart` (`EmbedMessage`), `extract_message.dart` (`ExtractMessage`), plus `stego_common.dart`, `logistic_map_keygen.dart`, `logistic_positions.dart`, `evaluate_stego.dart`. WPF: `EmbedMessage.cs`, `ExtractMessage.cs`, `StegoMessageContext.cs`. `AudioWatermarking` remains a thin compatibility wrapper.
+
+## 2026-06-01 — Trained autoencoder assets + ae_xor embed mode
+
+Bundled thesis `train/trained_autoencoder.mat` (~146 KB) and exported runtime weights `trained_autoencoder.json` (8-10-8 `tansig`, IW/LW/b from MATLAB `net` cells). Flutter assets: `assets/stego/`; WPF: embedded JSON + optional `.mat` copy beside Core.
+
+- `MessageBlockAutoencoder` / `StegoEmbedMode` (`xor_only` | `ae_xor`) in Flutter + `AudioStegano.Core`.
+- `DefaultStegoEmbedMode` in `appsettings.json` (default `xor_only`, same as MATLAB `embed_message.m`).
+- `scripts/export_trained_autoencoder.py` regenerates JSON after retraining.
+- Embed/extract/`StegoRunner` pass `settings.stegoEmbedMode`.
+
+Note: `ae_xor` uses the trained net before LSB; bit-exact text recovery may differ from MATLAB until input/output `mapminmax` from `configure(net,X,X)` is ported — use `xor_only` for production round-trip.
+
+## 2026-06-01 — Stego: chaotic LSB positions (train/embed_message.m)
+
+Aligned Flutter (`audio_watermarking.dart`) and WPF (`AudioWatermarking.cs`) with thesis `train/embed_message.m` / `train/extract_message.m` / `train/logistic_positions.m`:
+
+- Message bits → XOR with `logistic_map_keygen` key → LSB at **chaotic sample indices** (not sequential `0..n-1`).
+- New `LogisticPositions` / `LogisticPositions.compute` (port of `logistic_positions.m`: unique + fill + sort).
+- Unit tests: round-trip Persian/English, metrics, wrong-key; new test that positions differ from sequential prefix.
+
+**Compatibility:** stego WAV files produced by the **previous sequential LSB** build cannot be extracted with this version; re-embed with the same `r`, `x0`, and `msg_bit_length`.
+
 ## 2026-06-01 16:49 (UTC+3:30) — Android release build 1.2.6 (Cafe Bazaar, official key)
 
 `.\_build-cafebazaar-release.ps1` exit 0. Signed with `E:\BANK Android Key publish\key.jks`. Output: `publish\cafebazaar_20260601_164348\` — `AudioStegano_1.2.6.bin` (upload), `AudioStegano_1.2.6.aab`, `AudioStegano_1.2.6_arm64-v8a.apk`, `mapping_1.2.6.txt`.

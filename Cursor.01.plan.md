@@ -373,3 +373,71 @@
   "verification": "Sync-KaraviAndroidKeyProperties + Assert-KaraviAndroidReleaseSigningConfigured exit 0; key.properties storeFile=E:/BANK Android Key publish/key.jks (gitignored)."
 }
 ```
+
+## Part 13 — Stego algorithm: logistic_positions (embed_message.m)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 13,
+  "title": "Align stego with train/embed_message.m chaotic LSB positions",
+  "userRequest": "Study train/embed_message.m and train/extract_message.m; optimize steganography in App repo",
+  "matlabSource": [
+    "Karavi.Thesis.AudioSignalStealthLogisticChaosMapping/train/embed_message.m",
+    "Karavi.Thesis.AudioSignalStealthLogisticChaosMapping/train/extract_message.m",
+    "Karavi.Thesis.AudioSignalStealthLogisticChaosMapping/train/logistic_positions.m",
+    "pipeline/logistic_map_keygen.m"
+  ],
+  "pipeline": "UTF-8 message -> bits -> XOR(logistic key) -> LSB at logistic_positions(r,x0,n,capacity)",
+  "touchedFiles": [
+    "src/audio_stegano_app/lib/core/stego/audio_watermarking.dart",
+    "src/audio_stegano_app/test/core/lsb_codec_test.dart",
+    "src/audio_stegano_desktop/src/AudioStegano.Core/Stego/LogisticPositions.cs",
+    "src/audio_stegano_desktop/src/AudioStegano.Core/Stego/AudioWatermarking.cs"
+  ],
+  "breakingNote": "Sequential-LSB stego from older app builds is not readable after this change; re-embed required.",
+  "aeXorMode": "ported with trained_autoencoder.mat + JSON weights; default xor_only"
+}
+```
+
+## Result 13
+
+```json
+{
+  "part": 13,
+  "status": "done",
+  "verification": "flutter test test/core/lsb_codec_test.dart test/core/stego_engine_test.dart — 12 passed; dotnet test AudioStegano.Core.Tests — 13 passed; BER 0 round-trip fa/en."
+}
+```
+
+## Part 14 — trained_autoencoder.mat + ae_xor mode
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 14,
+  "title": "Bundle trained_autoencoder.mat and enable ae_xor",
+  "userRequest": "Project must include trained_autoencoder.mat to use autoencoder weights in stego",
+  "assets": [
+    "src/audio_stegano_app/assets/stego/trained_autoencoder.mat",
+    "src/audio_stegano_app/assets/stego/trained_autoencoder.json",
+    "src/audio_stegano_desktop/src/AudioStegano.Core/Stego/trained_autoencoder.mat",
+    "scripts/export_trained_autoencoder.py"
+  ],
+  "runtime": "StegoEmbedMode xor_only | ae_xor; DefaultStegoEmbedMode in appsettings.json",
+  "defaultMode": "xor_only",
+  "status": "done"
+}
+```
+
+## Result 14
+
+```json
+{
+  "part": 14,
+  "status": "done",
+  "verification": "flutter test 13 passed; dotnet test 14 passed; mat+json present under assets/stego; ae_xor pipeline runs; xor_only BER 0 round-trip."
+}
+```

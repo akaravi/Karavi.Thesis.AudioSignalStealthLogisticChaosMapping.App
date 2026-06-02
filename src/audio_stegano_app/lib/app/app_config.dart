@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../core/stego/stego_embed_mode.dart';
 import 'app_config_loader.dart';
 
 /// Deploy-time configuration from [appsettings.json] beside the app or bundled asset.
@@ -19,12 +20,16 @@ class AppConfig {
   /// Default logistic map [x0] for new sessions / reset.
   final double logisticX0;
 
+  /// `xor_only` or `ae_xor` — `train/embed_message.m` embed_mode.
+  final StegoEmbedMode defaultStegoEmbedMode;
+
   const AppConfig({
     required this.showEmbedLoadFileButton,
     required this.showEmbedRecoveryDialog,
     required this.defaultFixedMessageBitLength,
     required this.logisticR,
     required this.logisticX0,
+    required this.defaultStegoEmbedMode,
   });
 
   /// UI flag: on Windows desktop, file load stays available when deploy flag is false.
@@ -46,6 +51,7 @@ class AppConfig {
     defaultFixedMessageBitLength: 262144,
     logisticR: 3.99,
     logisticX0: 0.45,
+    defaultStegoEmbedMode: StegoEmbedMode.xorOnly,
   );
 
   /// Asset keys used after [tryLoadDeployAppSettingsJson] (web / IO beside exe).
@@ -69,6 +75,9 @@ class AppConfig {
       logisticR: (map['LogisticR'] as num?)?.toDouble() ?? defaults.logisticR,
       logisticX0:
           (map['LogisticX0'] as num?)?.toDouble() ?? defaults.logisticX0,
+      defaultStegoEmbedMode: StegoEmbedModeJson.fromConfig(
+        map['DefaultStegoEmbedMode'] as String?,
+      ),
     );
   }
 
