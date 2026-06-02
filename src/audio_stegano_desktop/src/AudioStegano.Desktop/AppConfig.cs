@@ -23,9 +23,6 @@ public sealed class AppConfig
     /// <summary>Default logistic map x0 for new sessions / reset.</summary>
     public double LogisticX0 { get; set; } = 0.45;
 
-    /// <summary><c>xor_only</c> or <c>ae_xor</c> — <c>train/embed_message.m</c> embed_mode.</summary>
-    public string DefaultStegoEmbedMode { get; set; } = "xor_only";
-
     public static AppConfig Current { get; private set; } = new();
 
     /// <summary>Embed tab: on Windows desktop, file load stays available even when deploy flag is false (mobile-oriented default).</summary>

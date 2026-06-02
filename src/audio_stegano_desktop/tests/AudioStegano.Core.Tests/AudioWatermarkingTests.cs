@@ -23,11 +23,11 @@ public class AudioWatermarkingTests
     public void AeXor_LoadsEmbeddedWeights_And_Embeds()
     {
         var ae = TrainedAutoencoder.Instance;
-        var wm = new AudioWatermarking(embedMode: StegoEmbedMode.AeXor, autoencoder: ae);
+        var wm = new AudioWatermarking(autoencoder: ae);
         var cover = SineCover();
         var outcome = wm.Embed("Test", cover);
         Assert.True(outcome.BitsEmbedded > 0);
-        Assert.NotNull(wm.Extract(outcome.Stego, outcome.BitsEmbedded));
+        Assert.Equal("Test", wm.Extract(outcome.Stego, outcome.BitsEmbedded));
     }
 
     [Fact]

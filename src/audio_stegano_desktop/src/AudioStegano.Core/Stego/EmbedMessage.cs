@@ -10,10 +10,12 @@ public sealed class EmbedMessage
     public EmbedMessage(
         double r = WatermarkDefaults.R,
         double x0 = WatermarkDefaults.X0,
-        StegoEmbedMode embedMode = StegoEmbedMode.XorOnly,
         MessageBlockAutoencoder? autoencoder = null)
     {
-        Context = new StegoMessageContext(r, x0, embedMode, autoencoder);
+        Context = new StegoMessageContext(
+            autoencoder ?? TrainedAutoencoder.Instance,
+            r,
+            x0);
     }
 
     public WatermarkEmbedResult RunText(WavFile cover, string text) =>

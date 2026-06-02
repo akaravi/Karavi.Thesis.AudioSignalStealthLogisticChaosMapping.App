@@ -45,6 +45,21 @@ class MessageBlockAutoencoder {
         jsonDecode(raw) as Map<String, dynamic>,
       );
 
+  /// MATLAB `mapminmax` on inputs: bits in [0,1] → [-1,1] (`net.inputs` processSettings).
+  static List<double> _mapInputBlock(List<double> bits01) =>
+      bits01.map((b) => 2.0 * b - 1.0).toList();
+
+  /// Inverse output `mapminmax`: network output in [-1,1] → [0,1].
+  static List<double> _unmapOutputBlock(List<double> y) =>
+      y.map((v) => (v + 1.0) / 2.0).toList();
+
+  /// `round(net(double(block)))` — same forward path for embed and extract.
+  List<int> _netRoundedBlock(List<double> bits01) {
+    final yRaw = _forwardColumn(_mapInputBlock(bits01));
+    final y = _unmapOutputBlock(yRaw);
+    return y.map((v) => v.round()).toList();
+  }
+
   /// `round(net(double(msg_matrix)))` — column-major 8×N blocks flattened.
   List<int> encodeRounded(Uint8List msgBits) {
     if (msgBits.length % blockSize != 0) {
@@ -53,19 +68,19 @@ class MessageBlockAutoencoder {
     final nBlocks = msgBits.length ~/ blockSize;
     final out = List<int>.filled(msgBits.length, 0);
     for (var b = 0; b < nBlocks; b++) {
-      final x = List<double>.generate(
+      final block = List<double>.generate(
         blockSize,
         (i) => msgBits[b * blockSize + i].toDouble(),
       );
-      final y = _forwardColumn(x);
+      final rounded = _netRoundedBlock(block);
       for (var i = 0; i < blockSize; i++) {
-        out[b * blockSize + i] = y[i].round();
+        out[b * blockSize + i] = rounded[i];
       }
     }
     return out;
   }
 
-  /// `round(net(double(reshape(payload, 8, n_blocks))))` flattened.
+  /// `round(net(double(reshape(payload, 8, n_blocks))))` — `extract_message.m`.
   Uint8List decodeBits(Uint8List payload) {
     if (payload.length % blockSize != 0) {
       throw ArgumentError('payload length must be a multiple of $blockSize');
@@ -73,13 +88,13 @@ class MessageBlockAutoencoder {
     final nBlocks = payload.length ~/ blockSize;
     final out = Uint8List(payload.length);
     for (var b = 0; b < nBlocks; b++) {
-      final x = List<double>.generate(
+      final block = List<double>.generate(
         blockSize,
         (i) => payload[b * blockSize + i].toDouble(),
       );
-      final y = _forwardColumn(x);
+      final rounded = _netRoundedBlock(block);
       for (var i = 0; i < blockSize; i++) {
-        out[b * blockSize + i] = y[i].round().clamp(0, 255) & 1;
+        out[b * blockSize + i] = rounded[i] & 1;
       }
     }
     return out;

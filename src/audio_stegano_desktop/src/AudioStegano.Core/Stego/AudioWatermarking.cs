@@ -12,17 +12,15 @@ public sealed class AudioWatermarking
 
     public double R => _embed.Context.R;
     public double X0 => _embed.Context.X0;
-    public StegoEmbedMode EmbedMode => _embed.Context.EmbedMode;
-    public MessageBlockAutoencoder? Autoencoder => _embed.Context.Autoencoder;
+    public MessageBlockAutoencoder Autoencoder => _embed.Context.Autoencoder;
 
     public AudioWatermarking(
         double r = WatermarkDefaults.R,
         double x0 = WatermarkDefaults.X0,
-        StegoEmbedMode embedMode = StegoEmbedMode.XorOnly,
         MessageBlockAutoencoder? autoencoder = null)
     {
-        _embed = new EmbedMessage(r, x0, embedMode, autoencoder);
-        _extract = new ExtractMessage(r, x0, embedMode, autoencoder);
+        _embed = new EmbedMessage(r, x0, autoencoder);
+        _extract = new ExtractMessage(r, x0, autoencoder);
     }
 
     public WatermarkOutcome Embed(string text, WavFile cover, int? fixedMsgBitLength = null) =>
@@ -39,9 +37,6 @@ public sealed class AudioWatermarking
 
     public byte[]? ExtractBits(WavFile stego, int msgBitLength, byte[]? binKey = null) =>
         _extract.RunBits(stego, msgBitLength, binKey);
-
-    public string? ExtractText(WavFile stego, int msgBitLength) =>
-        Extract(stego, msgBitLength);
 
     public WavFile StegoWithPerturbedKey(WavFile cover, byte[] binaryMsg) =>
         _embed.StegoWithPerturbedKey(cover, binaryMsg);

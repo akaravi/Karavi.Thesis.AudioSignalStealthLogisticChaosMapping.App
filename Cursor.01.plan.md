@@ -441,3 +441,66 @@
   "verification": "flutter test 13 passed; dotnet test 14 passed; mat+json present under assets/stego; ae_xor pipeline runs; xor_only BER 0 round-trip."
 }
 ```
+
+## Part 15 — Stego algorithm audit (autoencoder usage + mapminmax)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 15,
+  "title": "Verify full stego pipeline; fix ae_xor mapminmax; expose mode in settings",
+  "userRequest": "Ensure algorithm steps are correct; user suspected autoencoder not used",
+  "findings": {
+    "defaultMode": "xor_only — autoencoder skipped at runtime unless ae_xor selected",
+    "xor_onlyPipeline": "message_to_bits → XOR(logistic key) → LSB @ logistic_positions — verified",
+    "ae_xorPipeline": "message_to_bits → round(net(mapminmax)) → XOR → LSB — fixed mapminmax",
+    "matlabParity": "embed_message.m default embed_mode = xor_only; net loaded but unused in that branch"
+  },
+  "changes": [
+    "MessageBlockAutoencoder mapminmax (Flutter + WPF)",
+    "settings_screen SegmentedButton StegoEmbedMode",
+    "stego_engine_test + WPF test exact ae_xor round-trip"
+  ],
+  "status": "done"
+}
+```
+
+## Result 15
+
+```json
+{
+  "part": 15,
+  "status": "done",
+  "verification": "flutter test stego_engine_test 4 passed; dotnet test 14 passed; ae_xor round-trip Test/پیام; xor_only unchanged."
+}
+```
+
+## Part 16 — Autoencoder-only (remove xor_only)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 16,
+  "title": "Mandatory autoencoder; remove xor_only and mode selection",
+  "userRequest": "Autoencoder must always be used; remove any path that skips it",
+  "changes": [
+    "Deleted StegoEmbedMode enum and xor_only branches",
+    "MessageBlockAutoencoder required on EmbedMessage/ExtractMessage",
+    "StegoRunner always loads trained_autoencoder.json",
+    "Removed DefaultStegoEmbedMode from appsettings and settings UI"
+  ],
+  "status": "done"
+}
+```
+
+## Result 16
+
+```json
+{
+  "part": 16,
+  "status": "done",
+  "verification": "flutter test stego_engine + app_config 8 passed; dotnet test 14 passed; only ae_xor pipeline remains."
+}
+```

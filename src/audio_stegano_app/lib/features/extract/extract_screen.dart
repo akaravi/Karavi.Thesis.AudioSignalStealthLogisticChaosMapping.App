@@ -190,7 +190,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
         msgBitLength: msgBitLength,
         r: settings.r,
         x0: settings.x0,
-        embedMode: settings.stegoEmbedMode,
       );
     } catch (e) {
       error = e.toString();

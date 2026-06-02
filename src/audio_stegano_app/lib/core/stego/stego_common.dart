@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'message_block_autoencoder.dart';
-import 'stego_embed_mode.dart';
 
 /// پیش‌فرض‌ها — `main_steganography.m`
 const double kWatermarkDefaultR = 3.99;
@@ -12,39 +11,23 @@ const double kWatermarkDefaultX0 = 0.45;
 class StegoMessageContext {
   final double r;
   final double x0;
-  final StegoEmbedMode embedMode;
-  final MessageBlockAutoencoder? autoencoder;
+  final MessageBlockAutoencoder autoencoder;
 
   const StegoMessageContext({
     this.r = kWatermarkDefaultR,
     this.x0 = kWatermarkDefaultX0,
-    this.embedMode = StegoEmbedMode.xorOnly,
-    this.autoencoder,
-  }) : assert(
-         embedMode != StegoEmbedMode.aeXor || autoencoder != null,
-         'autoencoder is required when embedMode is ae_xor',
-       );
+    required this.autoencoder,
+  });
 
-  /// `xor_only` یا `ae_xor` — قبل از LSB
+  /// اتوانکدر → XOR با کلید لاجستیک — `embed_mode = ae_xor`
   Uint8List buildPayload(Uint8List binaryMsg, Uint8List key) {
-    if (embedMode == StegoEmbedMode.aeXor) {
-      final encoded = autoencoder!.encodeRounded(binaryMsg);
-      return MessageBlockAutoencoder.buildPayload(encoded, key);
-    }
-    final payload = Uint8List(binaryMsg.length);
-    for (var i = 0; i < binaryMsg.length; i++) {
-      payload[i] = (binaryMsg[i] ^ key[i]) & 1;
-    }
-    return payload;
+    final encoded = autoencoder.encodeRounded(binaryMsg);
+    return MessageBlockAutoencoder.buildPayload(encoded, key);
   }
 
-  /// بعد از XOR با کلید از LSB
-  Uint8List recoverMessageBits(Uint8List payload) {
-    if (embedMode == StegoEmbedMode.aeXor) {
-      return autoencoder!.decodeBits(payload);
-    }
-    return payload;
-  }
+  /// `round(net(...))` پس از XOR — `extract_message.m`
+  Uint8List recoverMessageBits(Uint8List payload) =>
+      autoencoder.decodeBits(payload);
 }
 
 /// `train/stego_common.m` — message_to_bits / bits_to_message

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/stego/stego_embed_mode.dart';
 import 'app_config.dart';
 import 'app_config_provider.dart';
 import 'logistic_param_bounds.dart';
@@ -26,8 +25,6 @@ class AppSettings {
 
   final bool defaultFixedMessageBitLimit;
 
-  final StegoEmbedMode stegoEmbedMode;
-
   const AppSettings({
     required this.themeMode,
 
@@ -44,7 +41,6 @@ class AppSettings {
     required this.x0,
 
     required this.defaultFixedMessageBitLimit,
-    required this.stegoEmbedMode,
   });
 
   factory AppSettings.fromDeploy(AppConfig deploy) => AppSettings(
@@ -63,7 +59,6 @@ class AppSettings {
     x0: LogisticParamBounds.clampX0(deploy.logisticX0),
 
     defaultFixedMessageBitLimit: true,
-    stegoEmbedMode: deploy.defaultStegoEmbedMode,
   );
 
   AppSettings copyWith({
@@ -82,7 +77,6 @@ class AppSettings {
     double? x0,
 
     bool? defaultFixedMessageBitLimit,
-    StegoEmbedMode? stegoEmbedMode,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -101,7 +95,6 @@ class AppSettings {
 
       defaultFixedMessageBitLimit:
           defaultFixedMessageBitLimit ?? this.defaultFixedMessageBitLimit,
-      stegoEmbedMode: stegoEmbedMode ?? this.stegoEmbedMode,
     );
   }
 }
@@ -135,8 +128,6 @@ class SettingsController extends StateNotifier<AppSettings> {
 
   static const _kDefaultFixedMsgBitLimit = 'default_fixed_msg_bit_limit';
 
-  static const _kStegoEmbedMode = 'stego_embed_mode';
-
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
 
@@ -161,9 +152,6 @@ class SettingsController extends StateNotifier<AppSettings> {
       x0: LogisticParamBounds.clampX0(p.getDouble(_kX0) ?? _deploy.logisticX0),
 
       defaultFixedMessageBitLimit: p.getBool(_kDefaultFixedMsgBitLimit) ?? true,
-      stegoEmbedMode: StegoEmbedModeJson.fromConfig(
-        p.getString(_kStegoEmbedMode) ?? _deploy.defaultStegoEmbedMode.configValue,
-      ),
     );
   }
 
@@ -231,12 +219,6 @@ class SettingsController extends StateNotifier<AppSettings> {
     final p = await SharedPreferences.getInstance();
 
     await p.setDouble(_kX0, clamped);
-  }
-
-  Future<void> setStegoEmbedMode(StegoEmbedMode mode) async {
-    state = state.copyWith(stegoEmbedMode: mode);
-    final p = await SharedPreferences.getInstance();
-    await p.setString(_kStegoEmbedMode, mode.configValue);
   }
 
   Future<void> setDefaultFixedMessageBitLimit(bool enabled) async {

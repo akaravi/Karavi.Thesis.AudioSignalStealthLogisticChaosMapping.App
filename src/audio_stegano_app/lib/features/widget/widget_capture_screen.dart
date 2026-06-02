@@ -240,7 +240,6 @@ class _WidgetCaptureScreenState extends ConsumerState<WidgetCaptureScreen> {
         r: settings.r,
         x0: settings.x0,
         fixedMsgBitLength: useFixedLen ? fixedBits : null,
-        embedMode: settings.stegoEmbedMode,
       );
     } catch (e) {
       error = e.toString();

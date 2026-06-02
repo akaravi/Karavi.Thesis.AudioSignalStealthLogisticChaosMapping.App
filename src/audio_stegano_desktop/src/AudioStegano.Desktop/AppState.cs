@@ -31,9 +31,6 @@ public sealed class AppSettings
 
     /// <summary>True after the one-time Open-with prompt was shown (yes or no).</summary>
     public bool WindowsOpenWithOfferSeen { get; set; }
-
-    /// <summary><c>xor_only</c> or <c>ae_xor</c> steganography path.</summary>
-    public StegoEmbedMode StegoEmbedMode { get; set; } = StegoEmbedMode.XorOnly;
 }
 
 public static class AppState
@@ -48,19 +45,15 @@ public static class AppState
 
     public static AppSettings Settings { get; private set; } = new();
 
-    public static EmbedMessage Embed => Settings.StegoEmbedMode == StegoEmbedMode.AeXor
-        ? new EmbedMessage(Settings.R, Settings.X0, StegoEmbedMode.AeXor, TrainedAutoencoder.Instance)
-        : new EmbedMessage(Settings.R, Settings.X0);
+    public static EmbedMessage Embed =>
+        new(Settings.R, Settings.X0, TrainedAutoencoder.Instance);
 
-    public static ExtractMessage Extract => Settings.StegoEmbedMode == StegoEmbedMode.AeXor
-        ? new ExtractMessage(Settings.R, Settings.X0, StegoEmbedMode.AeXor, TrainedAutoencoder.Instance)
-        : new ExtractMessage(Settings.R, Settings.X0);
+    public static ExtractMessage Extract =>
+        new(Settings.R, Settings.X0, TrainedAutoencoder.Instance);
 
     /// <summary>سازگاری با کد قبلی.</summary>
     public static AudioWatermarking Watermarking =>
-        Settings.StegoEmbedMode == StegoEmbedMode.AeXor
-            ? new AudioWatermarking(Settings.R, Settings.X0, StegoEmbedMode.AeXor, TrainedAutoencoder.Instance)
-            : new AudioWatermarking(Settings.R, Settings.X0);
+        new(Settings.R, Settings.X0, TrainedAutoencoder.Instance);
 
     public static void Load()
     {
@@ -69,7 +62,6 @@ public static class AppState
         {
             R = AppConfig.Current.LogisticR,
             X0 = AppConfig.Current.LogisticX0,
-            StegoEmbedMode = StegoEmbedModeParser.FromConfig(AppConfig.Current.DefaultStegoEmbedMode),
         };
         MergeSettingsFromFile(SettingsPath);
     }

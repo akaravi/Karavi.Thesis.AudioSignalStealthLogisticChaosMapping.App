@@ -13,7 +13,6 @@ export 'logistic_map_keygen.dart';
 export 'logistic_positions.dart';
 export 'message_block_autoencoder.dart';
 export 'stego_common.dart';
-export 'stego_embed_mode.dart';
 export 'trained_autoencoder_loader.dart';
 
 import 'dart:typed_data';
@@ -24,7 +23,6 @@ import 'evaluate_stego.dart';
 import 'extract_message.dart';
 import 'message_block_autoencoder.dart';
 import 'stego_common.dart';
-import 'stego_embed_mode.dart';
 
 /// API سازگار با کد قبلی — دروناً از [EmbedMessage] و [ExtractMessage] استفاده می‌کند.
 class AudioWatermarking {
@@ -33,24 +31,20 @@ class AudioWatermarking {
 
   double get r => _embed.ctx.r;
   double get x0 => _embed.ctx.x0;
-  StegoEmbedMode get embedMode => _embed.ctx.embedMode;
-  MessageBlockAutoencoder? get autoencoder => _embed.ctx.autoencoder;
+  MessageBlockAutoencoder get autoencoder => _embed.ctx.autoencoder;
 
   AudioWatermarking({
     double r = kWatermarkDefaultR,
     double x0 = kWatermarkDefaultX0,
-    StegoEmbedMode embedMode = StegoEmbedMode.xorOnly,
-    MessageBlockAutoencoder? autoencoder,
+    required MessageBlockAutoencoder autoencoder,
   })  : _embed = EmbedMessage(
           r: r,
           x0: x0,
-          embedMode: embedMode,
           autoencoder: autoencoder,
         ),
         _extract = ExtractMessage(
           r: r,
           x0: x0,
-          embedMode: embedMode,
           autoencoder: autoencoder,
         );
 
@@ -122,8 +116,11 @@ class LsbExtractResult {
 class LsbCodec {
   final AudioWatermarking _core;
 
-  LsbCodec({double r = kWatermarkDefaultR, double x0 = kWatermarkDefaultX0})
-    : _core = AudioWatermarking(r: r, x0: x0);
+  LsbCodec({
+    double r = kWatermarkDefaultR,
+    double x0 = kWatermarkDefaultX0,
+    required MessageBlockAutoencoder autoencoder,
+  }) : _core = AudioWatermarking(r: r, x0: x0, autoencoder: autoencoder);
 
   WatermarkEmbedResult embedText(WavFile cover, String text) =>
       _core.embedText(cover: cover, text: text);
@@ -154,8 +151,15 @@ class LsbCodec {
 class StegoEngine {
   final AudioWatermarking _core;
 
-  StegoEngine({double r = kWatermarkDefaultR, double x0 = kWatermarkDefaultX0})
-    : _core = AudioWatermarking(r: r, x0: x0);
+  StegoEngine({
+    double r = kWatermarkDefaultR,
+    double x0 = kWatermarkDefaultX0,
+    required MessageBlockAutoencoder autoencoder,
+  }) : _core = AudioWatermarking(
+         r: r,
+         x0: x0,
+         autoencoder: autoencoder,
+       );
 
   WatermarkOutcome embed({required String text, required WavFile cover}) =>
       _core.embed(text: text, cover: cover);

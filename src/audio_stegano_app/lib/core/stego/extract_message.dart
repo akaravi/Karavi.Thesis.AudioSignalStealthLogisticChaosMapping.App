@@ -15,7 +15,6 @@ import 'logistic_map_keygen.dart';
 import 'logistic_positions.dart';
 import 'message_block_autoencoder.dart';
 import 'stego_common.dart';
-import 'stego_embed_mode.dart';
 
 /// `train/extract_message.m`
 class ExtractMessage {
@@ -24,12 +23,10 @@ class ExtractMessage {
   ExtractMessage({
     double r = kWatermarkDefaultR,
     double x0 = kWatermarkDefaultX0,
-    StegoEmbedMode embedMode = StegoEmbedMode.xorOnly,
-    MessageBlockAutoencoder? autoencoder,
+    required MessageBlockAutoencoder autoencoder,
   }) : ctx = StegoMessageContext(
          r: r,
          x0: x0,
-         embedMode: embedMode,
          autoencoder: autoencoder,
        );
 

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:audio_stegano_app/core/audio/wav_io.dart';
 import 'package:audio_stegano_app/core/stego/stego.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 WavFile _sineCover({int seconds = 2, int sampleRate = 44100}) {
@@ -24,10 +25,21 @@ WavFile _sineCover({int seconds = 2, int sampleRate = 44100}) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late MessageBlockAutoencoder autoencoder;
+
+  setUpAll(() async {
+    final json = await rootBundle.loadString(
+      TrainedAutoencoderLoader.assetPath,
+    );
+    autoencoder = MessageBlockAutoencoder.fromJsonString(json);
+  });
+
   group('LSB Codec round-trip (English ASCII)', () {
     test('embeds and extracts short text with known msg_len', () {
       final cover = _sineCover();
-      final codec = LsbCodec();
+      final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'Hello World';
       final bits = MessageBits.fromUtf8Text(msg);
       final result = codec.embedText(cover, msg);
@@ -38,7 +50,7 @@ void main() {
 
     test('embeds and extracts longer paragraph', () {
       final cover = _sineCover(seconds: 4);
-      final codec = LsbCodec();
+      final codec = LsbCodec(autoencoder: autoencoder);
       const msg =
           'Audio steganography is the art of hiding data inside an audio carrier.';
       final bits = MessageBits.fromUtf8Text(msg);
@@ -52,7 +64,7 @@ void main() {
   group('LSB Codec Persian/UTF-8', () {
     test('round-trip Persian text', () {
       final cover = _sineCover(seconds: 4);
-      final codec = LsbCodec();
+      final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'سلام دنیا، این یک پیام نهان‌نگاری شده است.';
       final bits = MessageBits.fromUtf8Text(msg);
       final result = codec.embedText(cover, msg);
@@ -82,8 +94,8 @@ void main() {
   group('LSB Codec security', () {
     test('wrong key (different x0) fails to recover correct text', () {
       final cover = _sineCover();
-      final encoder = LsbCodec(x0: 0.45);
-      final decoder = LsbCodec(x0: 0.46);
+      final encoder = LsbCodec(x0: 0.45, autoencoder: autoencoder);
+      final decoder = LsbCodec(x0: 0.46, autoencoder: autoencoder);
       const msg = 'TopSecret';
       final bits = MessageBits.fromUtf8Text(msg);
       final result = encoder.embedText(cover, msg);
@@ -93,7 +105,7 @@ void main() {
 
     test('capacity check', () {
       final cover = _sineCover(seconds: 1);
-      final codec = LsbCodec();
+      final codec = LsbCodec(autoencoder: autoencoder);
       final tooLong = 'X' * (cover.samples.length);
       expect(() => codec.embedText(cover, tooLong), throwsArgumentError);
     });
@@ -102,7 +114,7 @@ void main() {
   group('Metrics (evaluate_stego.m)', () {
     test('SNR is high and BER is 0 after correct embed_extract', () {
       final cover = _sineCover(seconds: 2);
-      final codec = LsbCodec();
+      final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'Quality test of LSB embedding.';
       final bits = MessageBits.fromUtf8Text(msg);
       final result = codec.embedText(cover, msg);
@@ -138,7 +150,7 @@ void main() {
 
     test('full pipeline: embed -> encode -> decode -> extract', () {
       final cover = _sineCover(seconds: 2);
-      final codec = LsbCodec();
+      final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'پیام کامل با pipeline کامل WAV.';
       final bits = MessageBits.fromUtf8Text(msg);
       final stego = codec.embedText(cover, msg).stego;

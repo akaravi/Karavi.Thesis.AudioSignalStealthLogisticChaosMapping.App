@@ -22,17 +22,18 @@ WavFile _sineCover({int seconds = 4}) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('StegoEngine — ae_xor + trained autoencoder', () {
+  late MessageBlockAutoencoder autoencoder;
+
+  setUpAll(() async {
+    final json = await rootBundle.loadString(
+      TrainedAutoencoderLoader.assetPath,
+    );
+    autoencoder = MessageBlockAutoencoder.fromJsonString(json);
+  });
+
+  group('StegoEngine — trained autoencoder (ae_xor only)', () {
     test('loads weights and runs embed/extract pipeline', () async {
-      final json = await rootBundle.loadString(
-        TrainedAutoencoderLoader.assetPath,
-      );
-      final ae = MessageBlockAutoencoder.fromJsonString(json);
-      expect(ae, isNotNull);
-      final wm = AudioWatermarking(
-        embedMode: StegoEmbedMode.aeXor,
-        autoencoder: ae,
-      );
+      final wm = AudioWatermarking(autoencoder: autoencoder);
       final cover = _sineCover();
       const msg = 'Test';
       final out = wm.embed(text: msg, cover: cover);
@@ -41,13 +42,13 @@ void main() {
         stego: out.stego,
         msgBitLength: out.bitsEmbedded,
       );
-      expect(extracted, isNotNull);
+      expect(extracted, msg);
     });
   });
 
   group('StegoEngine — main_steganography.m flow', () {
     test('embed and extract round-trip with msg_len', () {
-      final eng = StegoEngine();
+      final eng = StegoEngine(autoencoder: autoencoder);
       final cover = _sineCover();
       const msg = 'پیام کامل برای حالت دیجیتال.';
       final out = eng.embed(text: msg, cover: cover);
@@ -56,7 +57,7 @@ void main() {
     });
 
     test('reports evaluate_stego metrics', () {
-      final eng = StegoEngine();
+      final eng = StegoEngine(autoencoder: autoencoder);
       final cover = _sineCover();
       const msg = 'metrics';
       final out = eng.embed(text: msg, cover: cover);
@@ -68,8 +69,8 @@ void main() {
     });
 
     test('wrong key returns null or wrong text', () {
-      final engEnc = StegoEngine(x0: 0.45);
-      final engDec = StegoEngine(x0: 0.46);
+      final engEnc = StegoEngine(x0: 0.45, autoencoder: autoencoder);
+      final engDec = StegoEngine(x0: 0.46, autoencoder: autoencoder);
       final cover = _sineCover();
       final out = engEnc.embed(text: 'Secret', cover: cover);
       final extracted = engDec.extract(out.stego, out.bitsEmbedded);

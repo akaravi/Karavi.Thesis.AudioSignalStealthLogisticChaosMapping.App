@@ -48,14 +48,14 @@ public sealed class MessageBlockAutoencoder
             throw new ArgumentException($"Length must be a multiple of {BlockSize}");
         var nBlocks = msgBits.Length / BlockSize;
         var outVals = new int[msgBits.Length];
-        var x = new double[BlockSize];
+        var block = new double[BlockSize];
         for (var b = 0; b < nBlocks; b++)
         {
             for (var i = 0; i < BlockSize; i++)
-                x[i] = msgBits[b * BlockSize + i];
-            var y = ForwardColumn(x);
+                block[i] = msgBits[b * BlockSize + i];
+            var rounded = NetRoundedBlock(block);
             for (var i = 0; i < BlockSize; i++)
-                outVals[b * BlockSize + i] = (int)Math.Round(y[i]);
+                outVals[b * BlockSize + i] = rounded[i];
         }
         return outVals;
     }
@@ -66,16 +66,43 @@ public sealed class MessageBlockAutoencoder
             throw new ArgumentException($"Length must be a multiple of {BlockSize}");
         var nBlocks = payload.Length / BlockSize;
         var outBits = new byte[payload.Length];
-        var x = new double[BlockSize];
+        var block = new double[BlockSize];
         for (var b = 0; b < nBlocks; b++)
         {
             for (var i = 0; i < BlockSize; i++)
-                x[i] = payload[b * BlockSize + i];
-            var y = ForwardColumn(x);
+                block[i] = payload[b * BlockSize + i];
+            var rounded = NetRoundedBlock(block);
             for (var i = 0; i < BlockSize; i++)
-                outBits[b * BlockSize + i] = (byte)((int)Math.Round(y[i]) & 1);
+                outBits[b * BlockSize + i] = (byte)(rounded[i] & 1);
         }
         return outBits;
+    }
+
+    private int[] NetRoundedBlock(double[] bits01)
+    {
+        var mapped = MapInputBlock(bits01);
+        var yRaw = ForwardColumn(mapped);
+        var y = UnmapOutputBlock(yRaw);
+        var rounded = new int[BlockSize];
+        for (var i = 0; i < BlockSize; i++)
+            rounded[i] = (int)Math.Round(y[i]);
+        return rounded;
+    }
+
+    private static double[] MapInputBlock(double[] bits01)
+    {
+        var mapped = new double[bits01.Length];
+        for (var i = 0; i < bits01.Length; i++)
+            mapped[i] = 2.0 * bits01[i] - 1.0;
+        return mapped;
+    }
+
+    private static double[] UnmapOutputBlock(double[] y)
+    {
+        var outVals = new double[y.Length];
+        for (var i = 0; i < y.Length; i++)
+            outVals[i] = (y[i] + 1.0) / 2.0;
+        return outVals;
     }
 
     public static int XorPayloadBit(int encodedRounded, int keyBit)

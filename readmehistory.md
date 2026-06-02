@@ -1,5 +1,33 @@
 # Change History
 
+## 2026-06-02 — Run all (local dev)
+
+- Build/test: dotnet build OK, dotnet test 14, flutter test 49, flutter analyze clean.
+- `flutter pub get` online 403 → used `dart pub get --offline`.
+- Fixed `lsb_codec_test.dart` for mandatory autoencoder.
+- Services: WPF pid 38076, Flutter Web HTTP 200 at 5320, Flutter Windows exe on 5323.
+- Added `_launch-dev-services.ps1`, `_health-check-dev.ps1`, `_restart-wpf.ps1`, `_restart-flutter-windows.ps1`.
+- `LastRunInfo.html` updated at repo root.
+
+## 2026-06-02 — Autoencoder-only stego (removed xor_only path)
+
+Per user requirement: every embed/extract **must** pass through `trained_autoencoder.mat`.
+
+- Removed `StegoEmbedMode` / `xor_only` branch (Flutter + WPF); deleted `stego_embed_mode.dart` and `StegoEmbedMode.cs`.
+- `StegoMessageContext` always requires `MessageBlockAutoencoder`; pipeline: bits → `round(net(mapminmax))` → XOR → chaotic LSB.
+- `StegoRunner` always loads bundled autoencoder JSON; removed `DefaultStegoEmbedMode` from all `appsettings.json`.
+- Removed settings UI toggle for embed mode; `settings.stegoEmbedMode` dropped from Flutter settings.
+- Tests updated: Flutter 8 + WPF 14 passed.
+
+## 2026-06-02 — Stego audit: mapminmax + settings UI for ae_xor
+
+Verified full pipeline against `train/embed_message.m` / `extract_message.m`:
+
+- **Default runtime mode is `xor_only`** (`appsettings.json` → `DefaultStegoEmbedMode`) — autoencoder is **not** invoked unless mode is `ae_xor` (same default as MATLAB script).
+- **`MessageBlockAutoencoder`**: added input/output `mapminmax` (bits [0,1] ↔ [-1,1]) so `round(net(...))` matches MATLAB `net()` preprocessing; `decodeBits` uses the same forward path as `encodeRounded`.
+- **Flutter settings**: new segmented control **XOR only / Autoencoder + XOR** (`settings.stegoEmbedMode`); embed/extract screens already pass this to `StegoRunner`.
+- Tests: Flutter `ae_xor` round-trip asserts exact text; WPF `AeXor_LoadsEmbeddedWeights_And_Embeds` asserts `"Test"`.
+
 ## 2026-06-01 — Rename stego files to embed_message / extract_message (MATLAB parity)
 
 Flutter (`lib/core/stego/`): `embed_message.dart` (`EmbedMessage`), `extract_message.dart` (`ExtractMessage`), plus `stego_common.dart`, `logistic_map_keygen.dart`, `logistic_positions.dart`, `evaluate_stego.dart`. WPF: `EmbedMessage.cs`, `ExtractMessage.cs`, `StegoMessageContext.cs`. `AudioWatermarking` remains a thin compatibility wrapper.
