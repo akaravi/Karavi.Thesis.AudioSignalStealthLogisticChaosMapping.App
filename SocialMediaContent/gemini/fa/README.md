@@ -28,6 +28,6 @@
 ## لینک‌ها
 
 - مایکت: https://myket.ir/app/ir.ntk.audiowmark.app  
-- سایت: http://xwave.ir  
+- سایت: http://xwav.ir  
 
 نسخه انگلیسی: [`../en/`](../en/)

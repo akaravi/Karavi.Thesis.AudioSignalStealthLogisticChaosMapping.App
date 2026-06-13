@@ -39,7 +39,7 @@ def main() -> None:
         out = WP_ROOT / locale / "images"
         out.mkdir(parents=True, exist_ok=True)
         banner(out, "Audio Stegano", "Download on Myket — ir.ntk.audiowmark.app", "banner-myket-download.webp")
-        banner(out, "XWave", "Project website — xwave.ir", "banner-xwave-site.webp", accent=(63, 81, 181))
+        banner(out, "XWave", "Project website — xwav.ir", "banner-xwave-site.webp", accent=(63, 81, 181))
         print(f"OK {locale}/banners")
 
 

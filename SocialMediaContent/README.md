@@ -23,4 +23,4 @@ python SocialMediaContent/wordpress/scripts/convert-screenshots-to-webp.py
 ## Links
 
 - **Myket:** https://myket.ir/app/ir.ntk.audiowmark.app  
-- **Site:** http://xwave.ir  
+- **Site:** http://xwav.ir  

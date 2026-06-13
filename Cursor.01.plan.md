@@ -535,8 +535,8 @@
     "post-content.html with H1/H2/H3, 4+ paragraphs, max ~30 words per sentence",
     "10 WordPress tags in seo-meta.json",
     "featured-splash-intro.webp as featured image",
-    "Myket and xwave.ir link banners with images",
-    "internal links xwave.ir + category/apps; external Myket, GitHub, NTK"
+    "Myket and xwav.ir link banners with images",
+    "internal links xwav.ir + category/apps; external Myket, GitHub, NTK"
   ]
 }
 ```

@@ -11,10 +11,10 @@
   "seoTitle": "صوت‌نهان | نرم‌افزار نهان‌نگاری پیام در فایل صوتی — دانلود از مایکت",
   "metaDescription": "آموزش کامل صوت‌نهان: نهان‌نگاری پیام در WAV با LSB و نقشه آشوب لاجستیک. گام‌به‌گام embed و extract. دانلود از مایکت.",
   "slug": "sot-nehan-audio-steganography-app",
-  "canonicalUrl": "https://xwave.ir/sot-nehan-audio-steganography-app/",
+  "canonicalUrl": "https://xwav.ir/sot-nehan-audio-steganography-app/",
   "ogTitle": "صوت‌نهان — نهان‌نگاری پیام در سیگنال صوتی",
   "ogDescription": "پیام متنی را داخل فایل صوتی پنهان کنید و با همان کلید بازیابی کنید. اپ اندروید NTK — دانلود از مایکت.",
-  "ogImage": "https://xwave.ir/wp-content/uploads/sot-nehan/fa/featured-splash-intro.webp",
+  "ogImage": "https://xwav.ir/wp-content/uploads/sot-nehan/fa/featured-splash-intro.webp",
   "ogType": "article",
   "ogLocale": "fa_IR",
   "twitterCard": "summary_large_image",
@@ -45,17 +45,17 @@
   ],
   "internalLinks": [
     {
-      "url": "https://xwave.ir/",
+      "url": "https://xwav.ir/",
       "anchor": "XWave",
       "rel": ""
     },
     {
-      "url": "https://xwave.ir/category/apps/",
+      "url": "https://xwav.ir/category/apps/",
       "anchor": "اپلیکیشن‌های XWave",
       "rel": ""
     },
     {
-      "url": "https://xwave.ir/en/audio-steganography-app-sot-nehan/",
+      "url": "https://xwav.ir/en/audio-steganography-app-sot-nehan/",
       "anchor": "نسخه انگلیسی این پست",
       "rel": "alternate"
     }

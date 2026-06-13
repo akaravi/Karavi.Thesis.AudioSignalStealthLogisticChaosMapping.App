@@ -2,7 +2,7 @@
 
 Parent: [`../`](../) (`SocialMediaContent`)
 
-Ready-to-publish WordPress content for [xwave.ir](http://xwave.ir) about **Audio Stegano** (*Sot-Nehan*).
+Ready-to-publish WordPress content for [xwav.ir](http://xwav.ir) about **Audio Stegano** (*Sot-Nehan*).
 
 | Locale | Folder | Language |
 |--------|--------|----------|
@@ -24,7 +24,7 @@ Ready-to-publish WordPress content for [xwave.ir](http://xwave.ir) about **Audio
 ## Main links
 
 - **App (Myket):** https://myket.ir/app/ir.ntk.audiowmark.app  
-- **Site:** http://xwave.ir  
+- **Site:** http://xwav.ir  
 
 ## Regenerate images (both locales)
 

@@ -11,7 +11,7 @@
     "targetTool": "Google Gemini — Create Video (Veo 3.1 / Veo 3.1 Fast)",
     "targetUrls": {
       "myket": "https://myket.ir/app/ir.ntk.audiowmark.app",
-      "xwave": "http://xwave.ir/en/",
+      "xwave": "http://xwav.ir/en/",
       "github": "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App"
     },
     "notes": [
@@ -160,8 +160,8 @@
       "referenceImageId": "splash",
       "referenceImagePath": "SocialMediaContent/wordpress/en/images/featured-splash-intro.webp",
       "veoPrompt": "Cinematic outro: app splash screenshot fades to minimal end card. Logos area for NTK and XWave as text placeholders. Teal particle field settles. Thesis tagline area subtle. Professional research app closing 2026. 16:9.",
-      "onScreenText": "NTK · xwave.ir · Thesis research",
-      "voiceover": "Audio Stegano — NTK research. Details at xwave.ir.",
+      "onScreenText": "NTK · xwav.ir · Thesis research",
+      "voiceover": "Audio Stegano — NTK research. Details at xwav.ir.",
       "sfx": "Soft outro fade",
       "transitionOut": "fade to black"
     }
@@ -187,8 +187,8 @@
       "Stitch clips in sceneNumber order (CapCut, DaVinci Resolve, or Premiere).",
       "Align voiceover per scene timecode.",
       "Add musicDirection bed at -18dB.",
-      "End card: Myket URL plus xwave.ir for 2 seconds.",
-      "Export H.264 1080p 16:9 for Myket listing and xwave.ir embed."
+      "End card: Myket URL plus xwav.ir for 2 seconds.",
+      "Export H.264 1080p 16:9 for Myket listing and xwav.ir embed."
     ]
   },
   "geminiStudioQuickPaste": {

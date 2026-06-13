@@ -177,7 +177,7 @@ Ran `.\_update-ver.ps1` (patch +1). Synced:
 
 ## 2026-06-13 — WordPress post folder (Part 73)
 
-- Created `wordpress/` with SEO post for **صوت‌نهان** (xwave.ir / Myket).
+- Created `wordpress/` with SEO post for **صوت‌نهان** (xwav.ir / Myket).
 - `post-content.html` — headings, short sentences, internal/external links, image alt/title.
 - `seo-meta.json` — focus keyword, meta description, OG, 10 suggested tags.
 - `schema-software-application.jsonld` — Schema.org SoftwareApplication.

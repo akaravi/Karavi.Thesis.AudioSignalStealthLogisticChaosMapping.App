@@ -11,7 +11,7 @@
     "targetTool": "Google Gemini — Create Video (Veo 3.1 / Veo 3.1 Fast)",
     "targetUrls": {
       "myket": "https://myket.ir/app/ir.ntk.audiowmark.app",
-      "xwave": "http://xwave.ir",
+      "xwave": "http://xwav.ir",
       "github": "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App"
     },
     "notes": [
@@ -161,7 +161,7 @@
       "referenceImagePath": "SocialMediaContent/wordpress/fa/images/featured-splash-intro.webp",
       "veoPrompt": "Cinematic outro: app splash screenshot fades to minimal end card. Logos area for NTK and XWave as text placeholders EN only. Teal particle field settles. Thesis tagline area subtle. Professional research app closing 2026. 16:9.",
       "onScreenTextDiacritics": "پژوهِش پَایان‌نَامِه — N T K",
-      "voiceoverDiacritics": "صَوتُ‌نِهَان؛ محصولِ پژوهِشی N T K. جَزئیات در xwave.ir.",
+      "voiceoverDiacritics": "صَوتُ‌نِهَان؛ محصولِ پژوهِشی N T K. جَزئیات در xwav.ir.",
       "sfx": "فید اوت نرم",
       "transitionOut": "fade to black"
     }
@@ -187,8 +187,8 @@
       "چسباندن کلیپ‌ها به ترتیب sceneNumber.",
       "هم‌تراز کردن voiceoverDiacritics با timecode هر صحنه.",
       "موسیقی musicDirection در -18dB.",
-      "کارت پایان: لینک مایکت + xwave.ir به مدت ۲ ثانیه.",
-      "خروجی H.264 1080p 16:9 برای مایکت و xwave.ir"
+      "کارت پایان: لینک مایکت + xwav.ir به مدت ۲ ثانیه.",
+      "خروجی H.264 1080p 16:9 برای مایکت و xwav.ir"
     ]
   },
   "geminiStudioQuickPaste": {

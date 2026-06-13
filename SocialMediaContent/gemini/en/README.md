@@ -24,6 +24,6 @@ From [`../../wordpress/en/images/`](../../wordpress/en/images/)
 ## Links
 
 - Myket: https://myket.ir/app/ir.ntk.audiowmark.app  
-- Site: http://xwave.ir/en/  
+- Site: http://xwav.ir/en/  
 
 Persian version: [`../fa/`](../fa/)

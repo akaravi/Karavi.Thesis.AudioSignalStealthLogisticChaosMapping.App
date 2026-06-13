@@ -1,6 +1,6 @@
 # WordPress — پست صوت‌نهان (فارسی)
 
-محتوای آماده انتشار برای [xwave.ir](http://xwave.ir) — locale: **`fa`**
+محتوای آماده انتشار برای [xwav.ir](http://xwav.ir) — locale: **`fa`**
 
 نسخه انگلیسی: [`../en/`](../en/)
 ## فایل‌ها
@@ -42,7 +42,7 @@
 ## لینک‌های اصلی
 
 - **اپ:** https://myket.ir/app/ir.ntk.audiowmark.app  
-- **سایت:** http://xwave.ir  
+- **سایت:** http://xwav.ir  
 
 ## مراحل انتشار در WordPress
 
@@ -62,7 +62,7 @@
 - [x] Canonical و OG image  
 - [x] Alt و title برای همه تصاویر  
 - [x] `loading="lazy"` (به‌جز featured)  
-- [x] لینک داخلی: xwave.ir، category/apps  
+- [x] لینک داخلی: xwav.ir، category/apps  
 - [x] لینک خارجی: مایکت، GitHub، NTK  
 - [x] Schema SoftwareApplication  
 - [x] جملات کوتاه (حداکثر ~۳۰ کلمه)  

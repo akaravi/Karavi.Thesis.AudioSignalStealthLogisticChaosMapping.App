@@ -1,6 +1,6 @@
 # WordPress — Audio Stegano post (English)
 
-Ready-to-publish content for [xwave.ir](http://xwave.ir/en/) — locale: **`en`**
+Ready-to-publish content for [xwav.ir](http://xwav.ir/en/) — locale: **`en`**
 
 ## Files
 
@@ -31,7 +31,7 @@ Ready-to-publish content for [xwave.ir](http://xwave.ir/en/) — locale: **`en`*
 ## Main links
 
 - **App:** https://myket.ir/app/ir.ntk.audiowmark.app  
-- **Site:** http://xwave.ir/en/  
+- **Site:** http://xwav.ir/en/  
 - **Persian post:** [`../fa/`](../fa/)
 
 ## Publish checklist
@@ -51,7 +51,7 @@ Ready-to-publish content for [xwave.ir](http://xwave.ir/en/) — locale: **`en`*
 - [x] Meta description under 160 characters  
 - [x] Canonical + OG image  
 - [x] Alt and title on every image  
-- [x] Internal links: xwave.ir/en, category/apps, fa post  
+- [x] Internal links: xwav.ir/en, category/apps, fa post  
 - [x] External links: Myket, GitHub, NTK  
 - [x] Schema SoftwareApplication  
 - [x] Short sentences (max ~30 words)  
