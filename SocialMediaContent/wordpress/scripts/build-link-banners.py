@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = Path(__file__).resolve().parents[2]
+WP_ROOT = Path(__file__).resolve().parents[1]
 LOCALES = ("fa", "en")
 
 
@@ -36,7 +36,7 @@ def banner(out: Path, title: str, subtitle: str, fname: str, *, bg=(24, 32, 48),
 
 def main() -> None:
     for locale in LOCALES:
-        out = ROOT / "wordpress" / locale / "images"
+        out = WP_ROOT / locale / "images"
         out.mkdir(parents=True, exist_ok=True)
         banner(out, "Audio Stegano", "Download on Myket — ir.ntk.audiowmark.app", "banner-myket-download.webp")
         banner(out, "XWave", "Project website — xwave.ir", "banner-xwave-site.webp", accent=(63, 81, 181))

@@ -72,8 +72,8 @@
 ## تولید مجدد WebP
 
 ```powershell
-python wordpress/scripts/convert-screenshots-to-webp.py
-python wordpress/scripts/build-link-banners.py
+python SocialMediaContent/wordpress/scripts/convert-screenshots-to-webp.py
+python SocialMediaContent/wordpress/scripts/build-link-banners.py
 ```
 
 اسکرین‌شات‌ها از `docs/cafebazaar/screenshots_16x9/` کپی می‌شوند.

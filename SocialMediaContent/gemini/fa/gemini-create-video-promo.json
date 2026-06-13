@@ -1,0 +1,206 @@
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "gemini-create-video-prompt",
+  "locale": "fa",
+  "metadata": {
+    "title": "صَوتُ‌نِهَان — فیلم تبلیغاتی Gemini Veo",
+    "project": "Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App",
+    "appId": "ir.ntk.audiowmark.app",
+    "appNameDiacritics": "صَوتُ‌نِهَان",
+    "createdAt": "2026-06-13",
+    "targetTool": "Google Gemini — Create Video (Veo 3.1 / Veo 3.1 Fast)",
+    "targetUrls": {
+      "myket": "https://myket.ir/app/ir.ntk.audiowmark.app",
+      "xwave": "http://xwave.ir",
+      "github": "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App"
+    },
+    "notes": [
+      "حالت image-to-video برای هر صحنه با مسیر referenceImagePath.",
+      "گوینده فارسی: فقط فیلدهای voiceoverDiacritics (با اِعْرَاب کامل).",
+      "متن روی بنرهای raster فقط انگلیسی است.",
+      "کلیپ‌ها را به ترتیب sceneNumber بچسبانید؛ مجموع ~۵۴ ثانیه."
+    ]
+  },
+  "veoConfig": {
+    "modelRecommended": "veo-3.1-fast-generate-preview",
+    "modelAlternative": "veo-3.1-generate-preview",
+    "aspectRatio": "16:9",
+    "resolution": "1080p",
+    "durationSecondsPerClip": 6,
+    "enhancePrompt": true,
+    "generateAudio": true,
+    "negativePrompt": "blurry text, misspelled Persian, distorted UI, watermark, low quality, shaky cam, cartoonish, outdated 2010 UI, stock photo people, cluttered layout, wrong app screenshots"
+  },
+  "visualStyle": {
+    "era": "مدرن ۲۰۲۶",
+    "mood": "فناوری ممتاز، قابل اعتماد، سینمایی و تمیز",
+    "colorPalette": {
+      "primary": "#009688",
+      "secondary": "#1E293B",
+      "accent": "#6366F1",
+      "background": "گرادیان slate تیره با درخشش teal ملایم"
+    },
+    "motion": "Ken Burns نرم روی اسکرین‌شات، parallax کم، بدون برش خشن",
+    "typographyOnScreen": "فارسی فقط با اِعْرَاب کامل روی فریم؛ ترجیحاً آیکن و برچسب انگلیسی در موشن‌گرافیک",
+    "deviceFrame": "ماکاپ اندروید بدون bezel، زاویه سه‌بعدی ملایم"
+  },
+  "referenceImagesBasePath": "SocialMediaContent/wordpress/fa/images",
+  "referenceImages": [
+    { "id": "splash", "file": "featured-splash-intro.webp", "usage": "صحنه‌های ۱ و ۹ — معرفی و پایان" },
+    { "id": "icon", "file": "app-icon-256.webp", "usage": "صحنه ۲ — آیکن اپ" },
+    { "id": "embed-input", "file": "embed-message-input.webp", "usage": "صحنه ۳ — تب نهان‌نگاری" },
+    { "id": "waveform", "file": "embed-waveform-metrics.webp", "usage": "صحنه ۴ — موج و متریک" },
+    { "id": "bit-length", "file": "embed-message-length-dialog.webp", "usage": "صحنه ۵ — دیالوگ طول بیت" },
+    { "id": "extract-result", "file": "extract-recovered-text.webp", "usage": "صحنه ۶ — متن بازیابی‌شده" },
+    { "id": "settings", "file": "settings-theme-language.webp", "usage": "صحنه ۷ — تنظیمات و حریم خصوصی" },
+    { "id": "myket-banner", "file": "banner-myket-download.webp", "usage": "صحنه ۸ — فراخوان دانلود" }
+  ],
+  "fullScenarioDiacritics": "فیلم تبلیغاتی ۵۴ ثانیه‌ای: مَوجِ صَدا → پِنهَان‌سازی پِیغَام → استِخراج با کِلید → حِفظ حَریم خَصُوصی → دانلود از مایکِت. هر صحنه ۶ ثانیه، استایل مدرن ۲۰۲۶، اسکرین‌شات واقعی اپ.",
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "timecode": "00:00–00:06",
+      "titleDiacritics": "شروع — صَدا راز پنهان می‌کند",
+      "referenceImageId": "splash",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/featured-splash-intro.webp",
+      "veoPrompt": "Cinematic 16:9 tech promo 2026. Start from the provided mobile app splash screenshot on a floating bezel-less phone. Slow Ken Burns zoom-in. Abstract teal audio waveform particles rise from the screen and dissolve into glowing binary bits. Dark slate background with soft volumetric light. Premium fintech aesthetic. Smooth motion, shallow depth of field. No readable garbled text. End frame holds app branding area.",
+      "onScreenTextDiacritics": "پِیغَام، دَاخِلِ صَدا",
+      "voiceoverDiacritics": "پِیغَامِ شُما، دَاخِلِ مَوجِ صَدا پِنْهَان می‌شَوَد.",
+      "sfx": "ضربان محیطی نرم، whoosh ملایم",
+      "transitionOut": "crossfade 0.4s"
+    },
+    {
+      "sceneNumber": 2,
+      "timecode": "00:06–00:12",
+      "titleDiacritics": "معرفی اپ",
+      "referenceImageId": "icon",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/app-icon-256.webp",
+      "veoPrompt": "Hero reveal of the provided app icon centered on a modern 2026 gradient background teal and indigo. Icon scales up with elastic ease, gentle lens flare, floating shadow. Clean minimal motion graphics rings orbit the icon. Premium Android app launch aesthetic. 16:9 cinematic.",
+      "onScreenTextDiacritics": "صَوتُ‌نِهَان",
+      "voiceoverDiacritics": "صَوتُ‌نِهَان؛ نُهَان‌نَگَارِی صَوْتِی پِیشْرَفْتِه برای اندروید.",
+      "sfx": "زنگ برند سبک",
+      "transitionOut": "match cut to phone UI"
+    },
+    {
+      "sceneNumber": 3,
+      "timecode": "00:12–00:18",
+      "titleDiacritics": "نهان‌نگاری — نوشتن پیام",
+      "referenceImageId": "embed-input",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/embed-message-input.webp",
+      "veoPrompt": "Image-to-video using provided app screenshot of embed screen on floating phone mockup. Simulate finger typing in message field, subtle UI glow on primary button. Camera slowly orbits 5 degrees. Modern Material 3 style, light theme. Keep UI sharp and readable. 2026 product demo look.",
+      "onScreenTextDiacritics": "مَتْنِ پِیغَام را بِنَویسید",
+      "voiceoverDiacritics": "مَتْن را بِنَویسید؛ سپَس صَدا را ضَبْط کُنید یا فَایْل بارگذاری کُنید.",
+      "sfx": "ضربه کیبورد نرم",
+      "transitionOut": "slide left"
+    },
+    {
+      "sceneNumber": 4,
+      "timecode": "00:18–00:24",
+      "titleDiacritics": "پردازش — نمودار موج",
+      "referenceImageId": "waveform",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/embed-waveform-metrics.webp",
+      "veoPrompt": "Animate provided screenshot showing dual audio waveforms and quality metrics. Waveforms draw left-to-right with glowing teal trace. Metric cards fade in sequentially SNR PSNR. Futuristic but clean data visualization overlay. Floating phone, dark reflective surface. 16:9 tech demo 2026.",
+      "onScreenTextDiacritics": "کِلیدِ آشُوبِ لاجِسْتِیک",
+      "voiceoverDiacritics": "الگوریتم L S B و کِلیدِ آشُوبِ لاجِسْتِیک؛ اَمْن و دَقِیق.",
+      "sfx": "هوم پردازش داده، پینگ موج",
+      "transitionOut": "zoom to dialog"
+    },
+    {
+      "sceneNumber": 5,
+      "timecode": "00:24–00:30",
+      "titleDiacritics": "مهم — طول پیام به بیت",
+      "referenceImageId": "bit-length",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/embed-message-length-dialog.webp",
+      "veoPrompt": "Focus push-in on provided screenshot dialog showing message bit length number. Pulse highlight on the numeric value. Warning-style soft amber ring then teal confirm glow. Emphasize importance without clutter. Modern dialog UI on phone mockup. 16:9.",
+      "onScreenTextDiacritics": "طُولِ پِیغَام را یادداشت کُنید",
+      "voiceoverDiacritics": "طُولِ پِیغَام به بیت را حَتْماً یادداشت کُنید؛ برای بازیابی ضَرُوری است.",
+      "sfx": "هشدار ملایم",
+      "transitionOut": "crossfade"
+    },
+    {
+      "sceneNumber": 6,
+      "timecode": "00:30–00:36",
+      "titleDiacritics": "رمزگشایی — بازیابی متن",
+      "referenceImageId": "extract-result",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/extract-recovered-text.webp",
+      "veoPrompt": "Image-to-video from extract result screenshot. Recovered text card slides up with success green accent. Checkmark animation. Phone mockup on clean desk with soft daylight. Satisfying reveal moment. Premium app demo 2026. 16:9.",
+      "onScreenTextDiacritics": "پِیغَام را بِخوانید",
+      "voiceoverDiacritics": "با هَمان کِلید، پِیغَام را از فَایْلِ صَوْتِی استِخراج کُنید.",
+      "sfx": "زنگ موفقیت",
+      "transitionOut": "fade"
+    },
+    {
+      "sceneNumber": 7,
+      "timecode": "00:36–00:42",
+      "titleDiacritics": "حریم خصوصی — روی دستگاه",
+      "referenceImageId": "settings",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/settings-theme-language.webp",
+      "veoPrompt": "Show provided settings screenshot toggling light to dark theme smoothly. Language chips highlight EN FA AR FR. Shield icon overlay animation suggesting on-device privacy. No cloud upload visual metaphor crossed cloud icon. Modern 2026 security app aesthetic. 16:9.",
+      "onScreenTextDiacritics": "پردازِش روی دَسْتْگاهِ شُما",
+      "voiceoverDiacritics": "هَمه‌چیز روی دَسْتْگاهِ شُما پردازِش می‌شَوَد؛ بدون اِرسالِ خودکار.",
+      "sfx": "کلیک تاگل، درخشش سپر",
+      "transitionOut": "slide up"
+    },
+    {
+      "sceneNumber": 8,
+      "timecode": "00:42–00:48",
+      "titleDiacritics": "فراخوان — دانلود مایکت",
+      "referenceImageId": "myket-banner",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/banner-myket-download.webp",
+      "veoPrompt": "Animate provided Myket download banner sliding into center with depth. QR-style pulse near download area without real QR. Myket brand colors subtly in background particles. Call-to-action energy, clean 2026 app store promo. English text on banner stays sharp. 16:9.",
+      "onScreenTextDiacritics": "دانلود از مایکِت",
+      "voiceoverDiacritics": "اکنون صَوتُ‌نِهَان را از مایکِت دانلود کُنید.",
+      "sfx": "CTA upbeat",
+      "transitionOut": "crossfade"
+    },
+    {
+      "sceneNumber": 9,
+      "timecode": "00:48–00:54",
+      "titleDiacritics": "پایان — NTK و XWave",
+      "referenceImageId": "splash",
+      "referenceImagePath": "SocialMediaContent/wordpress/fa/images/featured-splash-intro.webp",
+      "veoPrompt": "Cinematic outro: app splash screenshot fades to minimal end card. Logos area for NTK and XWave as text placeholders EN only. Teal particle field settles. Thesis tagline area subtle. Professional research app closing 2026. 16:9.",
+      "onScreenTextDiacritics": "پژوهِش پَایان‌نَامِه — N T K",
+      "voiceoverDiacritics": "صَوتُ‌نِهَان؛ محصولِ پژوهِشی N T K. جَزئیات در xwave.ir.",
+      "sfx": "فید اوت نرم",
+      "transitionOut": "fade to black"
+    }
+  ],
+  "voiceoverFullDiacritics": "پِیغَامِ شُما، دَاخِلِ مَوجِ صَدا پِنْهَان می‌شَوَد. صَوتُ‌نِهَان؛ نُهَان‌نَگَارِی صَوْتِی پِیشْرَفْتِه برای اندروید. مَتْن را بِنَویسید؛ سپَس صَدا را ضَبْط کُنید یا فَایْل بارگذاری کُنید. الگوریتم L S B و کِلیدِ آشُوبِ لاجِسْتِیک؛ اَمْن و دَقِیق. طُولِ پِیغَام به بیت را حَتْماً یادداشت کُنید. با هَمان کِلید، پِیغَام را استِخراج کُنید. هَمه‌چیز روی دَسْتْگاهِ شُما. اکنون از مایکِت دانلود کُنید.",
+  "musicDirection": {
+    "genre": "الکترونیک سینمایی مدرن",
+    "bpm": "90-100",
+    "mood": "مطمئن، نوآورانه، تمیز",
+    "reference": "لانچ محصول فناوری ۲۰۲۶",
+    "ducking": "Sidechain زیر گوینده -3dB"
+  },
+  "assemblyInstructions": {
+    "order": "صحنه‌های ۱ تا ۹ را پشت سر هم در حالت image-to-video بسازید.",
+    "perSceneWorkflow": [
+      "referenceImagePath را به عنوان فریم شروع آپلود کنید.",
+      "veoPrompt را در فیلد prompt قرار دهید.",
+      "aspectRatio 16:9، resolution 1080p، duration 6s.",
+      "voiceoverDiacritics را در TTS فارسی یا ضبط دستی استفاده کنید.",
+      "خروجی: s01-hook.mp4 تا s09-outro.mp4"
+    ],
+    "postProduction": [
+      "چسباندن کلیپ‌ها به ترتیب sceneNumber.",
+      "هم‌تراز کردن voiceoverDiacritics با timecode هر صحنه.",
+      "موسیقی musicDirection در -18dB.",
+      "کارت پایان: لینک مایکت + xwave.ir به مدت ۲ ثانیه.",
+      "خروجی H.264 1080p 16:9 برای مایکت و xwave.ir"
+    ]
+  },
+  "geminiStudioQuickPaste": {
+    "singleCombinedPromptForManualMode": "فیلم تبلیغاتی ۵۴ ثانیه‌ای مدرن ۲۰۲۶ برای اپ اندروید صَوتُ‌نِهَان (نهان‌نگاری صوتی). ۹ کلیپ ۶ ثانیه‌ای. image-to-video از اسکرین‌شات‌های اپ. استایل teal/indigo، ماکاپ گوشی شناور، Ken Burns نرم. داستان: پنهان‌سازی متن در صوت → کلید آشوب LSB → ذخیره طول بیت → استخراج → حریم خصوصی روی دستگاه → دانلود مایکت. گوینده فارسی با اِعْرَاب کامل در scenes[].voiceoverDiacritics. متن فارسی بدون اِعْرَاب روی فریم نسازید.",
+    "negativePrompt": "UI تار، حروف فارسی اشتباه، کارتون، طراحی قدیمی، واترمارک"
+  },
+  "ttsSettings": {
+    "language": "fa-IR",
+    "useDiacriticsField": "voiceoverDiacritics",
+    "speakingRate": 0.95,
+    "pitch": 0,
+    "emphasis": "لحن آکادمیک-تبلیغاتی واضح، نه رباتیک",
+    "warning": "هرگز فارسی بدون اِعْرَاب در TTS استفاده نکنید"
+  }
+}

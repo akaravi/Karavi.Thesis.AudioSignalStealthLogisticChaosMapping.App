@@ -202,3 +202,24 @@ Ran `.\_update-ver.ps1` (patch +1). Synced:
 - Root `wordpress/README.md` indexes both locales; scripts output to `fa/images` and `en/images`.
 - Cross-links between fa and en posts in seo-meta and post footers.
 
+## 2026-06-13 — Gemini Create Video JSON prompt (Part 75)
+
+- `wordpress/gemini-create-video-promo.json` — 9-scene Veo 3.1 promo (~54s), image-to-video from fa/images, Persian voiceover with full diacritics.
+- `wordpress/GEMINI-VIDEO-README.md` — usage guide for Gemini Create Video.
+
+## 2026-06-13 — Move wordpress to SocialMediaContent (Part 76)
+
+- `wordpress/` → `SocialMediaContent/wordpress/` (fa, en, scripts, images, Gemini JSON).
+- Added `SocialMediaContent/README.md`; updated all path references and Python scripts (`WP_ROOT`, `REPO_ROOT`).
+
+## 2026-06-13 — Move Gemini to SocialMediaContent/gemini (Part 77)
+
+- `gemini-create-video-promo.json` + guide → `SocialMediaContent/gemini/` (`README.md`).
+- Removed Gemini section from `SocialMediaContent/wordpress/README.md`; cross-link to `../gemini/`.
+
+## 2026-06-13 — Gemini fa/en split (Part 78)
+
+- `SocialMediaContent/gemini/fa/` — Persian prompt (`voiceoverDiacritics`, full tashkil), images from `wordpress/fa/images/`.
+- `SocialMediaContent/gemini/en/` — fully English prompt (`voiceover`, `onScreenText`), images from `wordpress/en/images/`.
+- Per-locale `README.md`; root `gemini/README.md` indexes both; deleted root `gemini-create-video-promo.json`.
+

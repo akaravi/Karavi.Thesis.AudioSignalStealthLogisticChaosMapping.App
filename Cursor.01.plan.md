@@ -589,3 +589,98 @@
   }
 }
 ```
+
+---
+
+## Part 75 — Gemini Create Video promo JSON
+
+```json
+{
+  "part": 75,
+  "title": "gemini-create-video-promo.json for Veo 3.1 promotional film",
+  "status": "done"
+}
+```
+
+## Result 75
+
+```json
+{
+  "part": 75,
+  "status": "done",
+  "file": "wordpress/gemini-create-video-promo.json",
+  "scenes": 9,
+  "durationSeconds": 54,
+  "persianRule": "voiceoverFaDiacritics with full tashkil for TTS"
+}
+```
+
+---
+
+## Part 76 — Move wordpress → SocialMediaContent/wordpress
+
+```json
+{
+  "part": 76,
+  "title": "Relocate wordpress folder under SocialMediaContent",
+  "status": "done"
+}
+```
+
+## Result 76
+
+```json
+{
+  "part": 76,
+  "status": "done",
+  "newPath": "SocialMediaContent/wordpress/",
+  "scriptsUpdated": ["convert-screenshots-to-webp.py", "build-link-banners.py"]
+}
+```
+
+---
+
+## Part 77 — Gemini → SocialMediaContent/gemini
+
+```json
+{
+  "part": 77,
+  "title": "Move Gemini promo files to SocialMediaContent/gemini",
+  "status": "done"
+}
+```
+
+## Result 77
+
+```json
+{
+  "part": 77,
+  "status": "done",
+  "newPath": "SocialMediaContent/gemini/gemini-create-video-promo.json"
+}
+```
+
+---
+
+## Part 78 — Gemini prompts split fa / en
+
+```json
+{
+  "part": 78,
+  "title": "Split gemini prompts into fa/ and en/ locales",
+  "status": "done"
+}
+```
+
+## Result 78
+
+```json
+{
+  "part": 78,
+  "status": "done",
+  "paths": [
+    "SocialMediaContent/gemini/fa/gemini-create-video-promo.json",
+    "SocialMediaContent/gemini/en/gemini-create-video-promo.json"
+  ]
+}
+```

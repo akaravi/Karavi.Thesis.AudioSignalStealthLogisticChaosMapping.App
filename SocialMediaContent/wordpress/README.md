@@ -1,11 +1,15 @@
 # WordPress — Audio Stegano posts
 
-Ready-to-publish WordPress content for [xwave.ir](http://xwave.ir) about **Audio Stegano** (Persian name: *Sot-Nehan*).
+Parent: [`../`](../) (`SocialMediaContent`)
+
+Ready-to-publish WordPress content for [xwave.ir](http://xwave.ir) about **Audio Stegano** (*Sot-Nehan*).
 
 | Locale | Folder | Language |
 |--------|--------|----------|
 | Persian | [`fa/`](fa/) | `fa_IR`, RTL |
 | English | [`en/`](en/) | `en_US`, LTR |
+
+> Gemini Veo promo video: [`../gemini/`](../gemini/)
 
 ## Files per locale
 
@@ -25,7 +29,7 @@ Ready-to-publish WordPress content for [xwave.ir](http://xwave.ir) about **Audio
 ## Regenerate images (both locales)
 
 ```powershell
-python wordpress/scripts/convert-screenshots-to-webp.py
+python SocialMediaContent/wordpress/scripts/convert-screenshots-to-webp.py
 ```
 
 Screenshots from `docs/cafebazaar/screenshots_16x9/`. Link banners use **English-only** raster text (PIL cannot render Persian correctly).

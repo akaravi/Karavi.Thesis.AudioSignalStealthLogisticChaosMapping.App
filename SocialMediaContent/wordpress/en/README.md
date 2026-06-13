@@ -61,7 +61,7 @@ Ready-to-publish content for [xwave.ir](http://xwave.ir/en/) — locale: **`en`*
 ## Regenerate images
 
 ```powershell
-python wordpress/scripts/convert-screenshots-to-webp.py
+python SocialMediaContent/wordpress/scripts/convert-screenshots-to-webp.py
 ```
 
-Writes to both `wordpress/fa/images/` and `wordpress/en/images/`.
+Writes to both `SocialMediaContent/wordpress/fa/images/` and `SocialMediaContent/wordpress/en/images/`.

@@ -1,16 +1,17 @@
 """Convert Cafe Bazaar 16:9 PNG screenshots to WebP for WordPress (fa + en)."""
 from __future__ import annotations
 
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
-SRC16 = ROOT / "docs" / "cafebazaar" / "screenshots_16x9"
-ICON = ROOT / "src" / "audio_stegano_app" / "assets" / "branding" / "app_icon.png"
+# .../SocialMediaContent/wordpress/scripts/this.py
+WP_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = WP_ROOT.parents[1]
+SRC16 = REPO_ROOT / "docs" / "cafebazaar" / "screenshots_16x9"
+ICON = REPO_ROOT / "src" / "audio_stegano_app" / "assets" / "branding" / "app_icon.png"
 LOCALES = ("fa", "en")
 
 MAPPING = {
@@ -47,7 +48,7 @@ def build_icons(out: Path) -> None:
 
 def main() -> None:
     for locale in LOCALES:
-        out = ROOT / "wordpress" / locale / "images"
+        out = WP_ROOT / locale / "images"
         out.mkdir(parents=True, exist_ok=True)
         for src_name, dst_name in MAPPING.items():
             to_webp(SRC16 / src_name, out / dst_name)
