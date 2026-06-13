@@ -175,3 +175,30 @@ Ran `.\_update-ver.ps1` (patch +1). Synced:
 - `src/audio_stegano_app/pubspec.yaml` → `1.2.5`
 - `src/audio_stegano_desktop/src/AudioStegano.Desktop/AudioStegano.Desktop.csproj` → `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion`
 
+## 2026-06-13 — WordPress post folder (Part 73)
+
+- Created `wordpress/` with SEO post for **صوت‌نهان** (xwave.ir / Myket).
+- `post-content.html` — headings, short sentences, internal/external links, image alt/title.
+- `seo-meta.json` — focus keyword, meta description, OG, 10 suggested tags.
+- `schema-software-application.jsonld` — Schema.org SoftwareApplication.
+- `images/*.webp` — WebP from Cafe Bazaar 16:9 screenshots + Myket/XWave banners + app icon.
+- `scripts/convert-screenshots-to-webp.py` — regenerate WebP assets.
+
+## 2026-06-13 — WordPress post expanded (Part 73b)
+
+- `post-content.html` — 1800+ words; tutorial section `#tutorial` at end (7 steps + practice).
+- New WebP: `guide-quick-start.webp`, `language-selection.webp`, `embed-message-length-dialog.webp`.
+- `seo-meta.json` — reading time 12 min, meta description updated.
+
+## 2026-06-13 — WordPress banners English-only (Part 73c)
+
+- Regenerated `banner-myket-download.webp` and `banner-xwave-site.webp` with **English-only** raster text (no Persian in PIL-generated images).
+- Added `wordpress/scripts/build-link-banners.py`; documented rule in `wordpress/README.md`.
+
+## 2026-06-13 — WordPress fa/en locale folders (Part 74)
+
+- Moved Persian content to `wordpress/fa/` (post, seo-meta, schema, images, README).
+- Created `wordpress/en/` with full English post (1500+ words), SEO, schema, images, README.
+- Root `wordpress/README.md` indexes both locales; scripts output to `fa/images` and `en/images`.
+- Cross-links between fa and en posts in seo-meta and post footers.
+

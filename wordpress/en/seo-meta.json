@@ -1,0 +1,80 @@
+{
+  "focusKeyword": "audio steganography",
+  "secondaryKeywords": [
+    "Audio Stegano",
+    "LSB steganography",
+    "logistic chaos map",
+    "hide message in audio",
+    "Android steganography app",
+    "NTK"
+  ],
+  "seoTitle": "Audio Stegano | Hide Text in Audio Files — Download on Myket",
+  "metaDescription": "Full Audio Stegano guide: hide and extract text in WAV using LSB and logistic chaos mapping. Step-by-step embed and extract. Download on Myket.",
+  "slug": "audio-steganography-app-sot-nehan-en",
+  "canonicalUrl": "https://xwave.ir/en/audio-steganography-app-sot-nehan/",
+  "ogTitle": "Audio Stegano — Hide Messages Inside Audio Signals",
+  "ogDescription": "Hide text inside an audio file and recover it with the same key. Android app by NTK — download on Myket.",
+  "ogImage": "https://xwave.ir/wp-content/uploads/sot-nehan/en/featured-splash-intro.webp",
+  "ogType": "article",
+  "ogLocale": "en_US",
+  "twitterCard": "summary_large_image",
+  "robots": "index, follow, max-image-preview:large",
+  "readingTimeMinutes": 12,
+  "language": "en",
+  "featuredImage": {
+    "file": "images/featured-splash-intro.webp",
+    "alt": "Audio Stegano app splash screen — audio steganography with LSB and logistic chaos map",
+    "title": "Audio Stegano — splash"
+  },
+  "suggestedTags": [
+    "audio steganography",
+    "Audio Stegano",
+    "LSB",
+    "logistic chaos map",
+    "information security",
+    "Android app",
+    "NTK",
+    "audio processing",
+    "steganography",
+    "Myket"
+  ],
+  "categories": [
+    "Software",
+    "Security",
+    "Mobile apps"
+  ],
+  "internalLinks": [
+    {
+      "url": "https://xwave.ir/en/",
+      "anchor": "XWave",
+      "rel": ""
+    },
+    {
+      "url": "https://xwave.ir/en/category/apps/",
+      "anchor": "XWave apps",
+      "rel": ""
+    },
+    {
+      "url": "https://xwave.ir/sot-nehan-audio-steganography-app/",
+      "anchor": "Persian version of this post",
+      "rel": "alternate"
+    }
+  ],
+  "externalLinks": [
+    {
+      "url": "https://myket.ir/app/ir.ntk.audiowmark.app",
+      "anchor": "Download on Myket",
+      "rel": "noopener sponsored"
+    },
+    {
+      "url": "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App",
+      "anchor": "GitHub repository",
+      "rel": "noopener noreferrer"
+    },
+    {
+      "url": "https://ntk.ir",
+      "anchor": "NTK company",
+      "rel": "noopener noreferrer"
+    }
+  ]
+}

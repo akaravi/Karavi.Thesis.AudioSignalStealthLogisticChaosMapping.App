@@ -1,0 +1,37 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "صوت‌نهان",
+  "alternateName": "Audio Stegano",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Android",
+  "description": "اپلیکیشن نهان‌نگاری پیام متنی در فایل صوتی با LSB و نقشه آشوب لاجستیک. پردازش روی دستگاه.",
+  "url": "https://myket.ir/app/ir.ntk.audiowmark.app",
+  "downloadUrl": "https://myket.ir/app/ir.ntk.audiowmark.app",
+  "softwareVersion": "1.0.0",
+  "inLanguage": ["fa", "en", "ar", "fr"],
+  "author": {
+    "@type": "Person",
+    "name": "علیرضا کاروی",
+    "url": "https://alikaravi.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "NTK",
+    "url": "https://ntk.ir"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "IRR",
+    "availability": "https://schema.org/InStock"
+  },
+  "screenshot": "https://xwave.ir/wp-content/uploads/sot-nehan/fa/embed-waveform-metrics.webp",
+  "image": "https://xwave.ir/wp-content/uploads/sot-nehan/fa/featured-splash-intro.webp",
+  "featureList": [
+    "نهان‌نگاری LSB در WAV",
+    "کلید آشوب لاجستیک",
+    "رمزگشایی با طول پیام به بیت",
+    "رابط فارسی و تم روشن/تاریک"
+  ]
+}

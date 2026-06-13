@@ -1,0 +1,297 @@
+<!--
+  WordPress Post — Audio Stegano (English, 1000+ words + step-by-step tutorial)
+  Locale folder: wordpress/en/
+  1. Upload images/ to Media Library (e.g. sot-nehan/en/).
+  2. Paste this HTML in the WordPress editor (Custom HTML block).
+  3. Fill Yoast/Rank Math from seo-meta.json.
+  4. Add schema-software-application.jsonld via your schema plugin.
+  5. Replace images/ paths with live media URLs.
+-->
+
+<article class="post-sot-nehan" lang="en" dir="ltr">
+
+<p class="lead"><strong>Keywords:</strong> audio steganography, Audio Stegano, LSB, logistic chaos map, Android app, steganography tutorial</p>
+
+<h1>Audio Stegano: Hide Text Messages Inside Audio Files</h1>
+
+<p><strong>Audio Stegano</strong> is an Android app for <strong>audio steganography</strong>. Your text is hidden inside a sound waveform. Recovery needs the same key and message length in bits. All processing runs on your device.</p>
+
+<p>In information security, <strong>steganography</strong> hides the very existence of a secret message. Encryption makes content unreadable. Steganography hides the message inside another medium. <strong>Audio Stegano</strong> applies this idea to audio files.</p>
+
+<p>The app is part of thesis research on stealth audio steganography via logistic chaos mapping. Developer Alireza Karavi and <a href="https://ntk.ir" rel="noopener noreferrer" target="_blank">NTK</a> support the project. Technical details are on <a href="https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App" rel="noopener noreferrer" target="_blank">GitHub</a>.</p>
+
+<p>For more on signal processing and NTK apps, visit <a href="http://xwave.ir/en/" title="XWave website">XWave</a>. See also <a href="http://xwave.ir/en/category/apps/" title="XWave apps">XWave apps</a>. A <a href="https://xwave.ir/sot-nehan-audio-steganography-app/" hreflang="fa">Persian version</a> of this article is available.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/featured-splash-intro.webp"
+       alt="Audio Stegano app introduction screen — LSB audio steganography with logistic chaos map"
+       title="Audio Stegano — splash screen"
+       width="1920" height="1080"
+       loading="eager"
+       decoding="async" />
+  <figcaption><strong>Audio Stegano</strong> — <strong>audio steganography</strong> on Android</figcaption>
+</figure>
+
+<h2>Download the app on Myket</h2>
+
+<p>The Android build of <strong>Audio Stegano</strong> uses package ID <code>ir.ntk.audiowmark.app</code>. It is listed on <strong>Myket</strong>. Install from the official store only. Tap the banner below to open the download page.</p>
+
+<p><a href="https://myket.ir/app/ir.ntk.audiowmark.app" rel="noopener sponsored" target="_blank" title="Download Audio Stegano on Myket">
+  <img src="images/banner-myket-download.webp"
+       alt="Download Audio Stegano on Myket — hide messages in audio files"
+       title="Download on Myket"
+       width="1200" height="400"
+       loading="lazy"
+       decoding="async" />
+</a></p>
+
+<h2>XWave website</h2>
+
+<p>Read more about audio wave processing and NTK projects at <a href="http://xwave.ir/en/" title="XWave">xwave.ir</a>. This post is part of the same educational content series.</p>
+
+<p><a href="http://xwave.ir/en/" rel="noopener" target="_blank" title="XWave project website">
+  <img src="images/banner-xwave-site.webp"
+       alt="XWave website — signal processing articles and software projects"
+       title="xwave.ir"
+       width="1200" height="400"
+       loading="lazy"
+       decoding="async" />
+</a></p>
+
+<h2>How Audio Stegano works technically</h2>
+
+<p>The <strong>LSB</strong> algorithm uses the least significant bit of each PCM sample to carry message bits. Changes are tiny. Human ears usually cannot hear the difference. Listening quality stays high.</p>
+
+<p>A random key comes from the <strong>logistic chaos map</strong>. Parameters <code>seed</code>, <code>r</code>, and <code>x0</code> define the key bit stream. Without all three and the <strong>message length in bits</strong>, extraction fails.</p>
+
+<p>Input text is encoded as UTF-8, then as a bit stream. A 32-bit length header is included. Output is a <strong>WAV</strong> file with 16-bit PCM samples.</p>
+
+<p>The current release uses an <strong>Autoencoder</strong> layer to improve message robustness. It reduces certain error modes. See GitHub docs for the full pipeline.</p>
+
+<h2>Key app features</h2>
+
+<p>The UI supports Persian, English, Arabic, and French. Light and dark themes are built in. Accent color is configurable.</p>
+
+<p>Four main tabs: Embed, Extract, Settings, and About. A quick guide appears on first launch. The <strong>?</strong> icon opens the full in-app help.</p>
+
+<p>After embedding, metrics such as SNR, PSNR, BER, NPCR, and UACI are shown. Tap any metric for a detailed explanation. Numbers help you judge embedding quality.</p>
+
+<p>The instant verify button extracts and compares the message right away. Confirm success before sharing the file with others.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/embed-message-input.webp"
+       alt="Audio Stegano embed screen — type a message and pick an audio source"
+       title="Embed — message input"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Embed tab: type your message and record or upload audio</figcaption>
+</figure>
+
+<figure class="wp-block-image size-large">
+  <img src="images/embed-waveform-metrics.webp"
+       alt="Audio waveform chart and SNR PSNR quality metrics in Audio Stegano"
+       title="Waveform and metrics"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Compare cover and stego waveforms with quality metrics</figcaption>
+</figure>
+
+<h2>Practical uses of audio steganography</h2>
+
+<p>In <strong>cybersecurity</strong> courses, students can see steganography in action with <strong>Audio Stegano</strong>.</p>
+<p>The difference between encryption and steganography becomes clear in one session.</p>
+
+<p>Researchers can tune chaos parameters. They watch how <code>r</code> and <code>x0</code> affect BER and SNR live. That helps thesis work and papers.</p>
+
+<p>Everyday users can hide a short note inside a personal audio clip. The file looks like a normal WAV. Only someone with the key and bit length can read the text.</p>
+
+<p>This tool is meant for research and education. Illegal use or privacy violations are not allowed. Users are responsible for how they apply it.</p>
+
+<h2>Privacy and Android permissions</h2>
+
+<p>Audio and text are processed on your phone. The current release does not auto-upload data to a server. Files leave the device only when you share them.</p>
+
+<p>Microphone access is for recording in the Embed tab. Storage access lets you pick WAV or MP3 files. Permission reasons are documented on the Myket listing.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/settings-theme-language.webp"
+       alt="Audio Stegano settings — light or dark theme and UI language"
+       title="Settings — theme and language"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Settings: theme, language, and chaos key parameters</figcaption>
+</figure>
+
+<h2>Important tips before you start</h2>
+
+<p>Always save the <strong>message length in bits</strong> together with your key values. Extraction is impossible without that number. Store it in a secure note or send it separately.</p>
+
+<p>Do not recompress the output WAV. Sending as a voice message in WhatsApp or Telegram often destroys hidden data. Share the file as a <strong>document attachment</strong> instead.</p>
+
+<p>Message length and audio capacity are limited. For long text, use a longer cover clip. The app shows a capacity warning when needed.</p>
+
+<p>Parameters <code>r</code> and <code>x0</code> must match on both embed and extract sides. Even a tiny change in <code>x0</code> produces a completely different key.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/extract-audio-file.webp"
+       alt="Audio Stegano extract screen — pick a WAV file and enter message bit length"
+       title="Extract — file picker"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Extract tab: pick a file and enter message length in bits</figcaption>
+</figure>
+
+<figure class="wp-block-image size-large">
+  <img src="images/extract-recovered-text.webp"
+       alt="Audio Stegano extract result — recovered text from stego audio file"
+       title="Extract — recovered message"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Recovered text after successful extraction</figcaption>
+</figure>
+
+<h2>Other platforms</h2>
+
+<p>Besides Android, Flutter builds exist for Windows and Linux on GitHub. A WPF desktop client uses .NET 10. The core algorithm behaves the same across clients.</p>
+
+<p>For daily phone use, the Myket build is enough. Clone the repo to experiment on a PC. Build steps are in the repository README.</p>
+
+<!-- Step-by-step tutorial — end of post -->
+
+<h2 id="tutorial">Step-by-step tutorial: how to use Audio Stegano</h2>
+
+<p>This section assumes you installed the app from <a href="https://myket.ir/app/ir.ntk.audiowmark.app" rel="noopener sponsored" target="_blank">Myket</a>. Follow each step in order. You will hide and recover a sample message.</p>
+
+<h3>Step 1 — Install and first launch</h3>
+
+<p>Open the Myket link and tap Install. Find the <strong>Audio Stegano</strong> icon on your home screen. On first open, a short splash screen appears.</p>
+
+<p>The app asks for your UI language. Pick English or any language you prefer. You can change language later in Settings.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/language-selection.webp"
+       alt="Audio Stegano language selection — Persian English Arabic French"
+       title="Language selection"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Step 1: choose the interface language</figcaption>
+</figure>
+
+<p>A quick guide screen explains the app goal and main steps. Tap Get started to enter the main UI.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/guide-quick-start.webp"
+       alt="Audio Stegano quick guide — embed extract and settings overview"
+       title="Quick guide"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Quick guide after language selection</figcaption>
+</figure>
+
+<h3>Step 2 — Set key parameters</h3>
+
+<p>Before your first embed, open the Settings tab. Choose light or dark theme. Note the default <code>seed</code>, <code>r</code>, and <code>x0</code> values.</p>
+
+<p>If you work with a partner, agree on the same values for both phones. Adjust <code>r</code> and <code>x0</code> with sliders or manual entry. Leave Settings so values are saved.</p>
+
+<p>Write these three values in a safe place. You need them with the bit length for extraction. Without them, the receiver cannot read the message.</p>
+
+<h3>Step 3 — Embed a message</h3>
+
+<p>Go to the Embed tab. Type your message in the text box. Example: “Hello — this is a test.”</p>
+
+<p>Pick an audio source. Option A: tap Start Recording. Speak for a few seconds. Tap Stop Recording.</p>
+
+<p>Option B: tap Upload file. Choose a WAV or MP3 from storage. The clip must be long enough for your message.</p>
+
+<p>Processing starts automatically. Wait a few seconds. A progress indicator shows status. Errors appear as on-screen messages.</p>
+
+<p>When done, a dialog shows the <strong>message length in bits</strong>. Copy or write down that number. This is the most important step in the tutorial.</p>
+
+<figure class="wp-block-image size-large">
+  <img src="images/embed-message-length-dialog.webp"
+       alt="Message bit length dialog in Audio Stegano — required for extraction"
+       title="Message length in bits"
+       width="1920" height="1080"
+       loading="lazy"
+       decoding="async" />
+  <figcaption>Save the bit length — extraction fails without it</figcaption>
+</figure>
+
+<p>Compare cover and stego waveforms. Higher SNR usually means quieter changes. Tap metrics to read help text for each one.</p>
+
+<p>Tap Verify to extract immediately. If the text matches your input, embedding succeeded. If not, check capacity or key parameters.</p>
+
+<h3>Step 4 — Save and share the file</h3>
+
+<p>Tap Save stego file and pick a folder. The file name usually ends with .wav.</p>
+
+<p>To share, use the share icon. In messengers, pick Send file or Document. Do not pick Voice message.</p>
+
+<p>Tell the receiver: the WAV file, bit length, and values for <code>r</code>, <code>x0</code>, and <code>seed</code>. They can read <code>seed</code> in Settings.</p>
+
+<h3>Step 5 — Extract a message</h3>
+
+<p>The receiver installs the app and sets the same key in Settings. They open the Extract tab.</p>
+
+<p>Tap Pick audio file and select the WAV you sent. On Android, Open with → Audio Stegano also works.</p>
+
+<p>Enter the exact bit length the sender gave you. One wrong digit breaks the output.</p>
+
+<p>Tap Extract. Recovered text appears in the result card. Tap Copy to put it on the clipboard.</p>
+
+<h3>Step 6 — Common troubleshooting</h3>
+
+<p>If text is empty or garbage, check bit length first. Then compare <code>r</code>, <code>x0</code>, and <code>seed</code> with the sender. Small mismatches fail completely.</p>
+
+<p>If the file came from a messenger, ask whether it was sent as a file or as voice. Voice mode often destroys hidden data. Request the original WAV again.</p>
+
+<p>If capacity was too low, shorten the message or use a longer cover clip. The app shows a capacity warning when needed.</p>
+
+<p>For more help, tap <strong>?</strong> in the app bar. Full help repeats these steps. You can also visit <a href="http://xwave.ir/en/">xwave.ir</a>.</p>
+
+<h3>Step 7 — Start over</h3>
+
+<p>For a new embed, tap New embed at the top of the Embed tab. Previous state is cleared. Pick a fresh message and audio source.</p>
+
+<p>Each new embed may produce a different bit length. Write down the new number every time. Do not reuse an old bit count for a new file.</p>
+
+<h3>Practice exercise</h3>
+
+<p>Pick a short message in English or Persian. Record five seconds of audio. Embed it and save the bit length. Tap Verify right away.</p>
+
+<p>Without closing the app, switch to Extract. Load the same file. If text is correct, you are ready to share with others.</p>
+
+<p>Repeat with an uploaded MP3 file. Try light and dark themes. Deliberately change <code>r</code> and see extraction fail. That teaches why keys must match.</p>
+
+<h2>Summary</h2>
+
+<p><strong>Audio Stegano</strong> is a practical <strong>audio steganography</strong> tool using LSB and logistic chaos. Install from Myket, set keys, embed, save bit length, then extract.</p>
+
+<p>Download from <a href="https://myket.ir/app/ir.ntk.audiowmark.app" rel="noopener sponsored" target="_blank">Myket</a>. More articles appear on <a href="http://xwave.ir/en/">xwave.ir</a>.</p>
+
+<ul>
+  <li><a href="https://myket.ir/app/ir.ntk.audiowmark.app" rel="noopener sponsored" target="_blank">Download on Myket (external)</a></li>
+  <li><a href="http://xwave.ir/en/" rel="noopener" target="_blank">XWave website (internal)</a></li>
+  <li><a href="http://xwave.ir/en/category/apps/" rel="noopener">XWave apps (internal)</a></li>
+  <li><a href="https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App" rel="noopener noreferrer" target="_blank">GitHub repository (external)</a></li>
+  <li><a href="https://ntk.ir" rel="noopener noreferrer" target="_blank">NTK company (external)</a></li>
+</ul>
+
+<figure class="wp-block-image size-medium aligncenter">
+  <img src="images/app-icon-256.webp"
+       alt="Audio Stegano app icon — NTK audio steganography software"
+       title="Audio Stegano icon"
+       width="256" height="256"
+       loading="lazy"
+       decoding="async" />
+</figure>
+
+</article>

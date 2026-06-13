@@ -1,0 +1,37 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Audio Stegano",
+  "alternateName": "Sot-Nehan",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Android",
+  "description": "Android app to hide and recover text messages inside audio files using LSB and a logistic chaos map. On-device processing.",
+  "url": "https://myket.ir/app/ir.ntk.audiowmark.app",
+  "downloadUrl": "https://myket.ir/app/ir.ntk.audiowmark.app",
+  "softwareVersion": "1.0.0",
+  "inLanguage": ["en", "fa", "ar", "fr"],
+  "author": {
+    "@type": "Person",
+    "name": "Alireza Karavi",
+    "url": "https://alikaravi.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "NTK",
+    "url": "https://ntk.ir"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "IRR",
+    "availability": "https://schema.org/InStock"
+  },
+  "screenshot": "https://xwave.ir/wp-content/uploads/sot-nehan/en/embed-waveform-metrics.webp",
+  "image": "https://xwave.ir/wp-content/uploads/sot-nehan/en/featured-splash-intro.webp",
+  "featureList": [
+    "LSB steganography in WAV",
+    "Logistic chaos key",
+    "Extract with message length in bits",
+    "Multilingual UI and light/dark theme"
+  ]
+}

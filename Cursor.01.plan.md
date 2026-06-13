@@ -504,3 +504,88 @@
   "verification": "flutter test stego_engine + app_config 8 passed; dotnet test 14 passed; only ae_xor pipeline remains."
 }
 ```
+
+---
+
+## Part 73 — WordPress post (SEO + WebP)
+
+```json
+{
+  "part": 73,
+  "title": "wordpress folder: SEO post, tags, WebP images, Myket + xwave links",
+  "files": [
+    "wordpress/post-content.html",
+    "wordpress/seo-meta.json",
+    "wordpress/schema-software-application.jsonld",
+    "wordpress/images/*.webp",
+    "wordpress/README.md",
+    "wordpress/scripts/convert-screenshots-to-webp.py"
+  ],
+  "status": "done"
+}
+```
+
+## Result 73
+
+```json
+{
+  "part": 73,
+  "status": "done",
+  "deliverables": [
+    "post-content.html with H1/H2/H3, 4+ paragraphs, max ~30 words per sentence",
+    "10 WordPress tags in seo-meta.json",
+    "featured-splash-intro.webp as featured image",
+    "Myket and xwave.ir link banners with images",
+    "internal links xwave.ir + category/apps; external Myket, GitHub, NTK"
+  ]
+}
+```
+
+---
+
+## Part 73b — WordPress post 1000+ words + tutorial
+
+```json
+{
+  "part": "73b",
+  "title": "Expand post-content.html to 1000+ words; step-by-step tutorial at end",
+  "status": "done"
+}
+```
+
+## Result 73b
+
+```json
+{
+  "part": "73b",
+  "status": "done",
+  "wordCount": "~1821",
+  "tutorialSections": ["install", "key settings", "embed", "save/share", "extract", "troubleshooting", "reset", "practice exercise"]
+}
+```
+
+---
+
+## Part 74 — WordPress fa/ + en/ locale folders
+
+```json
+{
+  "part": 74,
+  "title": "Move wordpress content to fa/; create en/ with full English post",
+  "status": "done"
+}
+```
+
+## Result 74
+
+```json
+{
+  "part": 74,
+  "status": "done",
+  "structure": {
+    "wordpress/fa": "Persian post ~1826 words",
+    "wordpress/en": "English post ~1524 words",
+    "wordpress/scripts": "outputs images to both locales"
+  }
+}
+```
