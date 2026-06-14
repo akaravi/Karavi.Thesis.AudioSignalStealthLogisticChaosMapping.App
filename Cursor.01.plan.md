@@ -684,3 +684,40 @@
   ]
 }
 ```
+
+---
+
+## Part 79 — Gemini en promo from screenshotsReal/en
+
+```json
+{
+  "part": 79,
+  "title": "Edit gemini/en/gemini-create-video-promo.json to use real en screenshots",
+  "sourceFolder": "SocialMediaContent/screenshotsReal/screenshots/en",
+  "status": "done"
+}
+```
+
+## Result 79
+
+```json
+{
+  "part": 79,
+  "status": "done",
+  "file": "SocialMediaContent/gemini/en/gemini-create-video-promo.json",
+  "promptSpecVersion": "1.2.0",
+  "referenceImagesBasePath": "SocialMediaContent/screenshotsReal/screenshots/en",
+  "sceneMapping": [
+    { "scene": 1, "file": "1.jpg", "title": "Splash hook" },
+    { "scene": 2, "file": "4.png", "title": "Quick guide LSB chaos" },
+    { "scene": 3, "file": "5.png", "title": "Embed recording" },
+    { "scene": 4, "file": "6.png", "title": "Waveform metrics SNR PSNR" },
+    { "scene": 5, "file": "7.png", "title": "Extract pick file" },
+    { "scene": 6, "file": "8.png", "title": "Full guide bit length" },
+    { "scene": 7, "file": "10.png", "title": "Settings chaos params" },
+    { "scene": 8, "file": "2.jpg", "title": "Four languages" },
+    { "scene": 9, "file": "9.png", "title": "About thesis outro Myket CTA" }
+  ],
+  "notes": "No file 3.png in en set; Myket banner replaced by post end card overlay"
+}
+```

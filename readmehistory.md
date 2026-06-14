@@ -223,3 +223,9 @@ Ran `.\_update-ver.ps1` (patch +1). Synced:
 - `SocialMediaContent/gemini/en/` — fully English prompt (`voiceover`, `onScreenText`), images from `wordpress/en/images/`.
 - Per-locale `README.md`; root `gemini/README.md` indexes both; deleted root `gemini-create-video-promo.json`.
 
+## 2026-06-14 — Gemini en promo aligned to real screenshots (Part 79)
+
+- `SocialMediaContent/gemini/en/gemini-create-video-promo.json` — reference images switched from `wordpress/en/images/*.webp` to `screenshotsReal/screenshots/en/` (1.jpg, 2.jpg, 4–10.png).
+- Nine scenes remapped: splash → quick guide → embed recording → metrics → extract → full guide → settings → languages → about/outro.
+- App name/version synced to **Audio Steganography v1.2.6**; Myket CTA moved to scene 9 voiceover + post end card (no Myket banner in screenshot set).
+

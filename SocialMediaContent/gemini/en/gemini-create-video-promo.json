@@ -1,24 +1,30 @@
 {
-  "promptSpecVersion": "1.1.0",
+  "promptSpecVersion": "1.2.0",
   "kind": "gemini-create-video-prompt",
   "locale": "en",
   "metadata": {
-    "title": "Audio Stegano — Gemini Veo promotional video",
+    "title": "Audio Steganography — Gemini Veo promotional video (real screenshots)",
     "project": "Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App",
     "appId": "ir.ntk.audiowmark.app",
-    "appName": "Audio Stegano",
-    "createdAt": "2026-06-13",
+    "appName": "Audio Steganography",
+    "appVersion": "1.2.6",
+    "createdAt": "2026-06-14",
+    "updatedFrom": "SocialMediaContent/screenshotsReal/screenshots/en",
     "targetTool": "Google Gemini — Create Video (Veo 3.1 / Veo 3.1 Fast)",
     "targetUrls": {
       "myket": "https://myket.ir/app/ir.ntk.audiowmark.app",
       "xwave": "http://xwav.ir/en/",
-      "github": "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App"
+      "github": "https://github.com/akaravi/Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App",
+      "personalSite": "https://alikaravi.com",
+      "ntk": "https://ntk.ir"
     },
     "notes": [
-      "Use image-to-video mode per scene with the listed referenceImagePath.",
+      "Use image-to-video mode per scene with the listed referenceImagePath from screenshotsReal/en.",
+      "Screenshots are 1080×1920 portrait — place inside floating phone mockup for 16:9 output.",
       "All voiceover and on-screen copy are English only.",
-      "Raster banners use English text by design.",
-      "Stitch clips in sceneNumber order; total runtime ~54 seconds."
+      "Scenes 1–2 may show Persian UI labels from splash/language screens; motion graphics overlay stays English.",
+      "Stitch clips in sceneNumber order; total runtime ~54 seconds.",
+      "Scene 9 voiceover includes Myket CTA — add Myket URL end card in post (no Myket banner in screenshot set)."
     ]
   },
   "veoConfig": {
@@ -29,7 +35,7 @@
     "durationSecondsPerClip": 6,
     "enhancePrompt": true,
     "generateAudio": true,
-    "negativePrompt": "blurry text, garbled UI, watermark, low quality, shaky camera, cartoonish style, outdated 2010 UI, stock photo people, cluttered layout, wrong app screenshots, misspelled words"
+    "negativePrompt": "blurry text, garbled UI, watermark, low quality, shaky camera, cartoonish style, outdated 2010 UI, stock photo people, cluttered layout, wrong app screenshots, misspelled words, distorted waveform, fake metric numbers"
   },
   "visualStyle": {
     "era": "2026 modern",
@@ -38,32 +44,34 @@
       "primary": "#009688",
       "secondary": "#1E293B",
       "accent": "#6366F1",
-      "background": "deep slate gradient with soft teal glow"
+      "background": "deep slate gradient with soft teal glow matching app screenshots"
     },
     "motion": "smooth Ken Burns on screenshots, subtle parallax, micro-interactions, no harsh cuts",
     "typographyOnScreen": "English labels only on motion graphics; crisp sans-serif",
-    "deviceFrame": "modern bezel-less Android phone mockup at a slight 3D angle"
+    "deviceFrame": "modern bezel-less Android phone mockup at slight 3D angle; portrait screenshot centered in 16:9 frame"
   },
-  "referenceImagesBasePath": "SocialMediaContent/wordpress/en/images",
+  "referenceImagesBasePath": "SocialMediaContent/screenshotsReal/screenshots/en",
   "referenceImages": [
-    { "id": "splash", "file": "featured-splash-intro.webp", "usage": "Scenes 1 and 9 — intro and outro" },
-    { "id": "icon", "file": "app-icon-256.webp", "usage": "Scene 2 — app icon hero" },
-    { "id": "embed-input", "file": "embed-message-input.webp", "usage": "Scene 3 — embed tab" },
-    { "id": "waveform", "file": "embed-waveform-metrics.webp", "usage": "Scene 4 — waveform and metrics" },
-    { "id": "bit-length", "file": "embed-message-length-dialog.webp", "usage": "Scene 5 — message length dialog" },
-    { "id": "extract-result", "file": "extract-recovered-text.webp", "usage": "Scene 6 — recovered text" },
-    { "id": "settings", "file": "settings-theme-language.webp", "usage": "Scene 7 — settings and privacy" },
-    { "id": "myket-banner", "file": "banner-myket-download.webp", "usage": "Scene 8 — download CTA" }
+    { "id": "splash", "file": "1.jpg", "usage": "Scene 1 — splash intro with waveform and app branding" },
+    { "id": "quick-guide", "file": "4.png", "usage": "Scene 2 — Quick guide: LSB + logistic chaos overview" },
+    { "id": "embed-recording", "file": "5.png", "usage": "Scene 3 — Embed tab: secret message + live audio recording" },
+    { "id": "embed-result", "file": "6.png", "usage": "Scene 4 — File saved, waveform comparison, SNR/PSNR metrics" },
+    { "id": "extract-pick", "file": "7.png", "usage": "Scene 5 — Extract tab: pick stego audio file" },
+    { "id": "full-guide", "file": "8.png", "usage": "Scene 6 — Full guide modal: embed steps and bit-length reminder" },
+    { "id": "settings", "file": "10.png", "usage": "Scene 7 — Settings: language, theme color, logistic r/x0 chaos params" },
+    { "id": "language", "file": "2.jpg", "usage": "Scene 8 — Language picker: Persian, English, Arabic, French" },
+    { "id": "about", "file": "9.png", "usage": "Scene 9 — About: thesis, supervisor, GitHub links, outro" }
   ],
-  "fullScenario": "54-second promo: audio wave → hide message → extract with key → on-device privacy → download on Myket. Six seconds per scene, 2026 modern look, real app screenshots.",
+  "fullScenario": "54-second promo from real app screenshots: splash → LSB chaos intro → embed message and record → quality metrics → extract stego file → save bit length guide → on-device settings and chaos key → four languages → thesis outro and Myket download.",
   "scenes": [
     {
       "sceneNumber": 1,
       "timecode": "00:00–00:06",
       "title": "Hook — sound hides secrets",
       "referenceImageId": "splash",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/featured-splash-intro.webp",
-      "veoPrompt": "Cinematic 16:9 tech promo 2026. Start from the provided mobile app splash screenshot on a floating bezel-less phone. Slow Ken Burns zoom-in. Abstract teal audio waveform particles rise from the screen and dissolve into glowing binary bits. Dark slate background with soft volumetric light. Premium fintech aesthetic. Smooth motion, shallow depth of field. No readable garbled text. End frame holds app branding area.",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/1.jpg",
+      "screenshotContent": "Dark splash: Audio Signal branding, glowing teal waveform, steganography tagline, version badge.",
+      "veoPrompt": "Cinematic 16:9 tech promo 2026. Image-to-video from provided portrait splash screenshot inside floating bezel-less phone mockup. Slow Ken Burns zoom-in on central waveform icon. Abstract teal audio particles rise from the glowing waveform line and dissolve into subtle binary bits. Dark teal-to-black gradient background from screenshot preserved. Premium research-app aesthetic. Keep UI text sharp — do not rewrite Persian labels. Smooth motion, shallow depth of field.",
       "onScreenText": "Hide text inside sound",
       "voiceover": "Your message hides inside the sound wave.",
       "sfx": "Soft ambient pulse, subtle whoosh",
@@ -72,101 +80,109 @@
     {
       "sceneNumber": 2,
       "timecode": "00:06–00:12",
-      "title": "App reveal",
-      "referenceImageId": "icon",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/app-icon-256.webp",
-      "veoPrompt": "Hero reveal of the provided app icon centered on a modern 2026 gradient background teal and indigo. Icon scales up with elastic ease, gentle lens flare, floating shadow. Clean minimal motion graphics rings orbit the icon. Premium Android app launch aesthetic. 16:9 cinematic.",
-      "onScreenText": "Audio Stegano",
-      "voiceover": "Audio Stegano — advanced audio steganography for Android.",
+      "title": "Quick guide — LSB and chaos key",
+      "referenceImageId": "quick-guide",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/4.png",
+      "screenshotContent": "Light Quick guide screen: LSB + logistic chaos map thesis research, Embed/Extract/Settings/About cards, Get started button.",
+      "veoPrompt": "Image-to-video from provided Quick guide screenshot on floating phone. Light mint-green theme. Sequential highlight glow on four feature rows: Embed shield, Extract magnifier, Settings gear, About people. Subtle scroll-down motion revealing LSB and logistic chaos map intro paragraph. Camera slow push-in. Material 3 clean UI — keep English text readable. 2026 product demo look, 16:9 with phone centered.",
+      "onScreenText": "LSB + logistic chaos key",
+      "voiceover": "Audio Steganography — hide text in audio with LSB and a logistic chaos key.",
       "sfx": "Light brand chime",
-      "transitionOut": "match cut to phone UI"
+      "transitionOut": "match cut to Embed tab"
     },
     {
       "sceneNumber": 3,
       "timecode": "00:12–00:18",
-      "title": "Embed — write your message",
-      "referenceImageId": "embed-input",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/embed-message-input.webp",
-      "veoPrompt": "Image-to-video using provided app screenshot of embed screen on floating phone mockup. Simulate finger typing in message field, subtle UI glow on primary button. Camera slowly orbits 5 degrees. Modern Material 3 style, light theme. Keep UI sharp and readable. 2026 product demo look.",
+      "title": "Embed — type message and record",
+      "referenceImageId": "embed-recording",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/5.png",
+      "screenshotContent": "Embed tab: secret message field with sample text, 144 bits counter, live recording at 00:04, audio level bars at 90%, Stop Recording.",
+      "veoPrompt": "Image-to-video using provided Embed screen screenshot. Simulate typing cursor in message field, then pulsing red record button and animated audio level bars climbing. Timer ticks subtly. Floating phone mockup, light theme, teal accents. Keep bit counter and Audio Steganography header sharp. Modern Android demo 2026, 16:9.",
       "onScreenText": "Type your secret message",
-      "voiceover": "Type your text, then record audio or upload a file.",
-      "sfx": "Soft keyboard taps",
+      "voiceover": "Type your text, then record audio or upload a WAV or MP3 file.",
+      "sfx": "Soft keyboard taps, recording pulse",
       "transitionOut": "slide left"
     },
     {
       "sceneNumber": 4,
       "timecode": "00:18–00:24",
-      "title": "Processing — waveform and metrics",
-      "referenceImageId": "waveform",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/embed-waveform-metrics.webp",
-      "veoPrompt": "Animate provided screenshot showing dual audio waveforms and quality metrics. Waveforms draw left-to-right with glowing teal trace. Metric cards fade in sequentially SNR PSNR. Futuristic but clean data visualization overlay. Floating phone, dark reflective surface. 16:9 tech demo 2026.",
-      "onScreenText": "LSB + logistic chaos key",
-      "voiceover": "LSB plus logistic chaos key — secure and precise.",
-      "sfx": "Data processing hum, waveform ping",
-      "transitionOut": "zoom to dialog"
+      "title": "Success — waveforms and quality metrics",
+      "referenceImageId": "embed-result",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/6.png",
+      "screenshotContent": "File saved checkmark, Play/Pause/Stop, Save stego file, Verify roundtrip, dual waveform comparison (cover vs stego), metrics: SNR 47.34 dB, PSNR 96.36 dB, BER 0.0000%.",
+      "veoPrompt": "Animate provided embed-result screenshot. Green checkmark pulse on File saved. Dual waveforms draw left-to-right — teal original cover overlay and dark stego trace. Metric chips fade in sequentially: Duration, Bits embedded, SNR, PSNR, BER. Subtle glow on SNR and PSNR values. Floating phone on dark reflective surface. Futuristic clean data viz, 16:9 tech demo 2026.",
+      "onScreenText": "SNR · PSNR · zero BER",
+      "voiceover": "See proof in the waveforms — high SNR, high PSNR, zero bit error.",
+      "sfx": "Data processing hum, waveform ping, success tone",
+      "transitionOut": "zoom to Extract tab"
     },
     {
       "sceneNumber": 5,
       "timecode": "00:24–00:30",
-      "title": "Critical — save bit length",
-      "referenceImageId": "bit-length",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/embed-message-length-dialog.webp",
-      "veoPrompt": "Focus push-in on provided screenshot dialog showing message bit length number. Pulse highlight on the numeric value. Warning-style soft amber ring then teal confirm glow. Emphasize importance without clutter. Modern dialog UI on phone mockup. 16:9.",
-      "onScreenText": "Save bit length!",
-      "voiceover": "Always save the message length in bits — required to recover.",
-      "sfx": "Gentle alert tone",
+      "title": "Extract — pick stego audio",
+      "referenceImageId": "extract-pick",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/7.png",
+      "screenshotContent": "Extract tab selected: Pick audio file WAV/MP3 button, disabled Extract button with lock icon.",
+      "veoPrompt": "Image-to-video from Extract tab screenshot. Teal Pick audio file button receives tap ripple, folder icon bounce. Extract button unlock animation — padlock opens and button gains teal glow. Magnifying glass nav tab highlighted. Clean minimal UI, light background. Phone mockup slow orbit 5 degrees. 16:9 product walkthrough 2026.",
+      "onScreenText": "Recover your message",
+      "voiceover": "Open your stego file and enter the message length in bits to extract.",
+      "sfx": "Soft tap, unlock click",
       "transitionOut": "crossfade"
     },
     {
       "sceneNumber": 6,
       "timecode": "00:30–00:36",
-      "title": "Extract — recover your message",
-      "referenceImageId": "extract-result",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/extract-recovered-text.webp",
-      "veoPrompt": "Image-to-video from extract result screenshot. Recovered text card slides up with success green accent. Checkmark animation. Phone mockup on clean desk with soft daylight. Satisfying reveal moment. Premium app demo 2026. 16:9.",
-      "onScreenText": "Recover your message",
-      "voiceover": "With the same key, extract the message from audio.",
-      "sfx": "Success chime",
-      "transitionOut": "fade"
+      "title": "Critical — save bit length",
+      "referenceImageId": "full-guide",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/8.png",
+      "screenshotContent": "Full guide bottom sheet: what app does (local processing), app tabs, Embed steps — message box and audio source, chaos params must match.",
+      "veoPrompt": "Focus on provided Full guide modal screenshot over dimmed app background. Scroll highlight on Embed steps section — pulse on message-length-in-bits instruction. Soft amber warning ring then teal confirm glow on step text about matching chaos parameters. Emphasize importance without clutter. Modern bottom-sheet UI on phone mockup. 16:9.",
+      "onScreenText": "Save bit length!",
+      "voiceover": "Always save the message length in bits — and use the same chaos key to recover.",
+      "sfx": "Gentle alert tone",
+      "transitionOut": "slide up to Settings"
     },
     {
       "sceneNumber": 7,
       "timecode": "00:36–00:42",
-      "title": "Privacy — 100% on device",
+      "title": "Settings — chaos key and on-device privacy",
       "referenceImageId": "settings",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/settings-theme-language.webp",
-      "veoPrompt": "Show provided settings screenshot toggling light to dark theme smoothly. Language chips highlight EN FA AR FR. Shield icon overlay animation suggesting on-device privacy. No cloud upload visual metaphor crossed cloud icon. Modern 2026 security app aesthetic. 16:9.",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/10.png",
+      "screenshotContent": "Settings: English selected, teal theme color, logistic chaos preview graph, r=3.990 slider, x0=0.45 slider, message length limit.",
+      "veoPrompt": "Show provided Settings screenshot. Chaos sequence preview graph animates — teal waveform redraws. r parameter slider moves slightly, x0 slider adjusts. Theme color swatches cycle then settle on teal. Shield overlay animation suggesting 100% on-device — no cloud upload, crossed cloud icon briefly. Language chips highlight EN. Modern 2026 security app aesthetic. 16:9.",
       "onScreenText": "100% on your device",
-      "voiceover": "Everything runs on your device — no automatic upload.",
-      "sfx": "Toggle click, soft shield shimmer",
-      "transitionOut": "slide up"
+      "voiceover": "Tune r and x0, pick your theme — everything runs locally on your device.",
+      "sfx": "Toggle click, soft shield shimmer, slider tick",
+      "transitionOut": "fade"
     },
     {
       "sceneNumber": 8,
       "timecode": "00:42–00:48",
-      "title": "CTA — download on Myket",
-      "referenceImageId": "myket-banner",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/banner-myket-download.webp",
-      "veoPrompt": "Animate provided Myket download banner sliding into center with depth. QR-style pulse near download area without real QR. Myket brand colors subtly in background particles. Call-to-action energy, clean 2026 app store promo. English text on banner stays sharp. 16:9.",
-      "onScreenText": "Download on Myket",
-      "voiceover": "Download Audio Stegano on Myket now.",
-      "sfx": "Upbeat CTA rise",
+      "title": "Multilingual — four languages",
+      "referenceImageId": "language",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/2.jpg",
+      "screenshotContent": "Language screen: Persian, English, Arabic, French cards with LTR/RTL direction icons.",
+      "veoPrompt": "Image-to-video from language picker screenshot on floating phone. Dark teal theme. Each language card highlights in sequence — Persian, English, Arabic, French — with subtle RTL/LTR arrow icon pulse. Translation icon at top gentle glow. Premium global app feel. Keep native script labels sharp. 16:9 cinematic.",
+      "onScreenText": "FA · EN · AR · FR",
+      "voiceover": "Persian, English, Arabic, and French — with light and dark themes.",
+      "sfx": "Soft selection chime per language",
       "transitionOut": "crossfade"
     },
     {
       "sceneNumber": 9,
       "timecode": "00:48–00:54",
-      "title": "Outro — NTK and XWave",
-      "referenceImageId": "splash",
-      "referenceImagePath": "SocialMediaContent/wordpress/en/images/featured-splash-intro.webp",
-      "veoPrompt": "Cinematic outro: app splash screenshot fades to minimal end card. Logos area for NTK and XWave as text placeholders. Teal particle field settles. Thesis tagline area subtle. Professional research app closing 2026. 16:9.",
-      "onScreenText": "NTK · xwav.ir · Thesis research",
-      "voiceover": "Audio Stegano — NTK research. Details at xwav.ir.",
-      "sfx": "Soft outro fade",
+      "title": "Outro — thesis, NTK, and download",
+      "referenceImageId": "about",
+      "referenceImagePath": "SocialMediaContent/screenshotsReal/screenshots/en/9.png",
+      "screenshotContent": "About us: Alireza Karavi, thesis title logistic chaos mapping, v1.2.6, Dr. Mehdi Mosleh supervisor, GitHub and NTK links.",
+      "veoPrompt": "Cinematic outro from About us screenshot. Slow Ken Burns on developer profile and thesis title. GitHub and NTK link rows subtle highlight sweep. Version 1.2.6 badge teal glow. Fade to minimal end card overlay space for Myket URL and xwav.ir text placeholders. Teal particle field settles. Professional research app closing 2026. 16:9.",
+      "onScreenText": "NTK · xwav.ir · Download on Myket",
+      "voiceover": "Audio Steganography — NTK thesis research. Download on Myket. Details at xwav.ir.",
+      "sfx": "Soft outro fade, upbeat CTA rise at end",
       "transitionOut": "fade to black"
     }
   ],
-  "voiceoverFull": "Your message hides inside the sound wave. Audio Stegano — advanced audio steganography for Android. Type your text, record or upload audio. LSB and logistic chaos key — secure and precise. Save the bit length. Extract with the same key. All on your device. Download on Myket now.",
+  "voiceoverFull": "Your message hides inside the sound wave. Audio Steganography — hide text in audio with LSB and a logistic chaos key. Type your text, record or upload audio. See proof in the waveforms — high SNR, high PSNR, zero bit error. Open your stego file and enter the message length in bits. Always save the bit length and use the same chaos key. Tune r and x0 — everything runs on your device. Persian, English, Arabic, and French. Download on Myket. NTK thesis research at xwav.ir.",
   "musicDirection": {
     "genre": "modern cinematic electronic ambient",
     "bpm": "90-100",
@@ -177,23 +193,23 @@
   "assemblyInstructions": {
     "order": "Render scenes 1 through 9 sequentially using Gemini Create Video image-to-video mode.",
     "perSceneWorkflow": [
-      "Upload referenceImagePath as the starting frame.",
+      "Upload referenceImagePath as the starting frame (portrait 1080×1920 inside phone mockup).",
       "Paste veoPrompt into the prompt field.",
       "Set aspectRatio 16:9, resolution 1080p, duration 6 seconds.",
       "Use voiceover text for English TTS or record separately.",
-      "Download each clip as s01-hook.mp4 through s09-outro.mp4."
+      "Download each clip as s01-splash.mp4 through s09-about-outro.mp4."
     ],
     "postProduction": [
       "Stitch clips in sceneNumber order (CapCut, DaVinci Resolve, or Premiere).",
       "Align voiceover per scene timecode.",
       "Add musicDirection bed at -18dB.",
-      "End card: Myket URL plus xwav.ir for 2 seconds.",
+      "End card 2 seconds: Myket URL https://myket.ir/app/ir.ntk.audiowmark.app plus xwav.ir/en/ (no Myket banner in screenshot set).",
       "Export H.264 1080p 16:9 for Myket listing and xwav.ir embed."
     ]
   },
   "geminiStudioQuickPaste": {
-    "singleCombinedPromptForManualMode": "Create a 54-second modern 2026 promotional video for the Audio Stegano Android app (audio steganography). Use 9 clips of 6 seconds each. Image-to-video from provided app screenshots. Style: premium teal and indigo tech, floating phone mockup, smooth Ken Burns. Story arc: hide text in audio, LSB chaos key, save bit length, extract message, on-device privacy, download on Myket. English voiceover from scenes[].voiceover. English on-screen labels only.",
-    "negativePrompt": "blurry UI, cartoon style, outdated design, watermark, misspelled text"
+    "singleCombinedPromptForManualMode": "Create a 54-second modern 2026 promotional video for Audio Steganography Android app (ir.ntk.audiowmark.app). Use 9 clips of 6 seconds each. Image-to-video from real app screenshots in SocialMediaContent/screenshotsReal/screenshots/en (1.jpg splash, 4.png quick guide, 5.png embed recording, 6.png metrics, 7.png extract, 8.png full guide, 10.png settings, 2.jpg languages, 9.png about). Style: premium teal tech, floating portrait phone in 16:9 frame, smooth Ken Burns. Story: hide text in audio, LSB logistic chaos key, record embed, SNR/PSNR proof, extract with bit length, on-device settings, four languages, thesis outro Myket CTA. English voiceover from scenes[].voiceover.",
+    "negativePrompt": "blurry UI, cartoon style, outdated design, watermark, misspelled text, wrong metric values"
   },
   "ttsSettings": {
     "language": "en-US",
