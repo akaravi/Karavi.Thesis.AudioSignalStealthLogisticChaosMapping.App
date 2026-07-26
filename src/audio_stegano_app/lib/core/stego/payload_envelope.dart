@@ -57,12 +57,28 @@ abstract final class PayloadAudioDefaults {
   }
 }
 
+/// Still-image payload defaults (JPEG body under ASTG type Image).
+abstract final class PayloadImageDefaults {
+  static const int envelopeOverheadBytes = 12;
+  static const int maxLongEdgePx = 240;
+  static const int jpegQuality = 55;
+  static const int minJpegQuality = 25;
+
+  static int maxImageBytesForBitBudget(int bitBudget) {
+    final maxBytes = bitBudget ~/ 8;
+    final usable = maxBytes - envelopeOverheadBytes;
+    return usable < 0 ? 0 : usable;
+  }
+}
+
 /// Result of peeling recovered stego bits (envelope or legacy text).
 class StegoPayloadResult {
   final StegoPayloadType? type;
   final bool isLegacy;
   final String? text;
   final WavFile? audio;
+  /// JPEG/PNG file bytes when [type] is [StegoPayloadType.image].
+  final Uint8List? imageBytes;
   final Uint8List? rawBody;
 
   const StegoPayloadResult({
@@ -70,6 +86,7 @@ class StegoPayloadResult {
     required this.isLegacy,
     this.text,
     this.audio,
+    this.imageBytes,
     this.rawBody,
   });
 
@@ -89,6 +106,12 @@ class StegoPayloadResult {
         type: StegoPayloadType.audio,
         isLegacy: false,
         audio: wav,
+      );
+
+  factory StegoPayloadResult.image(Uint8List fileBytes) => StegoPayloadResult(
+        type: StegoPayloadType.image,
+        isLegacy: false,
+        imageBytes: fileBytes,
       );
 
   factory StegoPayloadResult.unsupported(StegoPayloadType type, Uint8List body) =>
@@ -205,6 +228,35 @@ abstract final class PayloadEnvelope {
     );
   }
 
+  /// Packs a still image file body (JPEG/PNG bytes) as ASTG Image.
+  static Uint8List packImageBits(Uint8List imageFileBytes, {int? fixedBitLength}) {
+    if (imageFileBytes.isEmpty) {
+      throw ArgumentError('Image payload is empty');
+    }
+    if (!looksLikeImageFile(imageFileBytes)) {
+      throw ArgumentError('Image payload must be JPEG or PNG');
+    }
+    return packBits(
+      type: StegoPayloadType.image,
+      body: imageFileBytes,
+      fixedBitLength: fixedBitLength,
+    );
+  }
+
+  static bool looksLikeImageFile(Uint8List bytes) {
+    if (bytes.length < 4) return false;
+    // JPEG SOI
+    if (bytes[0] == 0xFF && bytes[1] == 0xD8) return true;
+    // PNG signature
+    if (bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return true;
+    }
+    return false;
+  }
+
   /// Unpacks typed payload from recovered bits. Legacy (no magic) → UTF-8 text.
   static StegoPayloadResult unpackBits(Uint8List bits) {
     if (bits.isEmpty) {
@@ -250,6 +302,10 @@ abstract final class PayloadEnvelope {
           return StegoPayloadResult.unsupported(type, body);
         }
       case StegoPayloadType.image:
+        if (!looksLikeImageFile(body)) {
+          return StegoPayloadResult.unsupported(type, body);
+        }
+        return StegoPayloadResult.image(body);
       case StegoPayloadType.other:
         return StegoPayloadResult.unsupported(type, body);
     }
@@ -360,6 +416,10 @@ abstract final class PayloadEnvelope {
     final body = encodeAudioBody(wav);
     return (headerByteLength + body.length) * 8;
   }
+
+  /// Bit length of an ASTG image envelope for raw image file bytes (unpadded).
+  static int bitLengthForImage(Uint8List imageFileBytes) =>
+      (headerByteLength + imageFileBytes.length) * 8;
 
   static Int16List _resampleMono16(Int16List input, int fromRate, int toRate) {
     if (fromRate == toRate || input.isEmpty) {

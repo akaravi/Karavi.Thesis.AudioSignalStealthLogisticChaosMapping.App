@@ -844,3 +844,41 @@
   ]
 }
 ```
+
+## Part 83 — ASTG Image payload (hide/recover still image)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 83,
+  "title": "Image payload for stego hide/extract",
+  "request": "میخواهم فایل عکس هم برای نهان شدن ایجاد کنی",
+  "scope": [
+    "ASTG type Image (0x02) pack/unpack JPEG/PNG body",
+    "Compress to Settings bit budget (Flutter image package + WPF JpegBitmapEncoder)",
+    "Embed UI Text|Audio|Image (Flutter + WPF)",
+    "Extract preview + save recovered image (Flutter + WPF)",
+    "i18n fa-first + tests"
+  ],
+  "constraints": ["no CDN", "Latin LTR N/A for image binary", "parity Flutter/WPF"]
+}
+```
+
+## Result 83
+
+```json
+{
+  "part": 83,
+  "status": "done",
+  "verification": "Flutter payload_envelope_test 10 passed; Core PayloadEnvelope 8 passed; WPF Desktop build 0 errors; flutter analyze image/embed/extract clean after unused-import fix",
+  "files": [
+    "payload_envelope.dart / PayloadEnvelope.cs",
+    "payload_image_codec.dart / PayloadImageCodec.cs",
+    "embed_screen.dart / EmbedView.xaml(.cs)",
+    "extract_screen.dart / ExtractView.xaml(.cs)",
+    "app_strings.dart / AppStrings.cs",
+    "payload_envelope_test.dart / PayloadEnvelopeTests.cs"
+  ]
+}
+```

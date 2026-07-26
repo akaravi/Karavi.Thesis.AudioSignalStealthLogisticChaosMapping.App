@@ -40,7 +40,7 @@ import '../shared/record_button.dart';
 import '../shared/stego_share.dart';
 import '../shared/tab_scroll_body.dart';
 
-enum _EmbedPayloadKind { text, audio }
+enum _EmbedPayloadKind { text, audio, image }
 
 class EmbedScreen extends ConsumerStatefulWidget {
   const EmbedScreen({super.key});
@@ -63,6 +63,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   bool _embedInputHidden = false;
   _EmbedPayloadKind _payloadKind = _EmbedPayloadKind.text;
   WavFile? _payloadAudio;
+  Uint8List? _payloadImageBytes;
   bool _recordingPayload = false;
   final GlobalKey _resultCardKey = GlobalKey();
   final ScrollController _scrollCtrl = ScrollController();
@@ -276,8 +277,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         await _showEmbedWarning(s.errorEmpty);
         return;
       }
-    } else if (_payloadAudio == null) {
-      await _showEmbedWarning(s.errorEmptyPayloadAudio);
+    } else if (_payloadKind == _EmbedPayloadKind.audio) {
+      if (_payloadAudio == null) {
+        await _showEmbedWarning(s.errorEmptyPayloadAudio);
+        return;
+      }
+    } else if (_payloadImageBytes == null) {
+      await _showEmbedWarning(s.errorEmptyPayloadImage);
       return;
     }
     try {
@@ -381,8 +387,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         await _showEmbedWarning(s.errorEmpty);
         return;
       }
-    } else if (_payloadAudio == null) {
-      await _showEmbedWarning(s.errorEmptyPayloadAudio);
+    } else if (_payloadKind == _EmbedPayloadKind.audio) {
+      if (_payloadAudio == null) {
+        await _showEmbedWarning(s.errorEmptyPayloadAudio);
+        return;
+      }
+    } else if (_payloadImageBytes == null) {
+      await _showEmbedWarning(s.errorEmptyPayloadImage);
       return;
     }
 
@@ -421,8 +432,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         await _showEmbedWarning(s.errorEmpty);
         return;
       }
-    } else if (_payloadAudio == null) {
-      await _showEmbedWarning(s.errorEmptyPayloadAudio);
+    } else if (_payloadKind == _EmbedPayloadKind.audio) {
+      if (_payloadAudio == null) {
+        await _showEmbedWarning(s.errorEmptyPayloadAudio);
+        return;
+      }
+    } else if (_payloadImageBytes == null) {
+      await _showEmbedWarning(s.errorEmptyPayloadImage);
       return;
     }
     await _loadAndEmbedPicked(
@@ -506,6 +522,26 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         return;
       }
       required = binaryMsg.length;
+    } else if (_payloadKind == _EmbedPayloadKind.image) {
+      final imageBytes = _payloadImageBytes;
+      if (imageBytes == null) {
+        if (!mounted) return;
+        _releaseEmbedInteractionLocks();
+        await _showEmbedWarning(s.errorEmptyPayloadImage);
+        return;
+      }
+      try {
+        binaryMsg = PayloadEnvelope.packImageBits(
+          imageBytes,
+          fixedBitLength: useFixedLen ? fixedBits : null,
+        );
+      } catch (_) {
+        if (!mounted) return;
+        _releaseEmbedInteractionLocks();
+        await _showEmbedWarning(s.errorPayloadImageBudget);
+        return;
+      }
+      required = binaryMsg.length;
     } else {
       binaryMsg = null;
       final text = _textCtrl.text.trim();
@@ -536,7 +572,8 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     EmbedRunResult? produced;
     String? error;
     try {
-      if (_payloadKind == _EmbedPayloadKind.audio) {
+      if (_payloadKind == _EmbedPayloadKind.audio ||
+          _payloadKind == _EmbedPayloadKind.image) {
         produced = await StegoRunner.embedBits(
           binaryMsg: binaryMsg!,
           cover: cover,
@@ -766,6 +803,12 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             recovered.samples.length == expected.samples.length &&
             _int16ListsEqual(recovered.samples, expected.samples);
       }
+    } else if (_payloadKind == _EmbedPayloadKind.image) {
+      final original = _payloadImageBytes;
+      final recovered = recoveredPayload.imageBytes;
+      ok = original != null &&
+          recovered != null &&
+          _uint8ListsEqual(original, recovered);
     } else {
       final original = _textCtrl.text.trim();
       ok = recoveredPayload.text != null && recoveredPayload.text == original;
@@ -777,6 +820,12 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _verifyStatus = ok
             ? s.verifyMatch
             : (recoveredPayload.audio == null
+                ? s.verifyEmpty
+                : s.verifyMismatch);
+      } else if (_payloadKind == _EmbedPayloadKind.image) {
+        _verifyStatus = ok
+            ? s.verifyMatch
+            : (recoveredPayload.imageBytes == null
                 ? s.verifyEmpty
                 : s.verifyMismatch);
       } else if (recoveredPayload.text == null ||
@@ -823,11 +872,82 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     return true;
   }
 
+  bool _uint8ListsEqual(Uint8List a, Uint8List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  bool get _payloadReadyForCover => switch (_payloadKind) {
+        _EmbedPayloadKind.text => _textCtrl.text.trim().isNotEmpty,
+        _EmbedPayloadKind.audio => _payloadAudio != null,
+        _EmbedPayloadKind.image => _payloadImageBytes != null,
+      };
+
+  Future<void> _pickPayloadImage() async {
+    if (_busy || _processing || _recorder.isRecording) return;
+    final s = AppStrings.of(context);
+    FilePickerResult? picked;
+    try {
+      picked = await FilePicker.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+    } catch (e) {
+      _showStatus(e.toString());
+      return;
+    }
+    if (!mounted || picked == null || picked.files.isEmpty) return;
+    final file = picked.files.first;
+    var bytes = file.bytes;
+    if (bytes == null && file.path != null && !kIsWeb) {
+      try {
+        bytes = await nativeReadBytes(file.path!);
+      } catch (e) {
+        if (!mounted) return;
+        _showStatus(e.toString());
+        return;
+      }
+    }
+    if (bytes == null || bytes.isEmpty) {
+      if (!mounted) return;
+      await _showEmbedWarning(s.errorPayloadImageDecode);
+      return;
+    }
+
+    final budget = _settingsBitBudget();
+    late final Uint8List compressed;
+    try {
+      compressed = PayloadImageCodec.compressToFitBudget(
+        bytes,
+        bitBudget: budget,
+      );
+    } on FormatException {
+      if (!mounted) return;
+      await _showEmbedWarning(s.errorPayloadImageDecode);
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      await _showEmbedWarning(s.errorPayloadImageBudget);
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _payloadImageBytes = compressed;
+      _payloadAudio = null;
+      _statusMessage = s.payloadImageReady;
+      _embedInputHidden = false;
+    });
+  }
+
   bool get _canStartNewEmbed =>
       _embedInputHidden ||
       _stego != null ||
       _cover != null ||
       _payloadAudio != null ||
+      _payloadImageBytes != null ||
       _textCtrl.text.trim().isNotEmpty ||
       _recorder.isRecording ||
       _isPlaying ||
@@ -867,6 +987,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _embedInputHidden = false;
         _payloadKind = _EmbedPayloadKind.text;
         _payloadAudio = null;
+        _payloadImageBytes = null;
         _recordingPayload = false;
         _cover = null;
         _stego = null;
@@ -1099,6 +1220,11 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       label: Text(s.embedPayloadAudioTab),
                       icon: const Icon(Icons.mic_none_outlined),
                     ),
+                    ButtonSegment(
+                      value: _EmbedPayloadKind.image,
+                      label: Text(s.embedPayloadImageTab),
+                      icon: const Icon(Icons.image_outlined),
+                    ),
                   ],
                   selected: {_payloadKind},
                   onSelectionChanged: isRecording || _processing
@@ -1108,6 +1234,12 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                           setState(() {
                             _payloadKind = kind;
                             if (kind == _EmbedPayloadKind.text) {
+                              _payloadAudio = null;
+                              _payloadImageBytes = null;
+                              _recordingPayload = false;
+                            } else if (kind == _EmbedPayloadKind.audio) {
+                              _payloadImageBytes = null;
+                            } else {
                               _payloadAudio = null;
                               _recordingPayload = false;
                             }
@@ -1138,7 +1270,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       prefixIcon: const Icon(Icons.message_outlined),
                     ),
                   )
-                else ...[
+                else if (_payloadKind == _EmbedPayloadKind.audio) ...[
                   Text(
                     s.embedPayloadAudioHint,
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -1174,12 +1306,57 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
+                ] else ...[
+                  Text(
+                    s.embedPayloadImageHint,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  if (_payloadImageBytes != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.memory(
+                        _payloadImageBytes!,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      s.payloadImageBudgetLabel(
+                        PayloadEnvelope.bitLengthForImage(_payloadImageBytes!),
+                        fixedBits,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: TextButton.icon(
+                        onPressed: isRecording || _processing
+                            ? null
+                            : () => setState(() {
+                                  _payloadImageBytes = null;
+                                  _statusMessage = null;
+                                }),
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(s.clearPayloadImage),
+                      ),
+                    ),
+                  ] else
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: FilledButton.tonalIcon(
+                        onPressed: isRecording || _processing
+                            ? null
+                            : _pickPayloadImage,
+                        icon: const Icon(Icons.image_outlined),
+                        label: Text(s.pickPayloadImage),
+                      ),
+                    ),
                 ],
                 const SizedBox(height: 16),
                 AudioFileDropSurface(
-                  enabled: canPickFile &&
-                      (_payloadKind == _EmbedPayloadKind.text ||
-                          _payloadAudio != null),
+                  enabled: canPickFile && _payloadReadyForCover,
                   onFilePath: _embedFromDroppedPath,
                   child: Card(
                     child: Padding(
@@ -1200,15 +1377,12 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                         AudioSourceActionsPanel(
                           orLabel: s.audioSourceOr,
                           showLoadAction: appConfig.showEmbedLoadFileForUi &&
-                              (_payloadKind == _EmbedPayloadKind.text ||
-                                  _payloadAudio != null),
+                              _payloadReadyForCover,
                           loadAction: CircleActionButton(
                             icon: Icons.upload_file_outlined,
                             label: s.loadAudioFile,
                             shape: ActionButtonShape.roundedSquare,
-                            enabled: canPickFile &&
-                                (_payloadKind == _EmbedPayloadKind.text ||
-                                    _payloadAudio != null),
+                            enabled: canPickFile && _payloadReadyForCover,
                             onPressed: _loadAndEmbed,
                             accent: CircleActionAccent.primary,
                           ),

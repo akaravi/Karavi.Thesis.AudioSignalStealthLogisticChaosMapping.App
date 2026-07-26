@@ -40,6 +40,22 @@ public static class PayloadAudioDefaults
     }
 }
 
+/// <summary>Still-image payload defaults (JPEG body under ASTG type Image).</summary>
+public static class PayloadImageDefaults
+{
+    public const int EnvelopeOverheadBytes = 12;
+    public const int MaxLongEdgePx = 240;
+    public const int JpegQuality = 55;
+    public const int MinJpegQuality = 25;
+
+    public static int MaxImageBytesForBitBudget(int bitBudget)
+    {
+        var maxBytes = bitBudget / 8;
+        var usable = maxBytes - EnvelopeOverheadBytes;
+        return usable < 0 ? 0 : usable;
+    }
+}
+
 /// <summary>Result of peeling recovered stego bits (envelope or legacy text).</summary>
 public sealed class StegoPayloadResult
 {
@@ -47,6 +63,8 @@ public sealed class StegoPayloadResult
     public bool IsLegacy { get; }
     public string? Text { get; }
     public WavFile? Audio { get; }
+    /// <summary>JPEG/PNG file bytes when <see cref="Type"/> is <see cref="StegoPayloadType.Image"/>.</summary>
+    public byte[]? ImageBytes { get; }
     public byte[]? RawBody { get; }
 
     private StegoPayloadResult(
@@ -54,12 +72,14 @@ public sealed class StegoPayloadResult
         bool isLegacy,
         string? text = null,
         WavFile? audio = null,
+        byte[]? imageBytes = null,
         byte[]? rawBody = null)
     {
         Type = type;
         IsLegacy = isLegacy;
         Text = text;
         Audio = audio;
+        ImageBytes = imageBytes;
         RawBody = rawBody;
     }
 
@@ -71,6 +91,9 @@ public sealed class StegoPayloadResult
 
     public static StegoPayloadResult FromAudio(WavFile wav) =>
         new(StegoPayloadType.Audio, false, audio: wav);
+
+    public static StegoPayloadResult FromImage(byte[] fileBytes) =>
+        new(StegoPayloadType.Image, false, imageBytes: fileBytes);
 
     public static StegoPayloadResult Unsupported(StegoPayloadType type, byte[] body) =>
         new(type, false, rawBody: body);
@@ -175,6 +198,25 @@ public static class PayloadEnvelope
         return PackBits(StegoPayloadType.Audio, body, fixedBitLength: fixedBitLength);
     }
 
+    /// <summary>Packs a still image file body (JPEG/PNG bytes) as ASTG Image.</summary>
+    public static byte[] PackImageBits(byte[] imageFileBytes, int? fixedBitLength = null)
+    {
+        if (imageFileBytes is null || imageFileBytes.Length == 0)
+            throw new ArgumentException("Image payload is empty");
+        if (!LooksLikeImageFile(imageFileBytes))
+            throw new ArgumentException("Image payload must be JPEG or PNG");
+        return PackBits(StegoPayloadType.Image, imageFileBytes, fixedBitLength: fixedBitLength);
+    }
+
+    public static bool LooksLikeImageFile(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length < 4) return false;
+        if (bytes[0] == 0xFF && bytes[1] == 0xD8) return true; // JPEG
+        if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47)
+            return true; // PNG
+        return false;
+    }
+
     public static StegoPayloadResult UnpackBits(byte[] bits)
     {
         if (bits.Length == 0)
@@ -202,6 +244,9 @@ public static class PayloadEnvelope
         {
             StegoPayloadType.Text => TryDecodeText(body),
             StegoPayloadType.Audio => TryDecodeAudio(body),
+            StegoPayloadType.Image => LooksLikeImageFile(body)
+                ? StegoPayloadResult.FromImage(body)
+                : StegoPayloadResult.Unsupported(type, body),
             _ => StegoPayloadResult.Unsupported(type, body),
         };
     }
@@ -284,6 +329,9 @@ public static class PayloadEnvelope
         var body = EncodeAudioBody(wav);
         return (HeaderByteLength + body.Length) * 8;
     }
+
+    public static int BitLengthForImage(byte[] imageFileBytes) =>
+        (HeaderByteLength + imageFileBytes.Length) * 8;
 
     private static StegoPayloadResult TryDecodeText(byte[] body)
     {

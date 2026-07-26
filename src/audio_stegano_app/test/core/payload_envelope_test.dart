@@ -53,6 +53,30 @@ void main() {
       expect(result.audio!.samples.length, 800);
     });
 
+    test('image JPEG pack/unpack round-trip', () {
+      final jpeg = Uint8List(68);
+      jpeg[0] = 0xFF;
+      jpeg[1] = 0xD8;
+      jpeg[2] = 0xFF;
+      jpeg[3] = 0xD9;
+      final bits = PayloadEnvelope.packImageBits(jpeg);
+      expect(PayloadEnvelope.hasMagicBits(bits), isTrue);
+      final result = PayloadEnvelope.unpackBits(bits);
+      expect(result.type, StegoPayloadType.image);
+      expect(result.imageBytes, isNotNull);
+      expect(result.imageBytes, jpeg);
+    });
+
+    test('image bit budget helper leaves room under fixed bits', () {
+      final maxBytes =
+          PayloadImageDefaults.maxImageBytesForBitBudget(262144);
+      expect(maxBytes, greaterThan(1000));
+      expect(
+        PayloadEnvelope.bitLengthForImage(Uint8List(maxBytes)),
+        lessThanOrEqualTo(262144),
+      );
+    });
+
     test('quiet speech peak-normalize keeps audible energy', () {
       final pcm = Int16List(1600);
       for (var i = 0; i < pcm.length; i++) {

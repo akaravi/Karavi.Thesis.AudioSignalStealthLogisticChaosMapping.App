@@ -43,6 +43,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   bool _extractionAttempted = false;
   String? _result;
   WavFile? _extractedAudio;
+  Uint8List? _extractedImageBytes;
   String? _statusMessage;
   String? _bitLengthError;
   WavFile? _loadedWav;
@@ -76,6 +77,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _extractionAttempted = false;
       _result = null;
       _extractedAudio = null;
+      _extractedImageBytes = null;
     });
 
     WavFile? wav;
@@ -199,6 +201,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _processing = true;
       _result = null;
       _extractedAudio = null;
+      _extractedImageBytes = null;
       _statusMessage = s.processing;
       _extractionAttempted = false;
       _extractedPlaying = false;
@@ -221,11 +224,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
     String? text;
     WavFile? audio;
+    Uint8List? imageBytes;
     String? status;
     if (error != null) {
       status = error;
     } else if (payload == null) {
       status = s.keyMismatch;
+    } else if (payload.imageBytes != null) {
+      imageBytes = payload.imageBytes;
+      status = null;
     } else if (payload.audio != null) {
       audio = payload.audio;
       status = null;
@@ -246,6 +253,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _extractionAttempted = true;
       _result = text;
       _extractedAudio = audio;
+      _extractedImageBytes = imageBytes;
       _statusMessage = status;
     });
   }
@@ -294,6 +302,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   }
 
   String _resultBody(AppStrings s) {
+    if (_extractedImageBytes != null) return s.extractedImage;
     if (_extractedAudio != null) return s.extractedAudio;
     if (_result != null && _result!.isNotEmpty) return _result!;
     if (_result != null && _result!.isEmpty) return s.noText;
@@ -301,7 +310,9 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   }
 
   bool get _extractSucceeded =>
-      (_result != null && _result!.isNotEmpty) || _extractedAudio != null;
+      (_result != null && _result!.isNotEmpty) ||
+      _extractedAudio != null ||
+      _extractedImageBytes != null;
 
   bool get _hasLoadedAudio => _loadedWav != null;
 
@@ -311,6 +322,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _extractionAttempted ||
       _result != null ||
       _extractedAudio != null ||
+      _extractedImageBytes != null ||
       _statusMessage != null ||
       _coverPlaying ||
       _coverLoaded ||
@@ -341,6 +353,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _loadedWav = null;
       _result = null;
       _extractedAudio = null;
+      _extractedImageBytes = null;
       _statusMessage = null;
       _bitLengthError = null;
       _coverPlaying = false;
@@ -387,6 +400,37 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
         type: FileType.custom,
         allowedExtensions: ['wav'],
         bytes: bytes,
+      );
+      if (path == null) {
+        if (kIsWeb && mounted) {
+          messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+        }
+        return;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _saveExtractedImage() async {
+    final imageBytes = _extractedImageBytes;
+    if (imageBytes == null) return;
+    final s = AppStrings.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final isPng = imageBytes.length >= 4 &&
+        imageBytes[0] == 0x89 &&
+        imageBytes[1] == 0x50;
+    final ext = isPng ? 'png' : 'jpg';
+    try {
+      final path = await FilePicker.saveFile(
+        dialogTitle: s.saveExtractedImage,
+        fileName: 'extracted_payload.$ext',
+        type: FileType.custom,
+        allowedExtensions: [ext],
+        bytes: imageBytes,
       );
       if (path == null) {
         if (kIsWeb && mounted) {
@@ -619,6 +663,10 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     }
     final theme = Theme.of(context);
     final isAudio = _extractedAudio != null;
+    final isImage = _extractedImageBytes != null;
+    final title = isImage
+        ? s.extractedImage
+        : (isAudio ? s.extractedAudio : s.extractedText);
     return Card(
       color: _extractSucceeded
           ? theme.colorScheme.primaryContainer
@@ -637,13 +685,22 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isAudio ? s.extractedAudio : s.extractedText,
+                  title,
                   style: theme.textTheme.titleMedium,
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            if (!isAudio)
+            if (isImage) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  _extractedImageBytes!,
+                  height: 180,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ] else if (!isAudio)
               DirectionalSelectableText(
                 _resultBody(s),
                 style: theme.textTheme.bodyLarge,
@@ -652,7 +709,16 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
               Text(_resultBody(s), style: theme.textTheme.bodyLarge),
             if (_extractSucceeded) ...[
               const SizedBox(height: 12),
-              if (isAudio)
+              if (isImage)
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: FilledButton.tonalIcon(
+                    onPressed: _saveExtractedImage,
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(s.saveExtractedImage),
+                  ),
+                )
+              else if (isAudio)
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,

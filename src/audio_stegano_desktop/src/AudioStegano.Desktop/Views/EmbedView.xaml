@@ -10,6 +10,8 @@
           <RadioButton x:Name="PayloadModeText" GroupName="EmbedPayloadMode" IsChecked="True"
                        Margin="0,0,16,0" Checked="PayloadMode_Checked" />
           <RadioButton x:Name="PayloadModeAudio" GroupName="EmbedPayloadMode"
+                       Margin="0,0,16,0" Checked="PayloadMode_Checked" />
+          <RadioButton x:Name="PayloadModeImage" GroupName="EmbedPayloadMode"
                        Checked="PayloadMode_Checked" />
         </StackPanel>
         <StackPanel x:Name="TextPayloadPanel">
@@ -32,6 +34,25 @@
                   Visibility="Collapsed">
             <TextBlock x:Name="ClearPayloadAudioLabel" />
           </Button>
+        </StackPanel>
+        <StackPanel x:Name="ImagePayloadPanel" Visibility="Collapsed">
+          <TextBlock x:Name="ImagePayloadHint" Style="{StaticResource BodySmall}"
+                     TextWrapping="Wrap" Margin="0,0,0,8" />
+          <TextBlock x:Name="ImagePayloadBudget" Style="{StaticResource BodySmall}"
+                     Margin="0,0,0,8" />
+          <Image x:Name="PayloadImagePreview" MaxHeight="140" Stretch="Uniform"
+                 Margin="0,0,0,8" Visibility="Collapsed" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="PickPayloadImageBtn" Style="{StaticResource TonalButton}"
+                    Margin="0,0,8,8" Click="PickPayloadImage_Click">
+              <TextBlock x:Name="PickPayloadImageLabel" />
+            </Button>
+            <Button x:Name="ClearPayloadImageBtn" Style="{StaticResource TonalButton}"
+                    Margin="0,0,0,8" Click="ClearPayloadImage_Click"
+                    Visibility="Collapsed">
+              <TextBlock x:Name="ClearPayloadImageLabel" />
+            </Button>
+          </StackPanel>
         </StackPanel>
 
         <Border x:Name="AudioSourceCard" Style="{StaticResource MaterialCard}" Margin="0,16,0,0" Padding="12,16">

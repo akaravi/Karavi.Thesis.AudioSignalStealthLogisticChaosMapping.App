@@ -24,7 +24,9 @@ public partial class EmbedView : UserControl
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
     private WavFile? _payloadAudio;
+    private byte[]? _payloadImageBytes;
     private bool _audioPayloadMode;
+    private bool _imagePayloadMode;
     private bool _recordingPayload;
     private bool _busy;
     private bool _verifying;
@@ -54,10 +56,14 @@ public partial class EmbedView : UserControl
         var s = ThemeManager.Strings;
         PayloadModeText.Content = s.EmbedPayloadTextTab;
         PayloadModeAudio.Content = s.EmbedPayloadAudioTab;
+        PayloadModeImage.Content = s.EmbedPayloadImageTab;
         MessageLabel.Text = s.TextHint;
         MessageTextBox.SetValue(ToolTipService.ToolTipProperty, s.TextHint);
         AudioPayloadHint.Text = s.EmbedPayloadAudioHint;
         ClearPayloadAudioLabel.Text = s.ClearPayloadAudio;
+        ImagePayloadHint.Text = s.EmbedPayloadImageHint;
+        PickPayloadImageLabel.Text = s.PickPayloadImage;
+        ClearPayloadImageLabel.Text = s.ClearPayloadImage;
         AudioSourceOrLabel.Text = s.AudioSourceOr;
         EqualizerTitle.Text = s.AudioEqualizer;
         RefreshRecordButtonLabels();
@@ -76,6 +82,7 @@ public partial class EmbedView : UserControl
         UpdateFabStates();
         UpdateMessageBitCounter();
         UpdateAudioPayloadUi();
+        UpdateImagePayloadUi();
     }
 
     private void RefreshRecordButtonLabels()
@@ -98,12 +105,19 @@ public partial class EmbedView : UserControl
     {
         if (!IsLoaded) return;
         _audioPayloadMode = PayloadModeAudio.IsChecked == true;
-        TextPayloadPanel.Visibility = _audioPayloadMode ? Visibility.Collapsed : Visibility.Visible;
+        _imagePayloadMode = PayloadModeImage.IsChecked == true;
+        TextPayloadPanel.Visibility = (!_audioPayloadMode && !_imagePayloadMode)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         AudioPayloadPanel.Visibility = _audioPayloadMode ? Visibility.Visible : Visibility.Collapsed;
+        ImagePayloadPanel.Visibility = _imagePayloadMode ? Visibility.Visible : Visibility.Collapsed;
         if (!_audioPayloadMode)
             _payloadAudio = null;
+        if (!_imagePayloadMode)
+            ClearImagePreview();
         RefreshRecordButtonLabels();
         UpdateAudioPayloadUi();
+        UpdateImagePayloadUi();
     }
 
     private void ClearPayloadAudio_Click(object sender, RoutedEventArgs e)
@@ -112,6 +126,57 @@ public partial class EmbedView : UserControl
         StatusText.Text = string.Empty;
         UpdateAudioPayloadUi();
         RefreshRecordButtonLabels();
+    }
+
+    private void ClearPayloadImage_Click(object sender, RoutedEventArgs e)
+    {
+        ClearImagePreview();
+        StatusText.Text = string.Empty;
+        UpdateImagePayloadUi();
+    }
+
+    private void ClearImagePreview()
+    {
+        _payloadImageBytes = null;
+        PayloadImagePreview.Source = null;
+        PayloadImagePreview.Visibility = Visibility.Collapsed;
+    }
+
+    private void PickPayloadImage_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || _capture.IsRecording) return;
+        var s = ThemeManager.Strings;
+        var dlg = new OpenFileDialog
+        {
+            Filter = "Images|*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.webp|All files|*.*",
+        };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var source = File.ReadAllBytes(dlg.FileName);
+            var budget = AppConfig.Current.DefaultFixedMessageBitLength;
+            var compressed = PayloadImageCodec.CompressToFitBudget(source, budget);
+            _payloadImageBytes = compressed;
+            using var ms = new MemoryStream(compressed);
+            var bmp = new System.Windows.Media.Imaging.BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bmp.StreamSource = ms;
+            bmp.EndInit();
+            bmp.Freeze();
+            PayloadImagePreview.Source = bmp;
+            PayloadImagePreview.Visibility = Visibility.Visible;
+            StatusText.Text = s.PayloadImageReady;
+            UpdateImagePayloadUi();
+        }
+        catch (InvalidOperationException)
+        {
+            ShowEmbedWarning(s.ErrorPayloadImageBudget);
+        }
+        catch (Exception)
+        {
+            ShowEmbedWarning(s.ErrorPayloadImageDecode);
+        }
     }
 
     private void UpdateAudioPayloadUi()
@@ -128,6 +193,23 @@ public partial class EmbedView : UserControl
             var used = PayloadEnvelope.BitLengthForAudio(_payloadAudio);
             AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(used, budget);
             ClearPayloadAudioBtn.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void UpdateImagePayloadUi()
+    {
+        var s = ThemeManager.Strings;
+        var budget = AppConfig.Current.DefaultFixedMessageBitLength;
+        if (_payloadImageBytes is null)
+        {
+            ImagePayloadBudget.Text = s.PayloadImageBudgetLabel(0, budget);
+            ClearPayloadImageBtn.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            var used = PayloadEnvelope.BitLengthForImage(_payloadImageBytes);
+            ImagePayloadBudget.Text = s.PayloadImageBudgetLabel(used, budget);
+            ClearPayloadImageBtn.Visibility = Visibility.Visible;
         }
     }
 
@@ -462,6 +544,14 @@ public partial class EmbedView : UserControl
                 return;
             }
         }
+        else if (_imagePayloadMode)
+        {
+            if (_payloadImageBytes is null)
+            {
+                ShowEmbedWarning(s.ErrorEmptyPayloadImage);
+                return;
+            }
+        }
         else if (string.IsNullOrEmpty(MessageTextBox.Text.Trim()))
         {
             ShowEmbedWarning(s.ErrorEmpty);
@@ -528,6 +618,14 @@ public partial class EmbedView : UserControl
             if (_payloadAudio is null)
             {
                 ShowEmbedWarning(s.ErrorEmptyPayloadAudio);
+                return;
+            }
+        }
+        else if (_imagePayloadMode)
+        {
+            if (_payloadImageBytes is null)
+            {
+                ShowEmbedWarning(s.ErrorEmptyPayloadImage);
                 return;
             }
         }
@@ -618,6 +716,39 @@ public partial class EmbedView : UserControl
                 return;
             }
         }
+        else if (_imagePayloadMode)
+        {
+            if (_payloadImageBytes is null)
+            {
+                ShowEmbedWarning(s.ErrorEmptyPayloadImage);
+                return;
+            }
+            try
+            {
+                var bits = PayloadEnvelope.PackImageBits(_payloadImageBytes, fixedBitLength: fixedLen);
+                if (bits.Length > cover.ToMono().Samples.Length)
+                {
+                    ShowEmbedWarning(s.ErrorTooLong);
+                    return;
+                }
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        outcome = AppState.Watermarking.EmbedBitsWithMetrics(cover, bits);
+                    }
+                    catch (Exception ex)
+                    {
+                        error = ex.Message;
+                    }
+                });
+            }
+            catch (ArgumentException)
+            {
+                ShowEmbedWarning(s.ErrorPayloadImageBudget);
+                return;
+            }
+        }
         else
         {
             if (string.IsNullOrEmpty(messageText))
@@ -681,12 +812,16 @@ public partial class EmbedView : UserControl
         _stego = null;
         _outcome = null;
         _payloadAudio = null;
+        ClearImagePreview();
         _recordingPayload = false;
         _audioPayloadMode = false;
+        _imagePayloadMode = false;
         PayloadModeText.IsChecked = true;
         PayloadModeAudio.IsChecked = false;
+        PayloadModeImage.IsChecked = false;
         TextPayloadPanel.Visibility = Visibility.Visible;
         AudioPayloadPanel.Visibility = Visibility.Collapsed;
+        ImagePayloadPanel.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Collapsed;
         VerifyBanner.Visibility = Visibility.Collapsed;
         EmbedInputPanel.Visibility = Visibility.Visible;
@@ -694,6 +829,7 @@ public partial class EmbedView : UserControl
         StatusText.Text = string.Empty;
         Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
         UpdateAudioPayloadUi();
+        UpdateImagePayloadUi();
         RefreshRecordButtonLabels();
         UpdatePlaybackButtons();
         UpdateFabStates();
@@ -872,12 +1008,18 @@ public partial class EmbedView : UserControl
                      recovered.Samples.AsSpan().SequenceEqual(expected.Samples);
             }
         }
+        else if (_imagePayloadMode)
+        {
+            ok = _payloadImageBytes is not null &&
+                 payload?.ImageBytes is not null &&
+                 _payloadImageBytes.AsSpan().SequenceEqual(payload.ImageBytes);
+        }
         else
         {
             ok = payload?.Text is not null && payload.Text == original;
         }
 
-        if (!ok && (payload?.Text is null or "" && payload?.Audio is null))
+        if (!ok && payload?.Text is null or "" && payload?.Audio is null && payload?.ImageBytes is null)
         {
             VerifyText.Text = s.VerifyEmpty;
             VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 179, 38, 30));

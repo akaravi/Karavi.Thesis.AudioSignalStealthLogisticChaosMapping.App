@@ -18,6 +18,7 @@ public partial class ExtractView : UserControl
     private readonly AudioPlaybackService _extractedPlayback = new();
     private WavFile? _loadedWav;
     private WavFile? _extractedAudio;
+    private byte[]? _extractedImageBytes;
 
     public ExtractView()
     {
@@ -125,6 +126,7 @@ public partial class ExtractView : UserControl
         _extractedPlayback.Stop();
         _loadedWav = null;
         _extractedAudio = null;
+        ClearExtractedImage();
         BitLengthBox.Clear();
         ResultPanel.Visibility = Visibility.Collapsed;
         PlaybackPanel.Visibility = Visibility.Collapsed;
@@ -241,6 +243,7 @@ public partial class ExtractView : UserControl
         ResultPanel.Visibility = Visibility.Collapsed;
         _extractedPlayback.Stop();
         _extractedAudio = null;
+        ClearExtractedImage();
 
         StegoPayloadResult? payload = null;
         string? error = null;
@@ -274,10 +277,33 @@ public partial class ExtractView : UserControl
             return;
         }
 
+        if (payload.ImageBytes is not null)
+        {
+            _extractedAudio = null;
+            _extractedImageBytes = payload.ImageBytes;
+            StatusText.Text = string.Empty;
+            ResultText.Visibility = Visibility.Collapsed;
+            ResultText.Text = string.Empty;
+            ShowExtractedImage(payload.ImageBytes);
+            ResultTitle.Text = s.ExtractedImage;
+            ResultHeaderIcon.Text = "\uE73E";
+            ResultPanel.Style = (Style)FindResource("ResultCard");
+            ResultTitle.Foreground = (Brush)FindResource("TextBrush");
+            CopyButton.Visibility = Visibility.Collapsed;
+            PlayExtractedButton.Visibility = Visibility.Collapsed;
+            SaveExtractedButton.Visibility = Visibility.Visible;
+            SaveExtractedLabel.Text = s.SaveExtractedImage;
+            ResultPanel.Visibility = Visibility.Visible;
+            SessionLog.Write($"Extract: image bytes={payload.ImageBytes.Length}");
+            return;
+        }
+
         if (payload.Audio is not null)
         {
             _extractedAudio = payload.Audio;
+            ClearExtractedImage();
             StatusText.Text = string.Empty;
+            ResultText.Visibility = Visibility.Visible;
             ResultText.Text = s.ExtractedAudio;
             ResultTitle.Text = s.ExtractedAudio;
             ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text, forceLatinLtr: true);
@@ -288,6 +314,7 @@ public partial class ExtractView : UserControl
             CopyButton.Visibility = Visibility.Collapsed;
             PlayExtractedButton.Visibility = Visibility.Visible;
             SaveExtractedButton.Visibility = Visibility.Visible;
+            SaveExtractedLabel.Text = s.SaveExtractedAudio;
             ResultPanel.Visibility = Visibility.Visible;
             SessionLog.Write($"Extract: audio samples={payload.Audio.Samples.Length}");
             return;
@@ -309,7 +336,9 @@ public partial class ExtractView : UserControl
         }
 
         _extractedAudio = null;
+        ClearExtractedImage();
         StatusText.Text = string.Empty;
+        ResultText.Visibility = Visibility.Visible;
         ResultText.Text = payload.Text;
         ResultTitle.Text = s.ExtractedText;
         ContentTextDirectionHelper.ApplyTo(ResultText, payload.Text);
@@ -324,9 +353,31 @@ public partial class ExtractView : UserControl
         SessionLog.Write($"Extract: success length={payload.Text.Length}");
     }
 
+    private void ClearExtractedImage()
+    {
+        _extractedImageBytes = null;
+        ResultImage.Source = null;
+        ResultImage.Visibility = Visibility.Collapsed;
+    }
+
+    private void ShowExtractedImage(byte[] bytes)
+    {
+        using var ms = new MemoryStream(bytes);
+        var bmp = new System.Windows.Media.Imaging.BitmapImage();
+        bmp.BeginInit();
+        bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+        bmp.StreamSource = ms;
+        bmp.EndInit();
+        bmp.Freeze();
+        ResultImage.Source = bmp;
+        ResultImage.Visibility = Visibility.Visible;
+    }
+
     private void ShowExtractFailure(string body)
     {
         _extractedAudio = null;
+        ClearExtractedImage();
+        ResultText.Visibility = Visibility.Visible;
         ResultText.Text = body;
         ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text);
         ResultHeaderIcon.Text = "\uE783";
@@ -366,15 +417,32 @@ public partial class ExtractView : UserControl
 
     private void SaveExtractedButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_extractedImageBytes is not null)
+        {
+            var isPng = _extractedImageBytes.Length >= 4 &&
+                        _extractedImageBytes[0] == 0x89 &&
+                        _extractedImageBytes[1] == 0x50;
+            var ext = isPng ? "png" : "jpg";
+            var dlg = new SaveFileDialog
+            {
+                Filter = isPng ? "PNG (*.png)|*.png" : "JPEG (*.jpg)|*.jpg",
+                FileName = $"extracted_payload.{ext}",
+            };
+            if (dlg.ShowDialog() != true) return;
+            File.WriteAllBytes(dlg.FileName, _extractedImageBytes);
+            StatusText.Text = ThemeManager.Strings.SuccessSaved;
+            return;
+        }
+
         if (_extractedAudio is null) return;
-        var dlg = new SaveFileDialog
+        var wavDlg = new SaveFileDialog
         {
             Filter = "WAV (*.wav)|*.wav",
             FileName = "extracted_payload.wav",
         };
-        if (dlg.ShowDialog() != true) return;
+        if (wavDlg.ShowDialog() != true) return;
         File.WriteAllBytes(
-            dlg.FileName,
+            wavDlg.FileName,
             PayloadEnvelope.PrepareAudioForExport(_extractedAudio).Encode());
         StatusText.Text = ThemeManager.Strings.SuccessSaved;
     }

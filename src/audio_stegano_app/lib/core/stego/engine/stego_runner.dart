@@ -137,6 +137,7 @@ class ExtractPayloadRunResult {
   final String? text;
   final int? audioSampleRate;
   final Int16List? audioSamples;
+  final Uint8List? imageBytes;
   final bool unsupported;
 
   const ExtractPayloadRunResult({
@@ -145,6 +146,7 @@ class ExtractPayloadRunResult {
     this.text,
     this.audioSampleRate,
     this.audioSamples,
+    this.imageBytes,
     this.unsupported = false,
   });
 
@@ -158,6 +160,9 @@ class ExtractPayloadRunResult {
         isLegacy: false,
         rawBody: Uint8List(0),
       );
+    }
+    if (imageBytes != null) {
+      return StegoPayloadResult.image(imageBytes!);
     }
     if (audioSamples != null && audioSampleRate != null) {
       return StegoPayloadResult.audio(
@@ -259,6 +264,20 @@ class StegoRunner {
     return embedBits(binaryMsg: bits, cover: cover, r: r, x0: x0);
   }
 
+  static Future<EmbedRunResult> embedImage({
+    required Uint8List imageFileBytes,
+    required WavFile cover,
+    double r = 3.99,
+    double x0 = 0.45,
+    int? fixedMsgBitLength,
+  }) {
+    final bits = PayloadEnvelope.packImageBits(
+      imageFileBytes,
+      fixedBitLength: fixedMsgBitLength,
+    );
+    return embedBits(binaryMsg: bits, cover: cover, r: r, x0: x0);
+  }
+
   static Future<String?> extract(
     WavFile stego, {
     required int msgBitLength,
@@ -349,6 +368,13 @@ ExtractPayloadRunResult? _extractPayloadOnIsolate(_ExtractRequest req) {
     msgBitLength: req.msgBitLength,
   );
   if (payload == null) return null;
+  if (payload.imageBytes != null) {
+    return ExtractPayloadRunResult(
+      typeCode: StegoPayloadType.image.code,
+      isLegacy: false,
+      imageBytes: payload.imageBytes,
+    );
+  }
   if (payload.audio != null) {
     return ExtractPayloadRunResult(
       typeCode: StegoPayloadType.audio.code,

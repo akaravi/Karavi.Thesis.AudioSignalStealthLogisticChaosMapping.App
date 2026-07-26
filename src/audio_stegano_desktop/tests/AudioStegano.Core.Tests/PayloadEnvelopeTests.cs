@@ -80,4 +80,28 @@ public class PayloadEnvelopeTests
         Assert.Equal(PayloadAudioDefaults.ExportSampleRate, exported.SampleRate);
         Assert.True(exported.Samples.Length > pcm.Length);
     }
+
+    [Fact]
+    public void PackUnpack_ImageJpeg_RoundTrip()
+    {
+        var jpeg = new byte[68];
+        jpeg[0] = 0xFF;
+        jpeg[1] = 0xD8;
+        jpeg[2] = 0xFF;
+        jpeg[3] = 0xD9;
+        var bits = PayloadEnvelope.PackImageBits(jpeg);
+        Assert.True(PayloadEnvelope.HasMagicBits(bits));
+        var result = PayloadEnvelope.UnpackBits(bits);
+        Assert.Equal(StegoPayloadType.Image, result.Type);
+        Assert.NotNull(result.ImageBytes);
+        Assert.Equal(jpeg, result.ImageBytes);
+    }
+
+    [Fact]
+    public void ImageBitBudget_FitsUnderFixedBits()
+    {
+        var maxBytes = PayloadImageDefaults.MaxImageBytesForBitBudget(262144);
+        Assert.True(maxBytes > 1000);
+        Assert.True(PayloadEnvelope.BitLengthForImage(new byte[maxBytes]) <= 262144);
+    }
 }

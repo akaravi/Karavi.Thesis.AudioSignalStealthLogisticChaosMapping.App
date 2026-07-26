@@ -74,12 +74,78 @@ class AppStrings {
       _t(const _S('متن', 'Text', 'نص', 'Texte'));
   String get embedPayloadAudioTab =>
       _t(const _S('صوت', 'Audio', 'صوت', 'Audio'));
+  String get embedPayloadImageTab =>
+      _t(const _S('عکس', 'Image', 'صورة', 'Image'));
   String get embedPayloadAudioHint => _t(
     const _S(
       'پیام صوتی کوتاه با کیفیت پایین (۸ کیلوهرتز) ضبط کنید — حدود ۴ ثانیه در سقف بیت تنظیمات؛ سپس صوت اصلی (پوشش) را ضبط یا بارگذاری کنید.',
       'Record a short low-quality (8 kHz) voice payload — about 4 seconds within the settings bit budget — then record or load the cover audio.',
       'سجّل رسالة صوتية قصيرة بجودة منخفضة (٨ كيلوهرتز) — حوالي ٤ ثوانٍ ضمن حد البت — ثم سجّل أو حمّل الصوت الغطاء.',
       'Enregistrez un message vocal court (8 kHz) — environ 4 s dans le budget de bits — puis enregistrez ou chargez l’audio de couverture.',
+    ),
+  );
+  String get embedPayloadImageHint => _t(
+    const _S(
+      'یک عکس انتخاب کنید؛ به‌صورت JPEG فشرده می‌شود تا در سقف بیت تنظیمات جا شود. سپس صوت پوشش را ضبط یا بارگذاری کنید.',
+      'Pick an image; it is compressed to JPEG to fit the settings bit budget. Then record or load the cover audio.',
+      'اختر صورة؛ تُضغط إلى JPEG لتناسب حد البت. ثم سجّل أو حمّل صوت الغطاء.',
+      'Choisissez une image ; elle est compressée en JPEG pour tenir dans le budget de bits. Puis enregistrez ou chargez l’audio de couverture.',
+    ),
+  );
+  String get pickPayloadImage => _t(
+    const _S(
+      'انتخاب عکس',
+      'Pick image',
+      'اختيار صورة',
+      'Choisir une image',
+    ),
+  );
+  String get clearPayloadImage => _t(
+    const _S(
+      'حذف عکس',
+      'Clear image',
+      'مسح الصورة',
+      'Effacer l’image',
+    ),
+  );
+  String get payloadImageReady => _t(
+    const _S(
+      'عکس آماده است — اکنون صوت پوشش را ضبط یا بارگذاری کنید.',
+      'Image payload ready — now record or load the cover audio.',
+      'الصورة جاهزة — سجّل أو حمّل صوت الغطاء الآن.',
+      'Image prête — enregistrez ou chargez maintenant l’audio de couverture.',
+    ),
+  );
+  String payloadImageBudgetLabel(int usedBits, int budgetBits) => _t(
+    _S(
+      'بیت عکس: $usedBits / $budgetBits',
+      'Image bits: $usedBits / $budgetBits',
+      'بت الصورة: $usedBits / $budgetBits',
+      'Bits image : $usedBits / $budgetBits',
+    ),
+  );
+  String get errorEmptyPayloadImage => _t(
+    const _S(
+      'ابتدا یک عکس انتخاب کنید.',
+      'Pick an image payload first.',
+      'اختر صورة أولاً.',
+      'Choisissez d’abord une image.',
+    ),
+  );
+  String get errorPayloadImageBudget => _t(
+    const _S(
+      'عکس حتی پس از فشرده‌سازی در سقف بیت تنظیمات جا نمی‌شود.',
+      'Image cannot fit the settings bit budget even after compression.',
+      'لا يمكن للصورة أن تناسب حد البت حتى بعد الضغط.',
+      'L’image ne tient pas dans le budget de bits même après compression.',
+    ),
+  );
+  String get errorPayloadImageDecode => _t(
+    const _S(
+      'فایل تصویر پشتیبانی نمی‌شود یا خراب است.',
+      'Unsupported or corrupt image file.',
+      'ملف الصورة غير مدعوم أو تالف.',
+      'Fichier image non pris en charge ou corrompu.',
     ),
   );
   String get recordPayloadAudio => _t(
@@ -152,6 +218,22 @@ class AppStrings {
       'Extracted audio',
       'الصوت المستخرج',
       'Audio extrait',
+    ),
+  );
+  String get extractedImage => _t(
+    const _S(
+      'عکس استخراج‌شده',
+      'Extracted image',
+      'الصورة المستخرجة',
+      'Image extraite',
+    ),
+  );
+  String get saveExtractedImage => _t(
+    const _S(
+      'ذخیره عکس استخراج‌شده',
+      'Save extracted image',
+      'حفظ الصورة المستخرجة',
+      'Enregistrer l’image extraite',
     ),
   );
   String get saveExtractedAudio => _t(

@@ -1,5 +1,12 @@
 # Change History
 
+## 2026-07-26 — ASTG Image payload (hide/recover still image)
+
+- ASTG type `Image` (0x02): JPEG/PNG body; Flutter `PayloadImageCodec` + WPF `PayloadImageCodec` compress to fit Settings bit budget (long-edge ≤240, quality ladder).
+- Embed: Text | Audio | Image tabs (Flutter SegmentedButton + WPF radios); pick/preview/clear image then cover record/load.
+- Extract: preview recovered image + save JPEG/PNG (Flutter + WPF).
+- Tests: pack/unpack image + bit-budget helper (Dart/C#).
+
 ## 2026-07-26 — Extract dual players (cover vs payload)
 
 - Flutter/WPF Extract: separate players for stego cover vs extracted payload so pause/stop/play no longer share one source.
