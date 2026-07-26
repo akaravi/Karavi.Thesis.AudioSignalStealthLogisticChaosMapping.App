@@ -99,6 +99,12 @@ public sealed partial class AppStrings
         "هل تريد تسجيل التطبيق في «فتح باستخدام» Windows لملفات WAV/MP3/MP4؟",
         "Enregistrer cette application dans « Ouvrir avec » Windows pour les fichiers WAV/MP3/MP4 ?");
 
+    public string WindowsOpenWithRegisterFailed => T(
+        "ثبت «باز کردن با» ناموفق بود.",
+        "“Open with” registration failed.",
+        "فشل تسجيل «فتح باستخدام».",
+        "Échec de l’enregistrement « Ouvrir avec ».");
+
     public string WindowsOpenWithUnregistered => T(
         "ثبت «باز کردن با» حذف شد.",
         "“Open with” registration removed.",

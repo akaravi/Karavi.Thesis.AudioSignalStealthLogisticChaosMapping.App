@@ -11,6 +11,5 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Stego\trained_autoencoder.json" />
-    <None Include="Stego\trained_autoencoder.mat" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

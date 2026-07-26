@@ -1,5 +1,38 @@
 # Change History
 
+## 2026-07-26 — Extract dual players (cover vs payload)
+
+- Flutter/WPF Extract: separate players for stego cover vs extracted payload so pause/stop/play no longer share one source.
+- Playing one pauses the other; extracted play toggles pause when already playing.
+
+## 2026-07-26 — Fast extracted speech + pre-deploy test gate
+
+- Root cause (WPF): payload recorded at 8 kHz but `StopAndRead()` default-labeled WAV as 44100 → encode downsampled → ~5.5× too fast.
+- Fix: `AudioCaptureService` keeps session sample rate; `SampleRateReconcile` (Dart+C#) retags from wall-clock duration on payload stop.
+- Pre-deploy: `_test-pre-deploy.ps1` + `audio_payload_duration_test.dart` / `AudioPayloadDurationTests.cs` (duration preserve / mislabel regression). Gate PASSED.
+
+## 2026-07-26 — Extracted audio payload quality fix
+
+- Root cause: linear `(pcm16+32768)>>8` collapsed quiet speech toward silence after extract.
+- Audio body meta now includes `peakAbs` (10 B): DC-remove + peak-normalize on encode; restore amplitude on decode; legacy 8 B meta still readable.
+- Extract play/save (Flutter + WPF): `PrepareAudioForExport` / `prepareAudioForExport` → 16 kHz for player compatibility.
+- Tests: quiet-speech energy + export upsample (Flutter 8 / Core 24 green).
+
+## 2026-07-26 — Embed integrity gate (stego vs original)
+
+- Immediate post-embed check: BER=0, bit-exact payload, cover differs only in LSBs, WAV encode→decode→extract.
+- `toMatlabInt16` is identity copy (no float round-trip that could desync cover vs stego).
+- Flutter/WPF: reject embed on integrity failure; auto show VerifyMatch; audio verify compares PCM samples not only length.
+
+## 2026-07-26 — ASTG payload envelope + Embed audio tab
+
+- Content-type header `ASTG` (v1) before AE/XOR/LSB: Text / Image / Audio / Other; no magic → legacy UTF-8 text.
+- Audio payload body: 8 kHz mono PCM u8; bit budget from Settings `DefaultFixedMessageBitLength`.
+- Flutter Embed: Text | Audio tabs; record payload then cover; Extract: play/save recovered WAV.
+- WPF EmbedView / ExtractView parity + AppStrings.
+- Core: `PayloadEnvelope` (Dart + C#); tests green (19 Core incl. audio round-trip); Desktop build OK; removed missing `.mat` from Core csproj / Flutter pubspec (JSON AE remains).
+- Follow-up: ASTG-aware `lsb_codec_test` / `stego_engine_test`; Settings/Embed hints (~4 s @ 8 kHz); workspace title/status bar colors.
+
 ## 2026-06-02 — Run all (local dev)
 
 - Build/test: dotnet build OK, dotnet test 14, flutter test 49, flutter analyze clean.

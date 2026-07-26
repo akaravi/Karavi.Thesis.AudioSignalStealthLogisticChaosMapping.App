@@ -28,6 +28,59 @@ public sealed partial class AppStrings
     public string TextHint => T(
         "متن پیام را اینجا تایپ کنید…", "Type your secret message…",
         "اكتب رسالتك السرية هنا…", "Saisissez votre message secret…");
+    public string EmbedPayloadTextTab => T("متن", "Text", "نص", "Texte");
+    public string EmbedPayloadAudioTab => T("صوت", "Audio", "صوت", "Audio");
+    public string EmbedPayloadAudioHint => T(
+        "پیام صوتی کوتاه با کیفیت پایین (۸ کیلوهرتز) ضبط کنید — حدود ۴ ثانیه در سقف بیت تنظیمات؛ سپس صوت اصلی (پوشش) را ضبط یا بارگذاری کنید.",
+        "Record a short low-quality (8 kHz) voice payload — about 4 seconds within the settings bit budget — then record or load the cover audio.",
+        "سجّل رسالة صوتية قصيرة بجودة منخفضة (٨ كيلوهرتز) — حوالي ٤ ثوانٍ ضمن حد البت — ثم سجّل أو حمّل الصوت الغطاء.",
+        "Enregistrez un message vocal court (8 kHz) — environ 4 s dans le budget de bits — puis enregistrez ou chargez l’audio de couverture.");
+    public string RecordPayloadAudio => T(
+        "ضبط پیام صوتی", "Record voice payload",
+        "تسجيل الرسالة الصوتية", "Enregistrer le message vocal");
+    public string StopPayloadAudio => T(
+        "پایان ضبط پیام", "Stop payload recording",
+        "إيقاف تسجيل الرسالة", "Arrêter l’enregistrement du message");
+    public string ClearPayloadAudio => T(
+        "حذف پیام صوتی", "Clear voice payload",
+        "مسح الرسالة الصوتية", "Effacer le message vocal");
+    public string PayloadAudioReady => T(
+        "پیام صوتی آماده است — اکنون صوت پوشش را ضبط یا بارگذاری کنید.",
+        "Voice payload ready — now record or load the cover audio.",
+        "الرسالة الصوتية جاهزة — سجّل أو حمّل صوت الغطاء الآن.",
+        "Message vocal prêt — enregistrez ou chargez maintenant l’audio de couverture.");
+    public string PayloadAudioBudgetLabel(int usedBits, int budgetBits) => _lang switch
+    {
+        AppLanguage.Fa => $"بیت پیام صوتی: {usedBits} / {budgetBits}",
+        AppLanguage.En => $"Voice bits: {usedBits} / {budgetBits}",
+        AppLanguage.Ar => $"بت الرسالة: {usedBits} / {budgetBits}",
+        AppLanguage.Fr => $"Bits vocaux : {usedBits} / {budgetBits}",
+        _ => $"بیت پیام صوتی: {usedBits} / {budgetBits}",
+    };
+    public string ErrorEmptyPayloadAudio => T(
+        "ابتدا پیام صوتی را ضبط کنید.",
+        "Record the voice payload first.",
+        "سجّل الرسالة الصوتية أولاً.",
+        "Enregistrez d’abord le message vocal.");
+    public string ErrorPayloadAudioBudget => T(
+        "طول پیام صوتی از سقف بیت تنظیمات بیشتر است.",
+        "Voice payload exceeds the settings bit budget.",
+        "تجاوزت الرسالة الصوتية حد البت في الإعدادات.",
+        "Le message vocal dépasse le budget de bits des paramètres.");
+    public string ExtractedAudio => T(
+        "صوت استخراج‌شده", "Extracted audio",
+        "الصوت المستخرج", "Audio extrait");
+    public string SaveExtractedAudio => T(
+        "ذخیره صوت استخراج‌شده", "Save extracted audio",
+        "حفظ الصوت المستخرج", "Enregistrer l’audio extrait");
+    public string PlayExtractedAudio => T(
+        "پخش صوت استخراج‌شده", "Play extracted audio",
+        "تشغيل الصوت المستخرج", "Lire l’audio extrait");
+    public string ExtractUnsupportedType => T(
+        "این نوع محتوا در این نسخه پشتیبانی نمی‌شود.",
+        "This content type is not supported in this version.",
+        "نوع المحتوى هذا غير مدعوم في هذا الإصدار.",
+        "Ce type de contenu n’est pas pris en charge dans cette version.");
     public string StartRecording => T("شروع ضبط", "Start Recording", "بدء التسجيل", "Démarrer l’enregistrement");
     public string StopRecording => T("پایان ضبط", "Stop Recording", "إيقاف التسجيل", "Arrêter l’enregistrement");
     public string SaveStego => T(
@@ -125,12 +178,13 @@ public sealed partial class AppStrings
     public string DefaultFixedMessageBitLimitHint(int bits) => _lang switch
     {
         AppLanguage.Fa =>
-            $"نهان‌نگاری و رمزگشایی همیشه با {bits} بیت انجام می‌شود؛ طول پیام از شما پرسیده نمی‌شود.",
+            $"نهان‌نگاری و رمزگشایی همیشه با {bits} بیت انجام می‌شود؛ طول پیام از شما پرسیده نمی‌شود. برای تب صوت Embed حدود ۴ ثانیه صوت ۸کیلوهرتز (PCM u8) در این سقف جا می‌شود.",
         AppLanguage.Ar =>
-            $"الإخفاء والاستخراج دائماً بـ {bits} بت؛ لا يُطلب طول الرسالة.",
+            $"الإخفاء والاستخراج دائماً بـ {bits} بت؛ لا يُطلب طول الرسالة. في تب الصوت حوالي ٤ ثوانٍ بصوت ٨ كيلوهرتز (PCM u8) ضمن هذا الحد.",
         AppLanguage.Fr =>
-            $"Intégration et extraction à {bits} bits ; la longueur n’est pas demandée.",
-        _ => $"Embed and extract always use {bits} bits; message length is not asked.",
+            $"Intégration et extraction à {bits} bits ; la longueur n’est pas demandée. Onglet Audio : environ 4 s de voix 8 kHz PCM u8 dans ce budget.",
+        _ =>
+            $"Embed and extract always use {bits} bits; message length is not asked. On the Embed Audio tab, about 4 seconds of 8 kHz PCM u8 voice fits this budget.",
     };
     public string MessageBitsUsed(int used) => _lang switch
     {
@@ -217,11 +271,20 @@ public sealed partial class AppStrings
         "طول پیام باید عدد مثبت باشد.", "Message length must be a positive number.",
         "يجب أن يكون طول الرسالة رقماً موجباً.", "La longueur du message doit être positive.");
     public string VerifyMatch => T(
-        "تأیید موفق ✓ متن استخراج‌شده با اصل یکی است.", "Verified ✓ extracted text matches the original.",
-        "تم التحقق ✓ النص المستخرج يطابق الأصل.", "Vérifié ✓ le texte extrait correspond à l’original.");
+        "تأیید موفق ✓ محتوای استخراج‌شده با اصل یکی است (و فقط LSB نسبت به صوت پوشش تغییر کرده).",
+        "Verified ✓ recovered payload matches the original (cover changed only in LSBs).",
+        "تم التحقق ✓ المحتوى المستخرج يطابق الأصل (تغيّر الغطاء في LSB فقط).",
+        "Vérifié ✓ charge utile identique à l’original (couverture modifiée seulement en LSB).");
     public string VerifyMismatch => T(
-        "تأیید ناموفق! متن استخراج‌شده با اصل تطابق ندارد.", "Mismatch! extracted text differs from the original.",
-        "فشل التحقق! النص المستخرج يختلف عن الأصل.", "Échec ! le texte extrait diffère de l’original.");
+        "تأیید ناموفق! محتوای استخراج‌شده با اصل تطابق ندارد.",
+        "Mismatch! recovered payload differs from the original.",
+        "فشل التحقق! المحتوى المستخرج يختلف عن الأصل.",
+        "Échec ! la charge utile extraite diffère de l’original.");
+    public string ErrorEmbedIntegrity => T(
+        "نهان‌نگاری رد شد: فایل استگو با پیام اصلی تطبیق ندارد (تست یکپارچگی لحظه‌ای ناموفق).",
+        "Embed rejected: stego file failed the immediate integrity check against the original payload.",
+        "رُفض الإخفاء: فشل فحص سلامة الملف المخفي مقابل المحتوى الأصلي.",
+        "Intégration rejetée : le fichier stégo a échoué au contrôle d’intégrité immédiat.");
     public string VerifyEmpty => T(
         "چیزی استخراج نشد — embed با شکست مواجه شده است.", "Nothing extracted — embed seems broken.",
         "لم يُستخرج شيء — يبدو أن الإخفاء فشل.", "Rien extrait — l’intégration semble avoir échoué.");

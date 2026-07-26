@@ -70,6 +70,122 @@ class AppStrings {
       'Saisissez votre message secret…',
     ),
   );
+  String get embedPayloadTextTab =>
+      _t(const _S('متن', 'Text', 'نص', 'Texte'));
+  String get embedPayloadAudioTab =>
+      _t(const _S('صوت', 'Audio', 'صوت', 'Audio'));
+  String get embedPayloadAudioHint => _t(
+    const _S(
+      'پیام صوتی کوتاه با کیفیت پایین (۸ کیلوهرتز) ضبط کنید — حدود ۴ ثانیه در سقف بیت تنظیمات؛ سپس صوت اصلی (پوشش) را ضبط یا بارگذاری کنید.',
+      'Record a short low-quality (8 kHz) voice payload — about 4 seconds within the settings bit budget — then record or load the cover audio.',
+      'سجّل رسالة صوتية قصيرة بجودة منخفضة (٨ كيلوهرتز) — حوالي ٤ ثوانٍ ضمن حد البت — ثم سجّل أو حمّل الصوت الغطاء.',
+      'Enregistrez un message vocal court (8 kHz) — environ 4 s dans le budget de bits — puis enregistrez ou chargez l’audio de couverture.',
+    ),
+  );
+  String get recordPayloadAudio => _t(
+    const _S(
+      'ضبط پیام صوتی',
+      'Record voice payload',
+      'تسجيل الرسالة الصوتية',
+      'Enregistrer le message vocal',
+    ),
+  );
+  String get stopPayloadAudio => _t(
+    const _S(
+      'پایان ضبط پیام',
+      'Stop payload recording',
+      'إيقاف تسجيل الرسالة',
+      'Arrêter l’enregistrement du message',
+    ),
+  );
+  String get clearPayloadAudio => _t(
+    const _S(
+      'حذف پیام صوتی',
+      'Clear voice payload',
+      'مسح الرسالة الصوتية',
+      'Effacer le message vocal',
+    ),
+  );
+  String get payloadAudioReady => _t(
+    const _S(
+      'پیام صوتی آماده است — اکنون صوت پوشش را ضبط یا بارگذاری کنید.',
+      'Voice payload ready — now record or load the cover audio.',
+      'الرسالة الصوتية جاهزة — سجّل أو حمّل صوت الغطاء الآن.',
+      'Message vocal prêt — enregistrez ou chargez maintenant l’audio de couverture.',
+    ),
+  );
+  String payloadAudioBudgetLabel(int usedBits, int budgetBits) => _t(
+    _S(
+      'بیت پیام صوتی: $usedBits / $budgetBits',
+      'Voice bits: $usedBits / $budgetBits',
+      'بت الرسالة: $usedBits / $budgetBits',
+      'Bits vocaux : $usedBits / $budgetBits',
+    ),
+  );
+  String get errorEmptyPayloadAudio => _t(
+    const _S(
+      'ابتدا پیام صوتی را ضبط کنید.',
+      'Record the voice payload first.',
+      'سجّل الرسالة الصوتية أولاً.',
+      'Enregistrez d’abord le message vocal.',
+    ),
+  );
+  String get errorPayloadAudioBudget => _t(
+    const _S(
+      'طول پیام صوتی از سقف بیت تنظیمات بیشتر است.',
+      'Voice payload exceeds the settings bit budget.',
+      'تجاوزت الرسالة الصوتية حد البت في الإعدادات.',
+      'Le message vocal dépasse le budget de bits des paramètres.',
+    ),
+  );
+  String get errorEmbedIntegrity => _t(
+    const _S(
+      'نهان‌نگاری رد شد: فایل استگو با پیام اصلی تطبیق ندارد (تست یکپارچگی لحظه‌ای ناموفق).',
+      'Embed rejected: stego file failed the immediate integrity check against the original payload.',
+      'رُفض الإخفاء: فشل فحص سلامة الملف المخفي مقابل المحتوى الأصلي.',
+      'Intégration rejetée : le fichier stégo a échoué au contrôle d’intégrité immédiat.',
+    ),
+  );
+  String get extractedAudio => _t(
+    const _S(
+      'صوت استخراج‌شده',
+      'Extracted audio',
+      'الصوت المستخرج',
+      'Audio extrait',
+    ),
+  );
+  String get saveExtractedAudio => _t(
+    const _S(
+      'ذخیره صوت استخراج‌شده',
+      'Save extracted audio',
+      'حفظ الصوت المستخرج',
+      'Enregistrer l’audio extrait',
+    ),
+  );
+  String get playExtractedAudio => _t(
+    const _S(
+      'پخش صوت استخراج‌شده',
+      'Play extracted audio',
+      'تشغيل الصوت المستخرج',
+      'Lire l’audio extrait',
+    ),
+  );
+  String get extractUnsupportedType => _t(
+    const _S(
+      'این نوع محتوا در این نسخه پشتیبانی نمی‌شود.',
+      'This content type is not supported in this version.',
+      'نوع المحتوى هذا غير مدعوم في هذا الإصدار.',
+      'Ce type de contenu n’est pas pris en charge dans cette version.',
+    ),
+  );
+  String get extractFailed => _t(
+    const _S(
+      'استخراج ناموفق بود.',
+      'Extraction failed.',
+      'فشل الاستخراج.',
+      'Échec de l’extraction.',
+    ),
+  );
   String get startRecording => _t(
     const _S(
       'شروع ضبط',
@@ -283,10 +399,10 @@ class AppStrings {
   );
   String defaultFixedMessageBitLimitHint(int bits) => _t(
     _S(
-      'نهان‌نگاری و رمزگشایی همیشه با $bits بیت انجام می‌شود؛ طول پیام از شما پرسیده نمی‌شود.',
-      'Embed and extract always use $bits bits; message length is not asked.',
-      'الإخفاء والاستخراج دائماً بـ $bits بت؛ لا يُطلب طول الرسالة.',
-      'Intégration et extraction à $bits bits ; la longueur n’est pas demandée.',
+      'نهان‌نگاری و رمزگشایی همیشه با $bits بیت انجام می‌شود؛ طول پیام از شما پرسیده نمی‌شود. برای تب صوت Embed حدود ۴ ثانیه صوت ۸کیلوهرتز (PCM u8) در این سقف جا می‌شود.',
+      'Embed and extract always use $bits bits; message length is not asked. On the Embed Audio tab, about 4 seconds of 8 kHz PCM u8 voice fits this budget.',
+      'الإخفاء والاستخراج دائماً بـ $bits بت؛ لا يُطلب طول الرسالة. في تب الصوت حوالي ٤ ثوانٍ بصوت ٨ كيلوهرتز (PCM u8) ضمن هذا الحد.',
+      'Intégration et extraction à $bits bits ; la longueur n’est pas demandée. Onglet Audio : environ 4 s de voix 8 kHz PCM u8 dans ce budget.',
     ),
   );
   String messageBitsUsed(int used) => _t(
@@ -591,18 +707,18 @@ class AppStrings {
   );
   String get verifyMatch => _t(
     const _S(
-      'تأیید موفق ✓ متن استخراج‌شده با اصل یکی است.',
-      'Verified ✓ extracted text matches the original.',
-      'تم التحقق ✓ النص المستخرج يطابق الأصل.',
-      'Vérifié ✓ le texte extrait correspond à l’original.',
+      'تأیید موفق ✓ محتوای استخراج‌شده با اصل یکی است (و فقط LSB نسبت به صوت پوشش تغییر کرده).',
+      'Verified ✓ recovered payload matches the original (cover changed only in LSBs).',
+      'تم التحقق ✓ المحتوى المستخرج يطابق الأصل (تغيّر الغطاء في LSB فقط).',
+      'Vérifié ✓ charge utile identique à l’original (couverture modifiée seulement en LSB).',
     ),
   );
   String get verifyMismatch => _t(
     const _S(
-      'تأیید ناموفق! متن استخراج‌شده با اصل تطابق ندارد.',
-      'Mismatch! extracted text differs from the original.',
-      'فشل التحقق! النص المستخرج يختلف عن الأصل.',
-      'Échec ! le texte extrait diffère de l’original.',
+      'تأیید ناموفق! محتوای استخراج‌شده با اصل تطابق ندارد.',
+      'Mismatch! recovered payload differs from the original.',
+      'فشل التحقق! المحتوى المستخرج يختلف عن الأصل.',
+      'Échec ! la charge utile extraite diffère de l’original.',
     ),
   );
   String get verifyEmpty => _t(

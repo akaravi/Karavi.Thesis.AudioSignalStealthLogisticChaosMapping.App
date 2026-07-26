@@ -28,6 +28,29 @@ public class AudioWatermarkingTests
         var outcome = wm.Embed("Test", cover);
         Assert.True(outcome.BitsEmbedded > 0);
         Assert.Equal("Test", wm.Extract(outcome.Stego, outcome.BitsEmbedded));
+        var typed = wm.ExtractPayload(outcome.Stego, outcome.BitsEmbedded);
+        Assert.NotNull(typed);
+        Assert.False(typed!.IsLegacy);
+        Assert.Equal(StegoPayloadType.Text, typed.Type);
+        Assert.Equal("Test", typed.Text);
+    }
+
+    [Fact]
+    public void EmbedExtract_AudioPayload_RoundTrip()
+    {
+        var wm = new AudioWatermarking();
+        var cover = SineCover(6);
+        var pcm = new short[400];
+        for (var i = 0; i < pcm.Length; i++)
+            pcm[i] = (short)((i % 256) * 100);
+        var payload = new WavFile(8000, 1, 16, pcm);
+        var outcome = wm.EmbedAudio(cover, payload);
+        var typed = wm.ExtractPayload(outcome.Stego, outcome.BitsEmbedded);
+        Assert.NotNull(typed);
+        Assert.Equal(StegoPayloadType.Audio, typed!.Type);
+        Assert.NotNull(typed.Audio);
+        Assert.Equal(8000, typed.Audio!.SampleRate);
+        Assert.Equal(400, typed.Audio.Samples.Length);
     }
 
     [Fact]

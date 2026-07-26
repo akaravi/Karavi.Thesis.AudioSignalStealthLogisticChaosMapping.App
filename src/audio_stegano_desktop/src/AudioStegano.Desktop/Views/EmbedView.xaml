@@ -6,14 +6,33 @@
     <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Auto" Padding="16,48,16,16">
       <StackPanel MaxWidth="720">
       <StackPanel x:Name="EmbedInputPanel">
-        <TextBlock x:Name="MessageLabel" Style="{StaticResource BodySmall}" Margin="0,0,0,6"
-                   Foreground="{DynamicResource TextBrush}" />
-        <TextBox x:Name="MessageTextBox" Style="{StaticResource MaterialTextBox}"
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+          <RadioButton x:Name="PayloadModeText" GroupName="EmbedPayloadMode" IsChecked="True"
+                       Margin="0,0,16,0" Checked="PayloadMode_Checked" />
+          <RadioButton x:Name="PayloadModeAudio" GroupName="EmbedPayloadMode"
+                       Checked="PayloadMode_Checked" />
+        </StackPanel>
+        <StackPanel x:Name="TextPayloadPanel">
+          <TextBlock x:Name="MessageLabel" Style="{StaticResource BodySmall}" Margin="0,0,0,6"
+                     Foreground="{DynamicResource TextBrush}" />
+          <TextBox x:Name="MessageTextBox" Style="{StaticResource MaterialTextBox}"
                    AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96"
                    VerticalScrollBarVisibility="Auto"
                    TextChanged="MessageTextBox_TextChanged" />
           <TextBlock x:Name="MessageBitsCounter" Style="{StaticResource BodySmall}"
                      Margin="0,6,0,0" HorizontalAlignment="Right" TextAlignment="Right" />
+        </StackPanel>
+        <StackPanel x:Name="AudioPayloadPanel" Visibility="Collapsed">
+          <TextBlock x:Name="AudioPayloadHint" Style="{StaticResource BodySmall}"
+                     TextWrapping="Wrap" Margin="0,0,0,8" />
+          <TextBlock x:Name="AudioPayloadBudget" Style="{StaticResource BodySmall}"
+                     Margin="0,0,0,8" />
+          <Button x:Name="ClearPayloadAudioBtn" Style="{StaticResource TonalButton}"
+                  HorizontalAlignment="Right" Margin="0,0,0,8" Click="ClearPayloadAudio_Click"
+                  Visibility="Collapsed">
+            <TextBlock x:Name="ClearPayloadAudioLabel" />
+          </Button>
+        </StackPanel>
 
         <Border x:Name="AudioSourceCard" Style="{StaticResource MaterialCard}" Margin="0,16,0,0" Padding="12,16">
           <StackPanel>

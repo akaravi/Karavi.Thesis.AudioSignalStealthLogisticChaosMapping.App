@@ -54,7 +54,8 @@ public static class WindowsFileAssociationService
         foreach (var ext in Extensions)
         {
             using var openWith = Registry.CurrentUser.CreateSubKey($@"Software\Classes\{ext}\OpenWithProgids");
-            openWith?.SetValue(ProgId, string.Empty, RegistryValueKind.None);
+            // OpenWithProgids entries are REG_NONE empty markers (not empty string).
+            openWith?.SetValue(ProgId, Array.Empty<byte>(), RegistryValueKind.None);
         }
 
         using (var clients = Registry.CurrentUser.CreateSubKey(@"Software\Clients\Media\AudioStegano"))

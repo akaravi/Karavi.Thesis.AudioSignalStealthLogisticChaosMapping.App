@@ -14,6 +14,7 @@ import '../audio/wav_io.dart';
 import 'logistic_map_keygen.dart';
 import 'logistic_positions.dart';
 import 'message_block_autoencoder.dart';
+import 'payload_envelope.dart';
 import 'stego_common.dart';
 
 /// `train/extract_message.m`
@@ -31,7 +32,23 @@ class ExtractMessage {
        );
 
   /// `msg_length` همان `stego_meta.msg_length` در متلب
+  /// ASTG text یا legacy UTF-8؛ برای صوت از [runPayload] استفاده کنید.
   String? runText({
+    required WavFile stego,
+    required int msgBitLength,
+    Uint8List? binKey,
+  }) {
+    final payload = runPayload(
+      stego: stego,
+      msgBitLength: msgBitLength,
+      binKey: binKey,
+    );
+    if (payload == null) return null;
+    return payload.text;
+  }
+
+  /// استخراج typed (ASTG envelope یا legacy متن).
+  StegoPayloadResult? runPayload({
     required WavFile stego,
     required int msgBitLength,
     Uint8List? binKey,
@@ -42,7 +59,7 @@ class ExtractMessage {
       binKey: binKey,
     );
     if (bits == null) return null;
-    return MessageBits.toUtf8Text(bits);
+    return PayloadEnvelope.unpackBits(bits);
   }
 
   Uint8List? runBits({

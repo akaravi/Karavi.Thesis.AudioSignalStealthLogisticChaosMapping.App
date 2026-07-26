@@ -33,23 +33,31 @@ class ExtractScreen extends ConsumerStatefulWidget {
 
 class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   final _bitLenCtrl = TextEditingController();
-  final AudioPlayerService _player = AudioPlayerService();
+  /// Cover (stego file) and recovered payload must never share one player —
+  /// otherwise pause/stop/play on one stream replaces or freezes the other.
+  final AudioPlayerService _coverPlayer = AudioPlayerService();
+  final AudioPlayerService _extractedPlayer = AudioPlayerService();
 
   bool _processing = false;
   bool _loadingFile = false;
   bool _extractionAttempted = false;
   String? _result;
+  WavFile? _extractedAudio;
   String? _statusMessage;
   String? _bitLengthError;
   WavFile? _loadedWav;
-  bool _isPlaying = false;
-  bool _playbackLoaded = false;
-  StreamSubscription<PlayerState>? _playStateSub;
+  bool _coverPlaying = false;
+  bool _coverLoaded = false;
+  bool _extractedPlaying = false;
+  StreamSubscription<PlayerState>? _coverStateSub;
+  StreamSubscription<PlayerState>? _extractedStateSub;
 
   @override
   void dispose() {
-    _playStateSub?.cancel();
-    unawaited(_player.dispose());
+    _coverStateSub?.cancel();
+    _extractedStateSub?.cancel();
+    unawaited(_coverPlayer.dispose());
+    unawaited(_extractedPlayer.dispose());
     _bitLenCtrl.dispose();
     super.dispose();
   }
@@ -67,6 +75,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _statusMessage = s.processing;
       _extractionAttempted = false;
       _result = null;
+      _extractedAudio = null;
     });
 
     WavFile? wav;
@@ -81,13 +90,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       error = audioLoadErrorMessage(s, e);
     }
 
-    await _player.stop();
+    await _coverPlayer.stop();
+    await _extractedPlayer.stop();
     if (!mounted) return;
     setState(() {
       _loadingFile = false;
       _loadedWav = wav;
-      _isPlaying = false;
-      _playbackLoaded = false;
+      _coverPlaying = false;
+      _coverLoaded = false;
+      _extractedPlaying = false;
       if (error != null) {
         _statusMessage = error;
       } else if (wav != null) {
@@ -96,15 +107,24 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     });
   }
 
-  void _attachPlaybackListeners() {
-    _playStateSub?.cancel();
-    _playStateSub = _player.stateStream.listen((st) {
+  void _attachCoverListeners() {
+    _coverStateSub ??= _coverPlayer.stateStream.listen((st) {
       if (!mounted) return;
       final completed = st.processingState == ProcessingState.completed;
       setState(() {
-        _isPlaying = completed ? false : st.playing;
-        _playbackLoaded =
-            _loadedWav != null && (_player.hasSource || completed);
+        _coverPlaying = completed ? false : st.playing;
+        _coverLoaded =
+            _loadedWav != null && (_coverPlayer.hasSource || completed);
+      });
+    });
+  }
+
+  void _attachExtractedListeners() {
+    _extractedStateSub ??= _extractedPlayer.stateStream.listen((st) {
+      if (!mounted) return;
+      final completed = st.processingState == ProcessingState.completed;
+      setState(() {
+        _extractedPlaying = completed ? false : st.playing;
       });
     });
   }
@@ -178,14 +198,17 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     setState(() {
       _processing = true;
       _result = null;
+      _extractedAudio = null;
       _statusMessage = s.processing;
       _extractionAttempted = false;
+      _extractedPlaying = false;
     });
+    unawaited(_extractedPlayer.stop());
 
-    String? text;
+    StegoPayloadResult? payload;
     String? error;
     try {
-      text = await StegoRunner.extract(
+      payload = await StegoRunner.extractPayload(
         wav,
         msgBitLength: msgBitLength,
         r: settings.r,
@@ -195,17 +218,35 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       error = e.toString();
     }
     if (!mounted) return;
+
+    String? text;
+    WavFile? audio;
+    String? status;
+    if (error != null) {
+      status = error;
+    } else if (payload == null) {
+      status = s.keyMismatch;
+    } else if (payload.audio != null) {
+      audio = payload.audio;
+      status = null;
+    } else if (payload.rawBody != null && payload.text == null) {
+      status = s.extractUnsupportedType;
+    } else if (payload.text == null) {
+      status = s.keyMismatch;
+    } else if (payload.text!.isEmpty) {
+      text = '';
+      status = s.noText;
+    } else {
+      text = payload.text;
+      status = null;
+    }
+
     setState(() {
       _processing = false;
       _extractionAttempted = true;
       _result = text;
-      _statusMessage =
-          error ??
-          (text == null
-              ? s.keyMismatch
-              : text.isEmpty
-              ? s.noText
-              : null);
+      _extractedAudio = audio;
+      _statusMessage = status;
     });
   }
 
@@ -213,11 +254,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     final wav = _loadedWav;
     if (wav == null) return;
     try {
-      _attachPlaybackListeners();
-      if (_playbackLoaded && !_isPlaying && _player.hasSource) {
-        await _player.resume();
+      // Pause payload player so streams stay independent (no shared source).
+      if (_extractedPlaying) {
+        await _extractedPlayer.pause();
+      }
+      _attachCoverListeners();
+      if (_coverLoaded && !_coverPlaying && _coverPlayer.hasSource) {
+        await _coverPlayer.resume();
       } else {
-        await _player.playWav(wav);
+        await _coverPlayer.playWav(wav);
       }
     } catch (e) {
       if (!mounted) return;
@@ -227,7 +272,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
   Future<void> _pauseLoaded() async {
     try {
-      await _player.pause();
+      await _coverPlayer.pause();
     } catch (e) {
       if (!mounted) return;
       setState(() => _statusMessage = e.toString());
@@ -236,11 +281,11 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
   Future<void> _stopLoaded() async {
     try {
-      await _player.stop();
+      await _coverPlayer.stop();
       if (!mounted) return;
       setState(() {
-        _isPlaying = false;
-        _playbackLoaded = false;
+        _coverPlaying = false;
+        _coverLoaded = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -249,12 +294,14 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   }
 
   String _resultBody(AppStrings s) {
+    if (_extractedAudio != null) return s.extractedAudio;
     if (_result != null && _result!.isNotEmpty) return _result!;
     if (_result != null && _result!.isEmpty) return s.noText;
     return _statusMessage ?? s.noText;
   }
 
-  bool get _extractSucceeded => _result != null && _result!.isNotEmpty;
+  bool get _extractSucceeded =>
+      (_result != null && _result!.isNotEmpty) || _extractedAudio != null;
 
   bool get _hasLoadedAudio => _loadedWav != null;
 
@@ -263,9 +310,11 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _bitLenCtrl.text.trim().isNotEmpty ||
       _extractionAttempted ||
       _result != null ||
+      _extractedAudio != null ||
       _statusMessage != null ||
-      _isPlaying ||
-      _playbackLoaded;
+      _coverPlaying ||
+      _coverLoaded ||
+      _extractedPlaying;
 
   bool get _newExtractFabEnabled {
     if (_processing || _loadingFile) return false;
@@ -275,7 +324,8 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   Future<void> _startNewExtract() async {
     if (!_newExtractFabEnabled) return;
     try {
-      await _player.stop();
+      await _coverPlayer.stop();
+      await _extractedPlayer.stop();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Extract new: stop playback: $e');
@@ -290,11 +340,66 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _extractionAttempted = false;
       _loadedWav = null;
       _result = null;
+      _extractedAudio = null;
       _statusMessage = null;
       _bitLengthError = null;
-      _isPlaying = false;
-      _playbackLoaded = false;
+      _coverPlaying = false;
+      _coverLoaded = false;
+      _extractedPlaying = false;
     });
+  }
+
+  Future<void> _playExtractedAudio() async {
+    final wav = _extractedAudio;
+    if (wav == null) return;
+    try {
+      if (_coverPlaying) {
+        await _coverPlayer.pause();
+      }
+      _attachExtractedListeners();
+      if (_extractedPlaying && _extractedPlayer.hasSource) {
+        await _extractedPlayer.pause();
+        return;
+      }
+      if (_extractedPlayer.hasSource && !_extractedPlaying) {
+        await _extractedPlayer.resume();
+        return;
+      }
+      await _extractedPlayer.playWav(
+        PayloadEnvelope.prepareAudioForExport(wav),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _statusMessage = e.toString());
+    }
+  }
+
+  Future<void> _saveExtractedAudio() async {
+    final wav = _extractedAudio;
+    if (wav == null) return;
+    final s = AppStrings.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final bytes = PayloadEnvelope.prepareAudioForExport(wav).encode();
+    try {
+      final path = await FilePicker.saveFile(
+        dialogTitle: s.saveExtractedAudio,
+        fileName: 'extracted_payload.wav',
+        type: FileType.custom,
+        allowedExtensions: ['wav'],
+        bytes: bytes,
+      );
+      if (path == null) {
+        if (kIsWeb && mounted) {
+          messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+        }
+        return;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   Widget _buildNewExtractFab(AppStrings s) {
@@ -333,7 +438,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
           Tooltip(
             message: s.play,
             child: IconButton.filled(
-              onPressed: _processing || _isPlaying ? null : _playLoaded,
+              onPressed: _processing || _coverPlaying ? null : _playLoaded,
               icon: const Icon(Icons.play_arrow_rounded),
             ),
           ),
@@ -341,7 +446,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
           Tooltip(
             message: s.pause,
             child: IconButton.filledTonal(
-              onPressed: _processing || !_isPlaying ? null : _pauseLoaded,
+              onPressed: _processing || !_coverPlaying ? null : _pauseLoaded,
               icon: const Icon(Icons.pause_rounded),
             ),
           ),
@@ -349,7 +454,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
           Tooltip(
             message: s.stopPlayback,
             child: IconButton.filledTonal(
-              onPressed: _processing || !_playbackLoaded ? null : _stopLoaded,
+              onPressed: _processing || !_coverLoaded ? null : _stopLoaded,
               icon: const Icon(Icons.stop_rounded),
             ),
           ),
@@ -513,6 +618,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       return const SizedBox.shrink();
     }
     final theme = Theme.of(context);
+    final isAudio = _extractedAudio != null;
     return Card(
       color: _extractSucceeded
           ? theme.colorScheme.primaryContainer
@@ -530,31 +636,67 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                       : Icons.error_outline,
                 ),
                 const SizedBox(width: 8),
-                Text(s.extractedText, style: theme.textTheme.titleMedium),
+                Text(
+                  isAudio ? s.extractedAudio : s.extractedText,
+                  style: theme.textTheme.titleMedium,
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            DirectionalSelectableText(_resultBody(s), style: theme.textTheme.bodyLarge),
+            if (!isAudio)
+              DirectionalSelectableText(
+                _resultBody(s),
+                style: theme.textTheme.bodyLarge,
+              )
+            else
+              Text(_resultBody(s), style: theme.textTheme.bodyLarge),
             if (_extractSucceeded) ...[
               const SizedBox(height: 12),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Builder(
-                  builder: (innerCtx) {
-                    return TextButton.icon(
-                      onPressed: () async {
-                        final messenger = ScaffoldMessenger.of(innerCtx);
-                        await Clipboard.setData(ClipboardData(text: _result!));
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(s.copied)),
-                        );
-                      },
-                      icon: const Icon(Icons.copy),
-                      label: Text(s.copy),
-                    );
-                  },
+              if (isAudio)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: _playExtractedAudio,
+                      icon: Icon(
+                        _extractedPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                      ),
+                      label: Text(
+                        _extractedPlaying ? s.pause : s.playExtractedAudio,
+                      ),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: _saveExtractedAudio,
+                      icon: const Icon(Icons.save_outlined),
+                      label: Text(s.saveExtractedAudio),
+                    ),
+                  ],
+                )
+              else
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Builder(
+                    builder: (innerCtx) {
+                      return TextButton.icon(
+                        onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(innerCtx);
+                          await Clipboard.setData(
+                            ClipboardData(text: _result!),
+                          );
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(s.copied)),
+                          );
+                        },
+                        icon: const Icon(Icons.copy),
+                        label: Text(s.copy),
+                      );
+                    },
+                  ),
                 ),
-              ),
             ],
           ],
         ),

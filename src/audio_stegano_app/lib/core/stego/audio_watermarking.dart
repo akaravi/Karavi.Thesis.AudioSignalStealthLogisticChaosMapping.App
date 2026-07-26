@@ -12,6 +12,7 @@ export 'extract_message.dart';
 export 'logistic_map_keygen.dart';
 export 'logistic_positions.dart';
 export 'message_block_autoencoder.dart';
+export 'payload_envelope.dart';
 export 'stego_common.dart';
 export 'trained_autoencoder_loader.dart';
 
@@ -22,6 +23,7 @@ import 'embed_message.dart';
 import 'evaluate_stego.dart';
 import 'extract_message.dart';
 import 'message_block_autoencoder.dart';
+import 'payload_envelope.dart';
 import 'stego_common.dart';
 
 /// API سازگار با کد قبلی — دروناً از [EmbedMessage] و [ExtractMessage] استفاده می‌کند.
@@ -59,8 +61,33 @@ class AudioWatermarking {
         fixedMsgBitLength: fixedMsgBitLength,
       );
 
+  WatermarkOutcome embedAudio({
+    required WavFile cover,
+    required WavFile payloadAudio,
+    int? fixedMsgBitLength,
+  }) =>
+      _embed.runWithMetricsBits(
+        cover: cover,
+        binaryMsg: PayloadEnvelope.packAudioBits(
+          payloadAudio,
+          fixedBitLength: fixedMsgBitLength,
+        ),
+      );
+
+  WatermarkOutcome embedBitsWithMetrics({
+    required WavFile cover,
+    required Uint8List binaryMsg,
+  }) =>
+      _embed.runWithMetricsBits(cover: cover, binaryMsg: binaryMsg);
+
   String? extract({required WavFile stego, required int msgBitLength}) =>
       _extract.runText(stego: stego, msgBitLength: msgBitLength);
+
+  StegoPayloadResult? extractPayload({
+    required WavFile stego,
+    required int msgBitLength,
+  }) =>
+      _extract.runPayload(stego: stego, msgBitLength: msgBitLength);
 
   WatermarkEmbedResult embedText({
     required WavFile cover,
@@ -130,9 +157,10 @@ class LsbCodec {
     if (bits == null) {
       return const LsbExtractResult(bits: null, text: null, bitsRead: 0);
     }
+    final payload = PayloadEnvelope.unpackBits(bits);
     return LsbExtractResult(
       bits: bits,
-      text: MessageBits.toUtf8Text(bits),
+      text: payload.text,
       bitsRead: bits.length,
     );
   }

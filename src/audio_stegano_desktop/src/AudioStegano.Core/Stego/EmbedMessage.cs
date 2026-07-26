@@ -19,7 +19,10 @@ public sealed class EmbedMessage
     }
 
     public WatermarkEmbedResult RunText(WavFile cover, string text) =>
-        RunBits(cover, MessageBits.FromUtf8Text(text));
+        RunBits(cover, PayloadEnvelope.PackTextBits(text));
+
+    public WatermarkEmbedResult RunAudio(WavFile cover, WavFile payloadAudio, int? fixedMsgBitLength = null) =>
+        RunBits(cover, PayloadEnvelope.PackAudioBits(payloadAudio, fixedBitLength: fixedMsgBitLength));
 
     public WatermarkEmbedResult RunBits(WavFile cover, byte[] binaryMsg, byte[]? binKey = null)
     {
@@ -81,19 +84,35 @@ public sealed class EmbedMessage
 
     public WatermarkOutcome RunWithMetrics(string text, WavFile cover, int? fixedMsgBitLength = null)
     {
-        var binaryMsg = fixedMsgBitLength is > 0
-            ? MessageBits.FromUtf8TextPadded(text, fixedMsgBitLength.Value)
-            : MessageBits.FromUtf8Text(text);
+        var binaryMsg = PayloadEnvelope.PackTextBits(
+            text,
+            fixedBitLength: fixedMsgBitLength is > 0 ? fixedMsgBitLength : null);
+        return RunWithMetricsBits(cover, binaryMsg);
+    }
+
+    public WatermarkOutcome RunWithMetricsBits(WavFile cover, byte[] binaryMsg)
+    {
         var embed = RunBits(cover, binaryMsg);
         var stegoDiff = StegoWithPerturbedKey(cover, binaryMsg);
-        var coverMono = cover.ToMono();
+        var coverMono = StegoAudioHelper.ToMatlabInt16(cover.ToMono().Samples);
 
         var metrics = WatermarkMetrics.Evaluate(
-            coverMono.Samples,
+            coverMono,
             embed.Stego.Samples,
             binaryMsg,
             embed.ExtractedBits,
             stegoDiff.Samples);
+
+        EmbedIntegrity.AssertOk(
+            EmbedIntegrity.Verify(
+                cover,
+                embed.Stego,
+                binaryMsg,
+                embed.ExtractedBits,
+                metrics.BerPercent,
+                Context.R,
+                Context.X0,
+                Context.Autoencoder));
 
         return new WatermarkOutcome(
             embed.Stego,
@@ -109,14 +128,7 @@ internal static class StegoAudioHelper
 {
     public static short[] ToMatlabInt16(ReadOnlySpan<short> samples)
     {
-        var outSamples = new short[samples.Length];
-        for (var i = 0; i < samples.Length; i++)
-        {
-            var normalized = samples[i] / 32767.0;
-            var v = (int)Math.Round(normalized * 32767);
-            v = Math.Clamp(v, -32768, 32767);
-            outSamples[i] = (short)v;
-        }
-        return outSamples;
+        // Identity copy — keep PCM values bit-exact vs cover (only LSB embed may change).
+        return samples.ToArray();
     }
 }

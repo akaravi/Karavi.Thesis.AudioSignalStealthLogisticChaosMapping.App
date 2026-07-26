@@ -10,8 +10,12 @@ public sealed class AudioCaptureService : IDisposable
     private readonly List<byte> _buffer = [];
     private readonly object _lock = new();
     private bool _recording;
+    private int _sampleRate = 44100;
 
     public bool IsRecording => _recording;
+
+    /// <summary>Sample rate of the active or last started capture session.</summary>
+    public int SampleRate => _sampleRate;
 
     public event Action<double>? AmplitudeDb;
     public event Action<double[]>? SpectrumBands;
@@ -22,6 +26,7 @@ public sealed class AudioCaptureService : IDisposable
     {
         Stop();
         _buffer.Clear();
+        _sampleRate = sampleRate;
         _waveIn = new WaveInEvent
         {
             WaveFormat = new WaveFormat(sampleRate, 16, 1),
@@ -33,7 +38,11 @@ public sealed class AudioCaptureService : IDisposable
         _recording = true;
     }
 
-    public WavFile? StopAndRead(int sampleRate = 44100)
+    /// <summary>
+    /// Stops capture and builds a WAV using the session sample rate from <see cref="Start"/>.
+    /// Do not pass a different rate unless intentionally re-labeling.
+    /// </summary>
+    public WavFile? StopAndRead(int? sampleRate = null)
     {
         if (_waveIn is null) return null;
         _waveIn.StopRecording();
@@ -41,6 +50,7 @@ public sealed class AudioCaptureService : IDisposable
         _waveIn = null;
         _recording = false;
 
+        var rate = sampleRate ?? _sampleRate;
         lock (_lock)
         {
             if (_buffer.Count < 2) return null;
@@ -49,7 +59,7 @@ public sealed class AudioCaptureService : IDisposable
             var raw = _buffer.ToArray();
             for (var i = 0; i < sampleCount; i++)
                 samples[i] = BitConverter.ToInt16(raw, i * 2);
-            return new WavFile(sampleRate, 1, 16, samples);
+            return new WavFile(rate, 1, 16, samples);
         }
     }
 

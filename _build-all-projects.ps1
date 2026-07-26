@@ -653,7 +653,7 @@ if (-not $SkipDevServers) {
 
     Start-ProjectTerminal `
         -WorkingDirectory $flutterAppPath `
-        -Command ("& `"$flutterCommand`" run -d windows --host-vmservice-port=$vmPort --device-vmservice-port=$vmPort --devtools-port=$devtoolsPort") `
+        -Command ("& `"$flutterCommand`" run -d windows --host-vmservice-port=$vmPort --device-vmservice-port=$vmPort") `
         -RestartMessage "Started: audio_stegano_app — flutter run -d windows (VM $vmPort, DevTools $devtoolsPort)"
 
     $webRunArgs = New-KaraviFlutterWebRunArgumentList -Device 'web-server' -WebPort $webPort

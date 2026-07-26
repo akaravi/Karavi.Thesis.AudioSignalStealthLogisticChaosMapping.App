@@ -11,6 +11,8 @@
 library;
 
 export 'audio_watermarking.dart';
+export 'embed_integrity.dart';
 export 'embed_message.dart';
 export 'extract_message.dart';
+export 'payload_envelope.dart';
 export 'engine/stego_runner.dart';

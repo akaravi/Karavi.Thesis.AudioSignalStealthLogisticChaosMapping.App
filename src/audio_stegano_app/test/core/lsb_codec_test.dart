@@ -41,7 +41,7 @@ void main() {
       final cover = _sineCover();
       final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'Hello World';
-      final bits = MessageBits.fromUtf8Text(msg);
+      final bits = PayloadEnvelope.packTextBits(msg);
       final result = codec.embedText(cover, msg);
       expect(result.extractedMsg, equals(bits));
       final extract = codec.extractText(result.stego, bits.length);
@@ -53,7 +53,7 @@ void main() {
       final codec = LsbCodec(autoencoder: autoencoder);
       const msg =
           'Audio steganography is the art of hiding data inside an audio carrier.';
-      final bits = MessageBits.fromUtf8Text(msg);
+      final bits = PayloadEnvelope.packTextBits(msg);
       final result = codec.embedText(cover, msg);
       expect(result.bitsEmbedded, bits.length);
       final extract = codec.extractText(result.stego, bits.length);
@@ -66,7 +66,7 @@ void main() {
       final cover = _sineCover(seconds: 4);
       final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'سلام دنیا، این یک پیام نهان‌نگاری شده است.';
-      final bits = MessageBits.fromUtf8Text(msg);
+      final bits = PayloadEnvelope.packTextBits(msg);
       final result = codec.embedText(cover, msg);
       final extract = codec.extractText(result.stego, bits.length);
       expect(extract.text, msg);
@@ -77,7 +77,7 @@ void main() {
     test('positions are scattered not sequential prefix', () {
       final cover = _sineCover(seconds: 4);
       const msg = 'Hello World';
-      final n = MessageBits.fromUtf8Text(msg).length;
+      final n = PayloadEnvelope.packTextBits(msg).length;
       final pos = LogisticPositions.compute(
         n: n,
         maxPos: cover.samples.length,
@@ -97,7 +97,7 @@ void main() {
       final encoder = LsbCodec(x0: 0.45, autoencoder: autoencoder);
       final decoder = LsbCodec(x0: 0.46, autoencoder: autoencoder);
       const msg = 'TopSecret';
-      final bits = MessageBits.fromUtf8Text(msg);
+      final bits = PayloadEnvelope.packTextBits(msg);
       final result = encoder.embedText(cover, msg);
       final extract = decoder.extractText(result.stego, bits.length);
       expect(extract.text, isNot('TopSecret'));
@@ -116,7 +116,7 @@ void main() {
       final cover = _sineCover(seconds: 2);
       final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'Quality test of LSB embedding.';
-      final bits = MessageBits.fromUtf8Text(msg);
+      final bits = PayloadEnvelope.packTextBits(msg);
       final result = codec.embedText(cover, msg);
       final stegoDiff = codec.stegoWithPerturbedKey(cover, bits);
       final mono = cover.toMono();
@@ -152,7 +152,7 @@ void main() {
       final cover = _sineCover(seconds: 2);
       final codec = LsbCodec(autoencoder: autoencoder);
       const msg = 'پیام کامل با pipeline کامل WAV.';
-      final bits = MessageBits.fromUtf8Text(msg);
+      final bits = PayloadEnvelope.packTextBits(msg);
       final stego = codec.embedText(cover, msg).stego;
       final wavBytes = stego.encode();
       final reloaded = WavFile.decode(wavBytes);

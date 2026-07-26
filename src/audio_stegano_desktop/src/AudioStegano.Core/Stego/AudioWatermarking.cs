@@ -26,8 +26,19 @@ public sealed class AudioWatermarking
     public WatermarkOutcome Embed(string text, WavFile cover, int? fixedMsgBitLength = null) =>
         _embed.RunWithMetrics(text, cover, fixedMsgBitLength);
 
+    public WatermarkOutcome EmbedAudio(WavFile cover, WavFile payloadAudio, int? fixedMsgBitLength = null) =>
+        _embed.RunWithMetricsBits(
+            cover,
+            PayloadEnvelope.PackAudioBits(payloadAudio, fixedBitLength: fixedMsgBitLength));
+
+    public WatermarkOutcome EmbedBitsWithMetrics(WavFile cover, byte[] binaryMsg) =>
+        _embed.RunWithMetricsBits(cover, binaryMsg);
+
     public string? Extract(WavFile stego, int msgBitLength) =>
         _extract.RunText(stego, msgBitLength);
+
+    public StegoPayloadResult? ExtractPayload(WavFile stego, int msgBitLength) =>
+        _extract.RunPayload(stego, msgBitLength);
 
     public WatermarkEmbedResult EmbedText(WavFile cover, string text) =>
         _embed.RunText(cover, text);

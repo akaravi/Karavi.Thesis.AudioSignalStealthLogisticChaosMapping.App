@@ -37,12 +37,42 @@ void main() {
       final cover = _sineCover();
       const msg = 'Test';
       final out = wm.embed(text: msg, cover: cover);
-      expect(out.bitsEmbedded, MessageBits.fromUtf8Text(msg).length);
+      expect(out.bitsEmbedded, PayloadEnvelope.packTextBits(msg).length);
       final extracted = wm.extract(
         stego: out.stego,
         msgBitLength: out.bitsEmbedded,
       );
       expect(extracted, msg);
+      final typed = wm.extractPayload(
+        stego: out.stego,
+        msgBitLength: out.bitsEmbedded,
+      );
+      expect(typed?.isLegacy, isFalse);
+      expect(typed?.type, StegoPayloadType.text);
+      expect(typed?.text, msg);
+    });
+
+    test('embed/extract audio payload round-trip', () {
+      final wm = AudioWatermarking(autoencoder: autoencoder);
+      final cover = _sineCover(seconds: 6);
+      final pcm = Int16List(400);
+      for (var i = 0; i < pcm.length; i++) {
+        pcm[i] = (i % 256) * 100;
+      }
+      final payload = WavFile(
+        sampleRate: PayloadAudioDefaults.sampleRate,
+        numChannels: 1,
+        bitsPerSample: 16,
+        samples: pcm,
+      );
+      final out = wm.embedAudio(cover: cover, payloadAudio: payload);
+      final typed = wm.extractPayload(
+        stego: out.stego,
+        msgBitLength: out.bitsEmbedded,
+      );
+      expect(typed?.type, StegoPayloadType.audio);
+      expect(typed?.audio?.sampleRate, PayloadAudioDefaults.sampleRate);
+      expect(typed?.audio?.samples.length, 400);
     });
   });
 

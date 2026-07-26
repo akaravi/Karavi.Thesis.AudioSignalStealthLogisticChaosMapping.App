@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,7 @@ import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_load_errors.dart';
 import '../../core/audio/audio_player.dart';
 import '../../core/audio/audio_recorder.dart';
+import '../../core/audio/sample_rate_reconcile.dart';
 import '../../core/audio/stego_file_naming.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/audio/spectrum_analyzer.dart';
@@ -37,6 +39,8 @@ import '../shared/message_bit_length_formatter.dart';
 import '../shared/record_button.dart';
 import '../shared/stego_share.dart';
 import '../shared/tab_scroll_body.dart';
+
+enum _EmbedPayloadKind { text, audio }
 
 class EmbedScreen extends ConsumerStatefulWidget {
   const EmbedScreen({super.key});
@@ -57,6 +61,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
 
   /// After a successful embed, message field and record/load card stay hidden until new embed.
   bool _embedInputHidden = false;
+  _EmbedPayloadKind _payloadKind = _EmbedPayloadKind.text;
+  WavFile? _payloadAudio;
+  bool _recordingPayload = false;
   final GlobalKey _resultCardKey = GlobalKey();
   final ScrollController _scrollCtrl = ScrollController();
   WavFile? _cover;
@@ -131,12 +138,20 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   Future<void> _toggleRecord() async {
     if (_busy) return;
     if (_recorder.isRecording) {
-      await _stopAndProcess();
+      if (_recordingPayload) {
+        await _stopPayloadRecording();
+      } else {
+        await _stopAndProcess();
+      }
       return;
     }
     _busy = true;
     try {
-      await _startRecording();
+      if (_payloadKind == _EmbedPayloadKind.audio && _payloadAudio == null) {
+        await _startPayloadRecording();
+      } else {
+        await _startRecording();
+      }
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -144,15 +159,129 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     }
   }
 
+  int _settingsBitBudget() {
+    final deploy = ref.read(appConfigProvider);
+    return deploy.defaultFixedMessageBitLength;
+  }
+
+  Future<void> _startPayloadRecording() async {
+    final s = AppStrings.of(context);
+    try {
+      SessionLog.write('Embed: payload record start');
+      await _recorder.start(sampleRate: PayloadAudioDefaults.sampleRate);
+    } catch (e, st) {
+      SessionLog.write('Embed: payload record start failed', error: e, stack: st);
+      if (!mounted) return;
+      _showStatus(e.toString());
+      return;
+    }
+    if (!mounted) return;
+    _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+    final sub = _recorder.spectrumStream.listen((bands) {
+      if (!mounted) return;
+      setState(() => _eqBands = List<double>.from(bands));
+    });
+    _spectrumSub = sub;
+    _recordStartedAt = DateTime.now();
+    _recordTickTimer?.cancel();
+    _recordTickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || !_recorder.isRecording) return;
+      final budget = _settingsBitBudget();
+      final maxDur = PayloadAudioDefaults.maxDurationForBitBudget(budget);
+      final elapsed = _recordingElapsed;
+      if (elapsed != null && elapsed >= maxDur) {
+        unawaited(_stopPayloadRecording());
+        return;
+      }
+      setState(() {});
+    });
+    setState(() {
+      _recordingPayload = true;
+      _embedInputHidden = false;
+      _cover = null;
+      _stego = null;
+      _result = null;
+      _verifyStatus = null;
+      _verifyOk = null;
+      _statusMessage = s.recording;
+    });
+  }
+
+  Future<void> _stopPayloadRecording() async {
+    final s = AppStrings.of(context);
+    if (mounted) {
+      setState(() {
+        _processing = true;
+        _statusMessage = s.processing;
+      });
+    }
+    try {
+      await _cancelSpectrum();
+      _clearRecordTimer();
+      WavFile? raw;
+      try {
+        SessionLog.write('Embed: payload record stop');
+        raw = await _recorder.stopAndRead();
+      } catch (e, st) {
+        SessionLog.write('Embed: payload record stop failed', error: e, stack: st);
+        if (!mounted) return;
+        setState(() {
+          _processing = false;
+          _recordingPayload = false;
+          _statusMessage = e.toString();
+        });
+        return;
+      }
+      if (!mounted) return;
+      if (raw == null || raw.samples.isEmpty) {
+        setState(() {
+          _processing = false;
+          _recordingPayload = false;
+          _statusMessage = 'No recorded audio.';
+        });
+        return;
+      }
+      final wallClock = _recordingElapsed;
+      final reconciled = SampleRateReconcile.reconcile(raw, wallClock);
+      final budget = _settingsBitBudget();
+      final bitsNeeded = PayloadEnvelope.bitLengthForAudio(reconciled);
+      final settings = ref.read(settingsProvider);
+      final cap = settings.defaultFixedMessageBitLimit ? budget : budget;
+      if (bitsNeeded > cap) {
+        setState(() {
+          _processing = false;
+          _recordingPayload = false;
+          _payloadAudio = null;
+        });
+        await _showEmbedWarning(s.errorPayloadAudioBudget);
+        return;
+      }
+      setState(() {
+        _processing = false;
+        _recordingPayload = false;
+        _payloadAudio = reconciled;
+        _statusMessage = s.payloadAudioReady;
+        _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+      });
+    } finally {
+      _releaseEmbedInteractionLocks();
+    }
+  }
+
   Future<void> _startRecording() async {
     final s = AppStrings.of(context);
-    final text = _textCtrl.text.trim();
-    if (text.isEmpty) {
-      await _showEmbedWarning(s.errorEmpty);
+    if (_payloadKind == _EmbedPayloadKind.text) {
+      final text = _textCtrl.text.trim();
+      if (text.isEmpty) {
+        await _showEmbedWarning(s.errorEmpty);
+        return;
+      }
+    } else if (_payloadAudio == null) {
+      await _showEmbedWarning(s.errorEmptyPayloadAudio);
       return;
     }
     try {
-      SessionLog.write('Embed: record start');
+      SessionLog.write('Embed: cover record start');
       await _recorder.start(sampleRate: 44100);
     } catch (e, st) {
       SessionLog.write('Embed: record start failed', error: e, stack: st);
@@ -174,6 +303,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       setState(() {});
     });
     setState(() {
+      _recordingPayload = false;
       _embedInputHidden = false;
       _cover = null;
       _stego = null;
@@ -246,8 +376,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   Future<void> _loadAndEmbed() async {
     if (_busy || _processing || _recorder.isRecording) return;
     final s = AppStrings.of(context);
-    if (_textCtrl.text.trim().isEmpty) {
-      await _showEmbedWarning(s.errorEmpty);
+    if (_payloadKind == _EmbedPayloadKind.text) {
+      if (_textCtrl.text.trim().isEmpty) {
+        await _showEmbedWarning(s.errorEmpty);
+        return;
+      }
+    } else if (_payloadAudio == null) {
+      await _showEmbedWarning(s.errorEmptyPayloadAudio);
       return;
     }
 
@@ -281,8 +416,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   Future<void> _embedFromDroppedPath(String filePath) async {
     if (_busy || _processing || _recorder.isRecording) return;
     final s = AppStrings.of(context);
-    if (_textCtrl.text.trim().isEmpty) {
-      await _showEmbedWarning(s.errorEmpty);
+    if (_payloadKind == _EmbedPayloadKind.text) {
+      if (_textCtrl.text.trim().isEmpty) {
+        await _showEmbedWarning(s.errorEmpty);
+        return;
+      }
+    } else if (_payloadAudio == null) {
+      await _showEmbedWarning(s.errorEmptyPayloadAudio);
       return;
     }
     await _loadAndEmbedPicked(
@@ -338,29 +478,55 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
 
   Future<void> _embedWithCover(WavFile cover, {String? loadedName}) async {
     final s = AppStrings.of(context);
-    final text = _textCtrl.text.trim();
-    if (text.isEmpty) {
-      if (!mounted) return;
-      _releaseEmbedInteractionLocks();
-      await _showEmbedWarning(s.errorEmpty);
-      return;
-    }
-
     final settings = ref.read(settingsProvider);
     final deploy = ref.read(appConfigProvider);
     final fixedBits = deploy.defaultFixedMessageBitLength;
     final useFixedLen = settings.defaultFixedMessageBitLimit;
-    final required = useFixedLen
-        ? fixedBits
-        : MessageBits.bitLengthForText(text);
     final available = cover.toMono().samples.length;
-    if (required > available) {
-      if (!mounted) return;
-      _releaseEmbedInteractionLocks();
-      await _showEmbedWarning(s.errorTooLong);
-      return;
+
+    late final int required;
+    late final Uint8List? binaryMsg;
+    if (_payloadKind == _EmbedPayloadKind.audio) {
+      final payload = _payloadAudio;
+      if (payload == null) {
+        if (!mounted) return;
+        _releaseEmbedInteractionLocks();
+        await _showEmbedWarning(s.errorEmptyPayloadAudio);
+        return;
+      }
+      try {
+        binaryMsg = PayloadEnvelope.packAudioBits(
+          payload,
+          fixedBitLength: useFixedLen ? fixedBits : null,
+        );
+      } catch (_) {
+        if (!mounted) return;
+        _releaseEmbedInteractionLocks();
+        await _showEmbedWarning(s.errorPayloadAudioBudget);
+        return;
+      }
+      required = binaryMsg.length;
+    } else {
+      binaryMsg = null;
+      final text = _textCtrl.text.trim();
+      if (text.isEmpty) {
+        if (!mounted) return;
+        _releaseEmbedInteractionLocks();
+        await _showEmbedWarning(s.errorEmpty);
+        return;
+      }
+      required = useFixedLen
+          ? fixedBits
+          : PayloadEnvelope.bitLengthForText(text);
+      if (useFixedLen && PayloadEnvelope.bitLengthForText(text) > fixedBits) {
+        if (!mounted) return;
+        _releaseEmbedInteractionLocks();
+        await _showEmbedWarning(s.errorTooLong);
+        return;
+      }
     }
-    if (useFixedLen && MessageBits.bitLengthForText(text) > fixedBits) {
+
+    if (required > available) {
       if (!mounted) return;
       _releaseEmbedInteractionLocks();
       await _showEmbedWarning(s.errorTooLong);
@@ -370,13 +536,22 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     EmbedRunResult? produced;
     String? error;
     try {
-      produced = await StegoRunner.embed(
-        text: text,
-        cover: cover,
-        r: settings.r,
-        x0: settings.x0,
-        fixedMsgBitLength: useFixedLen ? fixedBits : null,
-      );
+      if (_payloadKind == _EmbedPayloadKind.audio) {
+        produced = await StegoRunner.embedBits(
+          binaryMsg: binaryMsg!,
+          cover: cover,
+          r: settings.r,
+          x0: settings.x0,
+        );
+      } else {
+        produced = await StegoRunner.embed(
+          text: _textCtrl.text.trim(),
+          cover: cover,
+          r: settings.r,
+          x0: settings.x0,
+          fixedMsgBitLength: useFixedLen ? fixedBits : null,
+        );
+      }
     } catch (e) {
       error = e.toString();
     }
@@ -400,8 +575,14 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     });
     if (error != null && _isEmbedCapacityError(error)) {
       await _showEmbedWarning(s.errorTooLong);
+    } else if (error != null && _isEmbedIntegrityError(error)) {
+      await _showEmbedWarning(s.errorEmbedIntegrity);
     }
     if (success) {
+      setState(() {
+        _verifyOk = true;
+        _verifyStatus = s.verifyMatch;
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final ctx = _resultCardKey.currentContext;
         if (ctx != null) {
@@ -544,9 +725,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _verifyOk = null;
     });
     final settings = ref.read(settingsProvider);
-    String? extracted;
+    StegoPayloadResult? payload;
     try {
-      extracted = await StegoRunner.extract(
+      payload = await StegoRunner.extractPayload(
         stego,
         msgBitLength: result.msgBitLength,
         r: settings.r,
@@ -562,12 +743,44 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     }
     if (!mounted) return;
-    final original = _textCtrl.text.trim();
-    final ok = extracted != null && extracted == original;
+    final recoveredPayload = payload;
+    if (recoveredPayload == null) {
+      setState(() {
+        _verifying = false;
+        _verifyOk = false;
+        _verifyStatus = s.verifyEmpty;
+      });
+      return;
+    }
+    final bool ok;
+    if (_payloadKind == _EmbedPayloadKind.audio) {
+      final original = _payloadAudio;
+      final recovered = recoveredPayload.audio;
+      if (original == null || recovered == null) {
+        ok = false;
+      } else {
+        final expected = PayloadEnvelope.decodeAudioBody(
+          PayloadEnvelope.encodeAudioBody(original),
+        );
+        ok = recovered.sampleRate == expected.sampleRate &&
+            recovered.samples.length == expected.samples.length &&
+            _int16ListsEqual(recovered.samples, expected.samples);
+      }
+    } else {
+      final original = _textCtrl.text.trim();
+      ok = recoveredPayload.text != null && recoveredPayload.text == original;
+    }
     setState(() {
       _verifying = false;
       _verifyOk = ok;
-      if (extracted == null || extracted.isEmpty) {
+      if (_payloadKind == _EmbedPayloadKind.audio) {
+        _verifyStatus = ok
+            ? s.verifyMatch
+            : (recoveredPayload.audio == null
+                ? s.verifyEmpty
+                : s.verifyMismatch);
+      } else if (recoveredPayload.text == null ||
+          recoveredPayload.text!.isEmpty) {
         _verifyStatus = s.verifyEmpty;
       } else {
         _verifyStatus = ok ? s.verifyMatch : s.verifyMismatch;
@@ -593,10 +806,28 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     return lower.contains('too long') || lower.contains('message too long');
   }
 
+  bool _isEmbedIntegrityError(String message) {
+    final lower = message.toLowerCase();
+    return lower.contains('integrity') ||
+        lower.contains('ber is') ||
+        lower.contains('bit mismatch') ||
+        lower.contains('wav round-trip') ||
+        lower.contains('recovered');
+  }
+
+  bool _int16ListsEqual(Int16List a, Int16List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   bool get _canStartNewEmbed =>
       _embedInputHidden ||
       _stego != null ||
       _cover != null ||
+      _payloadAudio != null ||
       _textCtrl.text.trim().isNotEmpty ||
       _recorder.isRecording ||
       _isPlaying ||
@@ -634,6 +865,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _processing = false;
         _verifying = false;
         _embedInputHidden = false;
+        _payloadKind = _EmbedPayloadKind.text;
+        _payloadAudio = null;
+        _recordingPayload = false;
         _cover = null;
         _stego = null;
         _result = null;
@@ -809,7 +1043,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     bool useFixedLimit,
     int fixedBits,
   ) {
-    final used = MessageBits.bitLengthForText(_textCtrl.text);
+    final used = PayloadEnvelope.bitLengthForText(_textCtrl.text);
     if (useFixedLimit) {
       return s.messageBitsUsedAndRemaining(used, fixedBits - used);
     }
@@ -853,30 +1087,99 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
               if (!_embedInputHidden) ...[
-                DirectionalTextField(
-                  controller: _textCtrl,
-                  focusNode: _textFocus,
-                  maxLines: 4,
-                  minLines: 3,
-                  scrollPhysics: const NeverScrollableScrollPhysics(),
-                  enabled: !isRecording && !_processing,
-                  inputFormatters: useFixedLimit
-                      ? [MessageBitLengthFormatter(fixedBits)]
-                      : const [],
-                  decoration: InputDecoration(
-                    labelText: s.textHint,
-                    helperText: _messageBitCounterText(
-                      s,
-                      useFixedLimit,
-                      fixedBits,
+                SegmentedButton<_EmbedPayloadKind>(
+                  segments: [
+                    ButtonSegment(
+                      value: _EmbedPayloadKind.text,
+                      label: Text(s.embedPayloadTextTab),
+                      icon: const Icon(Icons.message_outlined),
                     ),
-                    helperMaxLines: 2,
-                    prefixIcon: const Icon(Icons.message_outlined),
-                  ),
+                    ButtonSegment(
+                      value: _EmbedPayloadKind.audio,
+                      label: Text(s.embedPayloadAudioTab),
+                      icon: const Icon(Icons.mic_none_outlined),
+                    ),
+                  ],
+                  selected: {_payloadKind},
+                  onSelectionChanged: isRecording || _processing
+                      ? null
+                      : (next) {
+                          final kind = next.first;
+                          setState(() {
+                            _payloadKind = kind;
+                            if (kind == _EmbedPayloadKind.text) {
+                              _payloadAudio = null;
+                              _recordingPayload = false;
+                            }
+                            _statusMessage = null;
+                          });
+                        },
                 ),
+                const SizedBox(height: 12),
+                if (_payloadKind == _EmbedPayloadKind.text)
+                  DirectionalTextField(
+                    controller: _textCtrl,
+                    focusNode: _textFocus,
+                    maxLines: 4,
+                    minLines: 3,
+                    scrollPhysics: const NeverScrollableScrollPhysics(),
+                    enabled: !isRecording && !_processing,
+                    inputFormatters: useFixedLimit
+                        ? [MessageBitLengthFormatter(fixedBits)]
+                        : const [],
+                    decoration: InputDecoration(
+                      labelText: s.textHint,
+                      helperText: _messageBitCounterText(
+                        s,
+                        useFixedLimit,
+                        fixedBits,
+                      ),
+                      helperMaxLines: 2,
+                      prefixIcon: const Icon(Icons.message_outlined),
+                    ),
+                  )
+                else ...[
+                  Text(
+                    s.embedPayloadAudioHint,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  if (_payloadAudio != null) ...[
+                    Text(
+                      s.payloadAudioBudgetLabel(
+                        PayloadEnvelope.bitLengthForAudio(_payloadAudio!),
+                        fixedBits,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: TextButton.icon(
+                        onPressed: isRecording || _processing
+                            ? null
+                            : () => setState(() {
+                                  _payloadAudio = null;
+                                  _statusMessage = null;
+                                }),
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(s.clearPayloadAudio),
+                      ),
+                    ),
+                  ] else if (_recordingPayload && isRecording) ...[
+                    Text(
+                      s.payloadAudioBudgetLabel(
+                        0,
+                        fixedBits,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
                 const SizedBox(height: 16),
                 AudioFileDropSurface(
-                  enabled: canPickFile,
+                  enabled: canPickFile &&
+                      (_payloadKind == _EmbedPayloadKind.text ||
+                          _payloadAudio != null),
                   onFilePath: _embedFromDroppedPath,
                   child: Card(
                     child: Padding(
@@ -896,12 +1199,16 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                         const SizedBox(height: 16),
                         AudioSourceActionsPanel(
                           orLabel: s.audioSourceOr,
-                          showLoadAction: appConfig.showEmbedLoadFileForUi,
+                          showLoadAction: appConfig.showEmbedLoadFileForUi &&
+                              (_payloadKind == _EmbedPayloadKind.text ||
+                                  _payloadAudio != null),
                           loadAction: CircleActionButton(
                             icon: Icons.upload_file_outlined,
                             label: s.loadAudioFile,
                             shape: ActionButtonShape.roundedSquare,
-                            enabled: canPickFile,
+                            enabled: canPickFile &&
+                                (_payloadKind == _EmbedPayloadKind.text ||
+                                    _payloadAudio != null),
                             onPressed: _loadAndEmbed,
                             accent: CircleActionAccent.primary,
                           ),
@@ -909,8 +1216,13 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                             isActive: isRecording,
                             enabled: isRecording || (!_processing && !_busy),
                             onPressed: _toggleRecord,
-                            labelIdle: s.startRecording,
-                            labelActive: s.stopRecording,
+                            labelIdle: _payloadKind == _EmbedPayloadKind.audio &&
+                                    _payloadAudio == null
+                                ? s.recordPayloadAudio
+                                : s.startRecording,
+                            labelActive: _recordingPayload
+                                ? s.stopPayloadAudio
+                                : s.stopRecording,
                           ),
                         ),
                         if (_processing) ...[

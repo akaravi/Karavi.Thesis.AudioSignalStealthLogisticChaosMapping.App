@@ -23,6 +23,9 @@ public partial class EmbedView : UserControl
     private WavFile? _cover;
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
+    private WavFile? _payloadAudio;
+    private bool _audioPayloadMode;
+    private bool _recordingPayload;
     private bool _busy;
     private bool _verifying;
     private bool _updatingMessageText;
@@ -49,13 +52,15 @@ public partial class EmbedView : UserControl
     public void ApplyStrings()
     {
         var s = ThemeManager.Strings;
+        PayloadModeText.Content = s.EmbedPayloadTextTab;
+        PayloadModeAudio.Content = s.EmbedPayloadAudioTab;
         MessageLabel.Text = s.TextHint;
         MessageTextBox.SetValue(ToolTipService.ToolTipProperty, s.TextHint);
+        AudioPayloadHint.Text = s.EmbedPayloadAudioHint;
+        ClearPayloadAudioLabel.Text = s.ClearPayloadAudio;
         AudioSourceOrLabel.Text = s.AudioSourceOr;
         EqualizerTitle.Text = s.AudioEqualizer;
-        RecordBtn.LabelIdle = s.StartRecording;
-        RecordBtn.LabelActive = s.StopRecording;
-        RecordBtn.RefreshVisual();
+        RefreshRecordButtonLabels();
         LoadFileBtn.Label = s.LoadAudioFile;
         LoadFileBtn.RefreshVisual();
         ToolTipService.SetToolTip(PlayButton, s.Play);
@@ -70,6 +75,60 @@ public partial class EmbedView : UserControl
         ToolTipService.SetToolTip(HelpFab, s.HelpTooltip);
         UpdateFabStates();
         UpdateMessageBitCounter();
+        UpdateAudioPayloadUi();
+    }
+
+    private void RefreshRecordButtonLabels()
+    {
+        var s = ThemeManager.Strings;
+        if (_audioPayloadMode && _payloadAudio is null)
+        {
+            RecordBtn.LabelIdle = s.RecordPayloadAudio;
+            RecordBtn.LabelActive = s.StopPayloadAudio;
+        }
+        else
+        {
+            RecordBtn.LabelIdle = s.StartRecording;
+            RecordBtn.LabelActive = s.StopRecording;
+        }
+        RecordBtn.RefreshVisual();
+    }
+
+    private void PayloadMode_Checked(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        _audioPayloadMode = PayloadModeAudio.IsChecked == true;
+        TextPayloadPanel.Visibility = _audioPayloadMode ? Visibility.Collapsed : Visibility.Visible;
+        AudioPayloadPanel.Visibility = _audioPayloadMode ? Visibility.Visible : Visibility.Collapsed;
+        if (!_audioPayloadMode)
+            _payloadAudio = null;
+        RefreshRecordButtonLabels();
+        UpdateAudioPayloadUi();
+    }
+
+    private void ClearPayloadAudio_Click(object sender, RoutedEventArgs e)
+    {
+        _payloadAudio = null;
+        StatusText.Text = string.Empty;
+        UpdateAudioPayloadUi();
+        RefreshRecordButtonLabels();
+    }
+
+    private void UpdateAudioPayloadUi()
+    {
+        var s = ThemeManager.Strings;
+        var budget = AppConfig.Current.DefaultFixedMessageBitLength;
+        if (_payloadAudio is null)
+        {
+            AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(0, budget);
+            ClearPayloadAudioBtn.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            var used = PayloadEnvelope.BitLengthForAudio(_payloadAudio);
+            AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(used, budget);
+            ClearPayloadAudioBtn.Visibility = Visibility.Visible;
+        }
     }
 
     private void UpdateFabStates()
@@ -186,6 +245,16 @@ public partial class EmbedView : UserControl
         message.Contains("too long", StringComparison.OrdinalIgnoreCase) ||
         message.Contains("Message too long", StringComparison.Ordinal);
 
+    private static bool IsEmbedIntegrityError(string message)
+    {
+        var m = message.ToLowerInvariant();
+        return m.Contains("integrity") ||
+               m.Contains("ber is") ||
+               m.Contains("bit mismatch") ||
+               m.Contains("wav round-trip") ||
+               m.Contains("recovered");
+    }
+
     private void ShowEmbedWarning(string message)
     {
         var s = ThemeManager.Strings;
@@ -224,10 +293,10 @@ public partial class EmbedView : UserControl
 
         var max = AppConfig.Current.DefaultFixedMessageBitLength;
         var text = MessageTextBox.Text;
-        if (MessageBits.BitLengthForText(text) <= max) return;
+        if (PayloadEnvelope.BitLengthForText(text) <= max) return;
 
         _updatingMessageText = true;
-        while (text.Length > 0 && MessageBits.BitLengthForText(text) > max)
+        while (text.Length > 0 && PayloadEnvelope.BitLengthForText(text) > max)
             text = text[..^1];
         var caret = Math.Min(MessageTextBox.CaretIndex, text.Length);
         MessageTextBox.Text = text;
@@ -240,7 +309,7 @@ public partial class EmbedView : UserControl
         if (!IsLoaded) return;
         EnforceMessageBitLimitIfNeeded();
         var s = ThemeManager.Strings;
-        var used = MessageBits.BitLengthForText(MessageTextBox.Text);
+        var used = PayloadEnvelope.BitLengthForText(MessageTextBox.Text);
         if (AppState.Settings.DefaultFixedMessageBitLimit)
         {
             var remaining = AppConfig.Current.DefaultFixedMessageBitLength - used;
@@ -308,24 +377,41 @@ public partial class EmbedView : UserControl
 
             var messageText = MessageTextBox.Text.Trim();
             string? errorMessage = null;
-            WavFile? coverWav = null;
+            WavFile? recorded = null;
+            var wasPayload = _recordingPayload;
 
             try
             {
                 await Task.Run(() =>
                 {
-                    coverWav = _capture.StopAndRead();
-                    if (coverWav is null)
-                    {
+                    recorded = _capture.StopAndRead();
+                    if (recorded is null)
                         errorMessage = s.ErrorNoRecording;
-                        return;
-                    }
                 });
 
                 if (errorMessage is not null)
                     StatusText.Text = errorMessage;
-                else if (coverWav is not null)
-                    await RunEmbedAsync(coverWav, messageText);
+                else if (recorded is not null && wasPayload)
+                {
+                    var wallClock = DateTime.UtcNow - _recordStartUtc;
+                    recorded = SampleRateReconcile.Reconcile(recorded, wallClock);
+                    var budget = AppConfig.Current.DefaultFixedMessageBitLength;
+                    var needed = PayloadEnvelope.BitLengthForAudio(recorded);
+                    if (needed > budget)
+                    {
+                        ShowEmbedWarning(s.ErrorPayloadAudioBudget);
+                        _payloadAudio = null;
+                    }
+                    else
+                    {
+                        _payloadAudio = recorded;
+                        StatusText.Text = s.PayloadAudioReady;
+                        UpdateAudioPayloadUi();
+                        RefreshRecordButtonLabels();
+                    }
+                }
+                else if (recorded is not null)
+                    await RunEmbedAsync(recorded, messageText);
             }
             catch (Exception ex)
             {
@@ -334,6 +420,7 @@ public partial class EmbedView : UserControl
             }
             finally
             {
+                _recordingPayload = false;
                 Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
                 StopRecordTimer();
                 ReleaseEmbedInteractionLocks();
@@ -342,38 +429,63 @@ public partial class EmbedView : UserControl
             return;
         }
 
-        if (string.IsNullOrEmpty(MessageTextBox.Text.Trim()))
+        if (_audioPayloadMode && _payloadAudio is null)
+        {
+            _busy = true;
+            try
+            {
+                SessionLog.Write("Embed: payload record start");
+                _recordingPayload = true;
+                _capture.Start(PayloadAudioDefaults.SampleRate);
+                StartRecordTimer();
+                StatusText.Text = s.Recording;
+                RefreshRecordButtonLabels();
+            }
+            catch (Exception ex)
+            {
+                _recordingPayload = false;
+                SessionLog.Write("Embed: payload record start failed", ex);
+                StatusText.Text = ex.Message;
+            }
+            finally
+            {
+                ReleaseEmbedInteractionLocks();
+            }
+            return;
+        }
+
+        if (_audioPayloadMode)
+        {
+            if (_payloadAudio is null)
+            {
+                ShowEmbedWarning(s.ErrorEmptyPayloadAudio);
+                return;
+            }
+        }
+        else if (string.IsNullOrEmpty(MessageTextBox.Text.Trim()))
         {
             ShowEmbedWarning(s.ErrorEmpty);
             return;
         }
 
-        if (ResultPanel.Visibility == Visibility.Visible)
-            ResetForNewEmbed();
-
+        _busy = true;
         try
         {
-            Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
-            _capture.Start();
-            _cover = null;
-            _stego = null;
-            _outcome = null;
-            ResultPanel.Visibility = Visibility.Collapsed;
-            VerifyBanner.Visibility = Visibility.Collapsed;
-            StatusText.Text = s.Recording;
-            RecordBtn.IsRecording = true;
-            LoadFileBtn.IsEnabled = false;
-            Equalizer.IsActive = true;
-            MessageTextBox.IsEnabled = false;
+            SessionLog.Write("Embed: cover record start");
+            _recordingPayload = false;
+            _capture.Start(44100);
             StartRecordTimer();
-            SessionLog.Write("Embed: record start");
+            StatusText.Text = s.Recording;
+            RefreshRecordButtonLabels();
         }
         catch (Exception ex)
         {
             SessionLog.Write("Embed: record start failed", ex);
             StatusText.Text = ex.Message;
-            RecordBtn.IsRecording = false;
-            StopRecordTimer();
+        }
+        finally
+        {
+            ReleaseEmbedInteractionLocks();
         }
     }
 
@@ -411,7 +523,15 @@ public partial class EmbedView : UserControl
 
         var s = ThemeManager.Strings;
         var messageText = MessageTextBox.Text.Trim();
-        if (string.IsNullOrEmpty(messageText))
+        if (_audioPayloadMode)
+        {
+            if (_payloadAudio is null)
+            {
+                ShowEmbedWarning(s.ErrorEmptyPayloadAudio);
+                return;
+            }
+        }
+        else if (string.IsNullOrEmpty(messageText))
         {
             ShowEmbedWarning(s.ErrorEmpty);
             return;
@@ -459,49 +579,89 @@ public partial class EmbedView : UserControl
     private async Task RunEmbedAsync(WavFile cover, string messageText, string? loadedFileName = null)
     {
         var s = ThemeManager.Strings;
-        if (string.IsNullOrEmpty(messageText))
-        {
-            ShowEmbedWarning(s.ErrorEmpty);
-            return;
-        }
-
         var useFixedLen = AppState.Settings.DefaultFixedMessageBitLimit;
-        var required = useFixedLen
-            ? AppConfig.Current.DefaultFixedMessageBitLength
-            : MessageBits.BitLengthForText(messageText);
-        if (required > cover.ToMono().Samples.Length)
-        {
-            ShowEmbedWarning(s.ErrorTooLong);
-            return;
-        }
-
-        if (useFixedLen &&
-            MessageBits.BitLengthForText(messageText) >
-            AppConfig.Current.DefaultFixedMessageBitLength)
-        {
-            ShowEmbedWarning(s.ErrorTooLong);
-            return;
-        }
+        var fixedLen = useFixedLen ? AppConfig.Current.DefaultFixedMessageBitLength : (int?)null;
 
         WatermarkOutcome? outcome = null;
         string? error = null;
-        var fixedLen = useFixedLen ? AppConfig.Current.DefaultFixedMessageBitLength : (int?)null;
-        await Task.Run(() =>
+
+        if (_audioPayloadMode)
         {
+            if (_payloadAudio is null)
+            {
+                ShowEmbedWarning(s.ErrorEmptyPayloadAudio);
+                return;
+            }
             try
             {
-                outcome = AppState.Watermarking.Embed(messageText, cover, fixedLen);
+                var bits = PayloadEnvelope.PackAudioBits(_payloadAudio, fixedBitLength: fixedLen);
+                if (bits.Length > cover.ToMono().Samples.Length)
+                {
+                    ShowEmbedWarning(s.ErrorTooLong);
+                    return;
+                }
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        outcome = AppState.Watermarking.EmbedBitsWithMetrics(cover, bits);
+                    }
+                    catch (Exception ex)
+                    {
+                        error = ex.Message;
+                    }
+                });
             }
-            catch (Exception ex)
+            catch (ArgumentException)
             {
-                error = ex.Message;
+                ShowEmbedWarning(s.ErrorPayloadAudioBudget);
+                return;
             }
-        });
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(messageText))
+            {
+                ShowEmbedWarning(s.ErrorEmpty);
+                return;
+            }
+
+            var required = useFixedLen
+                ? AppConfig.Current.DefaultFixedMessageBitLength
+                : PayloadEnvelope.BitLengthForText(messageText);
+            if (required > cover.ToMono().Samples.Length)
+            {
+                ShowEmbedWarning(s.ErrorTooLong);
+                return;
+            }
+
+            if (useFixedLen &&
+                PayloadEnvelope.BitLengthForText(messageText) >
+                AppConfig.Current.DefaultFixedMessageBitLength)
+            {
+                ShowEmbedWarning(s.ErrorTooLong);
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    outcome = AppState.Watermarking.Embed(messageText, cover, fixedLen);
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+            });
+        }
 
         if (error is not null)
         {
             if (IsEmbedCapacityError(error))
                 ShowEmbedWarning(s.ErrorTooLong);
+            else if (IsEmbedIntegrityError(error))
+                ShowEmbedWarning(s.ErrorEmbedIntegrity);
             else
                 StatusText.Text = error;
         }
@@ -520,12 +680,21 @@ public partial class EmbedView : UserControl
         _cover = null;
         _stego = null;
         _outcome = null;
+        _payloadAudio = null;
+        _recordingPayload = false;
+        _audioPayloadMode = false;
+        PayloadModeText.IsChecked = true;
+        PayloadModeAudio.IsChecked = false;
+        TextPayloadPanel.Visibility = Visibility.Visible;
+        AudioPayloadPanel.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Collapsed;
         VerifyBanner.Visibility = Visibility.Collapsed;
         EmbedInputPanel.Visibility = Visibility.Visible;
         MessageTextBox.IsEnabled = true;
         StatusText.Text = string.Empty;
         Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
+        UpdateAudioPayloadUi();
+        RefreshRecordButtonLabels();
         UpdatePlaybackButtons();
         UpdateFabStates();
     }
@@ -571,7 +740,13 @@ public partial class EmbedView : UserControl
         chips.Add(new("\uE72E", s.UaciLabel, m.UaciPercent.ToString("F4"), EmbedMetricKind.Uaci));
         MetricsItems.ItemsSource = chips;
 
-        VerifyBanner.Visibility = Visibility.Collapsed;
+        VerifyBanner.Visibility = Visibility.Visible;
+        VerifyProgress.Visibility = Visibility.Collapsed;
+        VerifyIcon.Visibility = Visibility.Visible;
+        VerifyText.Text = s.VerifyMatch;
+        VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 46, 125, 50));
+        VerifyBannerIcon.Text = "\uE73E";
+        VerifyText.Foreground = (Brush)FindResource("SuccessBrush");
         UpdatePlaybackButtons();
         UpdateResultActionButtons();
         var showRecovery = !AppState.Settings.DefaultFixedMessageBitLimit &&
@@ -666,10 +841,10 @@ public partial class EmbedView : UserControl
         var original = MessageTextBox.Text.Trim();
         var bits = _outcome.BitsEmbedded;
         var stego = _stego;
-        string? extracted = null;
+        StegoPayloadResult? payload = null;
         try
         {
-            extracted = await Task.Run(() => AppState.Watermarking.Extract(stego, bits));
+            payload = await Task.Run(() => AppState.Watermarking.ExtractPayload(stego, bits));
         }
         finally
         {
@@ -680,14 +855,36 @@ public partial class EmbedView : UserControl
             UpdateResultActionButtons();
         }
 
-        if (string.IsNullOrEmpty(extracted))
+        var ok = false;
+        if (_audioPayloadMode)
+        {
+            if (_payloadAudio is null || payload?.Audio is null)
+            {
+                ok = false;
+            }
+            else
+            {
+                var expected = PayloadEnvelope.DecodeAudioBody(
+                    PayloadEnvelope.EncodeAudioBody(_payloadAudio));
+                var recovered = payload.Audio;
+                ok = recovered.SampleRate == expected.SampleRate &&
+                     recovered.Samples.Length == expected.Samples.Length &&
+                     recovered.Samples.AsSpan().SequenceEqual(expected.Samples);
+            }
+        }
+        else
+        {
+            ok = payload?.Text is not null && payload.Text == original;
+        }
+
+        if (!ok && (payload?.Text is null or "" && payload?.Audio is null))
         {
             VerifyText.Text = s.VerifyEmpty;
             VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 179, 38, 30));
             VerifyBannerIcon.Text = "\uE783";
             VerifyText.Foreground = (Brush)FindResource("ErrorBrush");
         }
-        else if (extracted == original)
+        else if (ok)
         {
             VerifyText.Text = s.VerifyMatch;
             VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 46, 125, 50));

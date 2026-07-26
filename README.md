@@ -156,6 +156,7 @@ Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App/
 ├── _last-run-info.ps1           # تولید LastRunInfo.html
 ├── _last-run-info.template.html # قالب UTF-8 (عناوین فارسی)
 ├── _run-all-local.ps1           # اجرای همهٔ سرویس‌های dev + health
+├── _test-pre-deploy.ps1         # گیت تست قبل از deploy (مدت صوت + stego)
 ├── LastRunInfo.html             # گزارش آخرین اجرا (تولید خودکار)
 ├── _build-all-projects.ps1
 ├── _build-cafebazaar-release.ps1
@@ -183,6 +184,12 @@ Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App/
 ```powershell
 .\_run-all-local.ps1
 # توقف و اجرای مجدد: .\_run-all-local.ps1 -RestartAll
+
+قبل از publish / Cafe Bazaar (گیت مدت صوت + envelope + stego):
+
+```powershell
+.\_test-pre-deploy.ps1
+```
 ```
 
 پس از هر اجرای لوکال، گزارش **`LastRunInfo.html`** در ریشه مخزن به‌روز می‌شود (سه جدول: نتیجه اجرا، آدرس سرویس‌ها، تخصیص پورت‌ها). قانون: `.cursor/rules/last-run-info-html.mdc`.
@@ -192,7 +199,7 @@ Karavi.Thesis.AudioSignalStealthLogisticChaosMapping.App/
 ```powershell
 cd src/audio_stegano_app
 flutter pub get
-flutter run -d windows --host-vmservice-port=5323 --devtools-port=5324
+flutter run -d windows --host-vmservice-port=5323 --device-vmservice-port=5323
 flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1 --no-web-resources-cdn
 ```
 
@@ -413,6 +420,12 @@ Single source: [`_dev-ports.ps1`](_dev-ports.ps1). Run all local dev targets:
 .\_run-all-local.ps1
 ```
 
+Pre-deploy gate (audio duration + ASTG envelope + stego core — must pass before store upload):
+
+```powershell
+.\_test-pre-deploy.ps1
+```
+
 After each local run, **`LastRunInfo.html`** at the repo root is updated (execution results, service URLs, port map). See `.cursor/rules/last-run-info-html.mdc`.
 
 #### Flutter (development)
@@ -420,7 +433,7 @@ After each local run, **`LastRunInfo.html`** at the repo root is updated (execut
 ```powershell
 cd src/audio_stegano_app
 flutter pub get
-flutter run -d windows --host-vmservice-port=5323 --devtools-port=5324
+flutter run -d windows --host-vmservice-port=5323 --device-vmservice-port=5323
 flutter run -d web-server --web-port=5320 --web-hostname=127.0.0.1 --no-web-resources-cdn
 ```
 
@@ -559,6 +572,8 @@ flowchart LR
 | جریان اصلی | `main_steganography.m` | `stego_engine.dart` |
 
 منبع حقیقت الگوریتم: **`src/Matlab/`** — کلاینت‌ها همان قرارداد (طول پیام به بیت، کلید، PCM 16-bit) را پیاده می‌کنند.
+
+**ASTG payload envelope:** قبل از AE/XOR/LSB، بیت‌های نهان‌نگاری با هدر استاندارد شروع می‌شوند: magic `ASTG` · version `1` · type (`0x01` متن · `0x02` تصویر · `0x03` صوت · `0x04` دیگر) · flags · طول بدنه · بدنه. فایل‌های بدون magic همچنان به‌صورت UTF-8 قدیمی استخراج می‌شوند. تب Embed «صوت» پیام صوتی کم‌حجم (۸ کیلوهرتز، mono، PCM u8) را داخل envelope با type=Audio می‌گذارد؛ Extract آن را به‌صورت WAV قابل پخش/ذخیره برمی‌گرداند.
 
 ---
 

@@ -63,13 +63,29 @@
             <TextBox x:Name="ResultText" IsReadOnly="True" TextWrapping="Wrap" MinHeight="80"
                      Background="Transparent" BorderThickness="0"
                      Foreground="{DynamicResource TextBrush}" FontSize="15" />
-            <Button x:Name="CopyButton" Style="{StaticResource TonalButton}" HorizontalAlignment="Right"
-                    Margin="0,12,0,0" Click="CopyButton_Click">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" Margin="0,0,8,0" />
-                <TextBlock x:Name="CopyLabel" />
-              </StackPanel>
-            </Button>
+            <WrapPanel HorizontalAlignment="Right" Margin="0,12,0,0">
+              <Button x:Name="PlayExtractedButton" Style="{StaticResource TonalButton}" Margin="0,0,8,0"
+                      Click="PlayExtractedButton_Click" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                  <TextBlock x:Name="PlayExtractedLabel" />
+                </StackPanel>
+              </Button>
+              <Button x:Name="SaveExtractedButton" Style="{StaticResource TonalButton}" Margin="0,0,8,0"
+                      Click="SaveExtractedButton_Click" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" Margin="0,0,8,0" />
+                  <TextBlock x:Name="SaveExtractedLabel" />
+                </StackPanel>
+              </Button>
+              <Button x:Name="CopyButton" Style="{StaticResource TonalButton}"
+                      Click="CopyButton_Click">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" Margin="0,0,8,0" />
+                  <TextBlock x:Name="CopyLabel" />
+                </StackPanel>
+              </Button>
+            </WrapPanel>
           </StackPanel>
         </Border>
       </StackPanel>

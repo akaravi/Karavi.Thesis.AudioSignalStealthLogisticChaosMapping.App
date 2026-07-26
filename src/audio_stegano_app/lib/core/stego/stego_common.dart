@@ -85,13 +85,6 @@ class MessageBits {
 }
 
 Int16List toMatlabInt16(Int16List samples) {
-  final out = Int16List(samples.length);
-  for (var i = 0; i < samples.length; i++) {
-    final normalized = samples[i] / 32767.0;
-    var v = (normalized * 32767).round();
-    if (v > 32767) v = 32767;
-    if (v < -32768) v = -32768;
-    out[i] = v;
-  }
-  return out;
+  // Identity copy — keep PCM values bit-exact vs cover (only LSB embed may change).
+  return Int16List.fromList(samples);
 }

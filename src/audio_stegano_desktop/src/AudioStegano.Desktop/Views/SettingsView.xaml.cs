@@ -78,8 +78,22 @@ public partial class SettingsView : UserControl
         var s = ThemeManager.Strings;
         if (enable)
         {
-            WindowsFileAssociationService.Register(exe, s.AppTitle);
-            StatusToast(s.WindowsOpenWithRegistered);
+            try
+            {
+                WindowsFileAssociationService.Register(exe, s.AppTitle);
+                StatusToast(s.WindowsOpenWithRegistered);
+            }
+            catch (Exception ex)
+            {
+                RegisterOpenWithCheck.IsChecked = false;
+                AppState.Settings.RegisterWindowsFileAssociations = false;
+                AppState.Save();
+                MessageBox.Show(
+                    $"{s.WindowsOpenWithRegisterFailed}\n\n{ex.Message}",
+                    s.SettingsTab,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
         else
         {

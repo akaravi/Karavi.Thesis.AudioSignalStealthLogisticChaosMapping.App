@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 
-import '../../core/stego/audio_watermarking.dart';
+import '../../core/stego/payload_envelope.dart';
 
-/// Limits UTF-8 message input to [maxBits] (LSB bit length).
+/// Limits UTF-8 message input so ASTG text envelope fits in [maxBits].
 class MessageBitLengthFormatter extends TextInputFormatter {
   const MessageBitLengthFormatter(this.maxBits);
 
@@ -13,11 +13,12 @@ class MessageBitLengthFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    if (MessageBits.bitLengthForText(newValue.text) <= maxBits) {
+    if (PayloadEnvelope.bitLengthForText(newValue.text) <= maxBits) {
       return newValue;
     }
     var text = newValue.text;
-    while (text.isNotEmpty && MessageBits.bitLengthForText(text) > maxBits) {
+    while (text.isNotEmpty &&
+        PayloadEnvelope.bitLengthForText(text) > maxBits) {
       text = text.substring(0, text.length - 1);
     }
     return TextEditingValue(

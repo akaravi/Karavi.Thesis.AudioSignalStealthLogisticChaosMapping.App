@@ -234,8 +234,7 @@ try {
     $flutterWinArgs = @(
         'run', '-d', 'windows',
         "--host-vmservice-port=$vmPort",
-        "--device-vmservice-port=$vmPort",
-        "--devtools-port=$devtoolsPort"
+        "--device-vmservice-port=$vmPort"
     )
     $flutterWinProc = Start-Process -FilePath $flutterCommand `
         -ArgumentList $flutterWinArgs `

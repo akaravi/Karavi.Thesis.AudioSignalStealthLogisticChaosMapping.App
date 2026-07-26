@@ -13,13 +13,17 @@ namespace AudioStegano.Desktop.Views;
 
 public partial class ExtractView : UserControl
 {
-    private readonly AudioPlaybackService _playback = new();
+    /// Cover stego file vs recovered payload — separate players (parity with Flutter).
+    private readonly AudioPlaybackService _coverPlayback = new();
+    private readonly AudioPlaybackService _extractedPlayback = new();
     private WavFile? _loadedWav;
+    private WavFile? _extractedAudio;
 
     public ExtractView()
     {
         InitializeComponent();
-        _playback.PlaybackStateChanged += UpdatePlaybackButtons;
+        _coverPlayback.PlaybackStateChanged += UpdatePlaybackButtons;
+        _extractedPlayback.PlaybackStateChanged += UpdateExtractedPlayButton;
         Loaded += (_, _) =>
         {
             ApplyStrings();
@@ -52,7 +56,8 @@ public partial class ExtractView : UserControl
             }
         });
 
-        _playback.Stop();
+        _coverPlayback.Stop();
+        _extractedPlayback.Stop();
         _loadedWav = wav;
         PlaybackPanel.Visibility = wav is not null ? Visibility.Visible : Visibility.Collapsed;
         SetBusy(false);
@@ -87,6 +92,8 @@ public partial class ExtractView : UserControl
         ExtractLabel.Text = s.ExtractTab;
         ResultTitle.Text = s.ExtractedText;
         CopyLabel.Text = s.Copy;
+        PlayExtractedLabel.Text = s.PlayExtractedAudio;
+        SaveExtractedLabel.Text = s.SaveExtractedAudio;
         ToolTipService.SetToolTip(PlayButton, s.Play);
         ToolTipService.SetToolTip(PauseButton, s.Pause);
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
@@ -114,8 +121,10 @@ public partial class ExtractView : UserControl
     private void NewExtractFab_Click(object sender, RoutedEventArgs e)
     {
         if (BusyBar.Visibility == Visibility.Visible) return;
-        _playback.Stop();
+        _coverPlayback.Stop();
+        _extractedPlayback.Stop();
         _loadedWav = null;
+        _extractedAudio = null;
         BitLengthBox.Clear();
         ResultPanel.Visibility = Visibility.Collapsed;
         PlaybackPanel.Visibility = Visibility.Collapsed;
@@ -142,12 +151,37 @@ public partial class ExtractView : UserControl
             return;
         }
 
-        var playing = _playback.IsPlaying;
-        var hasSource = _playback.HasSource;
-        var paused = _playback.IsPaused;
+        var playing = _coverPlayback.IsPlaying;
+        var hasSource = _coverPlayback.HasSource;
+        var paused = _coverPlayback.IsPaused;
         PlayButton.IsEnabled = !playing && _loadedWav is not null;
         PauseButton.IsEnabled = playing;
         StopPlaybackButton.IsEnabled = hasSource && (playing || paused);
+        UpdateExtractedPlayButton();
+    }
+
+    private void UpdateExtractedPlayButton()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(UpdateExtractedPlayButton);
+            return;
+        }
+
+        if (PlayExtractedButton.Visibility != Visibility.Visible)
+            return;
+
+        var s = ThemeManager.Strings;
+        if (_extractedPlayback.IsPlaying)
+        {
+            PlayExtractedLabel.Text = s.Pause;
+            PlayExtractedButton.IsEnabled = true;
+        }
+        else
+        {
+            PlayExtractedLabel.Text = s.PlayExtractedAudio;
+            PlayExtractedButton.IsEnabled = _extractedAudio is not null;
+        }
     }
 
     private int? ParseBitLength()
@@ -205,15 +239,17 @@ public partial class ExtractView : UserControl
         SetBusy(true);
         StatusText.Text = s.Processing;
         ResultPanel.Visibility = Visibility.Collapsed;
+        _extractedPlayback.Stop();
+        _extractedAudio = null;
 
-        string? text = null;
+        StegoPayloadResult? payload = null;
         string? error = null;
         var wav = _loadedWav;
         await Task.Run(() =>
         {
             try
             {
-                text = AppState.Watermarking.Extract(wav!, bitLen.Value);
+                payload = AppState.Watermarking.ExtractPayload(wav!, bitLen.Value);
             }
             catch (Exception ex)
             {
@@ -230,45 +266,136 @@ public partial class ExtractView : UserControl
             return;
         }
 
-        if (text is null)
+        if (payload is null)
         {
             SessionLog.Write("Extract: key mismatch or empty");
             StatusText.Text = s.KeyMismatch;
-            ResultText.Text = s.NoText;
-            ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text);
-            ResultHeaderIcon.Text = "\uE783";
-            ResultPanel.Style = (Style)FindResource("MaterialCard");
-            ResultPanel.Background = (Brush)FindResource("ErrorContainerBrush");
-            ResultTitle.Foreground = (Brush)FindResource("OnErrorContainerBrush");
-            ResultText.Foreground = (Brush)FindResource("OnErrorContainerBrush");
-            ResultPanel.Visibility = Visibility.Visible;
+            ShowExtractFailure(s.NoText);
             return;
         }
 
+        if (payload.Audio is not null)
+        {
+            _extractedAudio = payload.Audio;
+            StatusText.Text = string.Empty;
+            ResultText.Text = s.ExtractedAudio;
+            ResultTitle.Text = s.ExtractedAudio;
+            ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text, forceLatinLtr: true);
+            ResultHeaderIcon.Text = "\uE73E";
+            ResultPanel.Style = (Style)FindResource("ResultCard");
+            ResultTitle.Foreground = (Brush)FindResource("TextBrush");
+            ResultText.Foreground = (Brush)FindResource("TextBrush");
+            CopyButton.Visibility = Visibility.Collapsed;
+            PlayExtractedButton.Visibility = Visibility.Visible;
+            SaveExtractedButton.Visibility = Visibility.Visible;
+            ResultPanel.Visibility = Visibility.Visible;
+            SessionLog.Write($"Extract: audio samples={payload.Audio.Samples.Length}");
+            return;
+        }
+
+        if (payload.RawBody is not null && payload.Text is null)
+        {
+            StatusText.Text = s.ExtractUnsupportedType;
+            ShowExtractFailure(s.ExtractUnsupportedType);
+            return;
+        }
+
+        if (payload.Text is null)
+        {
+            SessionLog.Write("Extract: key mismatch or empty");
+            StatusText.Text = s.KeyMismatch;
+            ShowExtractFailure(s.NoText);
+            return;
+        }
+
+        _extractedAudio = null;
         StatusText.Text = string.Empty;
-        ResultText.Text = text;
-        ContentTextDirectionHelper.ApplyTo(ResultText, text);
+        ResultText.Text = payload.Text;
+        ResultTitle.Text = s.ExtractedText;
+        ContentTextDirectionHelper.ApplyTo(ResultText, payload.Text);
         ResultHeaderIcon.Text = "\uE73E";
         ResultPanel.Style = (Style)FindResource("ResultCard");
         ResultTitle.Foreground = (Brush)FindResource("TextBrush");
         ResultText.Foreground = (Brush)FindResource("TextBrush");
+        CopyButton.Visibility = Visibility.Visible;
+        PlayExtractedButton.Visibility = Visibility.Collapsed;
+        SaveExtractedButton.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Visible;
-        SessionLog.Write($"Extract: success length={text.Length}");
+        SessionLog.Write($"Extract: success length={payload.Text.Length}");
+    }
+
+    private void ShowExtractFailure(string body)
+    {
+        _extractedAudio = null;
+        ResultText.Text = body;
+        ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text);
+        ResultHeaderIcon.Text = "\uE783";
+        ResultPanel.Style = (Style)FindResource("MaterialCard");
+        ResultPanel.Background = (Brush)FindResource("ErrorContainerBrush");
+        ResultTitle.Foreground = (Brush)FindResource("OnErrorContainerBrush");
+        ResultText.Foreground = (Brush)FindResource("OnErrorContainerBrush");
+        CopyButton.Visibility = Visibility.Collapsed;
+        PlayExtractedButton.Visibility = Visibility.Collapsed;
+        SaveExtractedButton.Visibility = Visibility.Collapsed;
+        ResultPanel.Visibility = Visibility.Visible;
+    }
+
+    private void PlayExtractedButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_extractedAudio is null) return;
+        if (_coverPlayback.IsPlaying)
+            _coverPlayback.Pause();
+
+        if (_extractedPlayback.IsPlaying)
+        {
+            _extractedPlayback.Pause();
+            UpdateExtractedPlayButton();
+            return;
+        }
+
+        if (_extractedPlayback.HasSource && _extractedPlayback.IsPaused)
+        {
+            _extractedPlayback.Resume();
+            UpdateExtractedPlayButton();
+            return;
+        }
+
+        _extractedPlayback.Play(PayloadEnvelope.PrepareAudioForExport(_extractedAudio));
+        UpdateExtractedPlayButton();
+    }
+
+    private void SaveExtractedButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_extractedAudio is null) return;
+        var dlg = new SaveFileDialog
+        {
+            Filter = "WAV (*.wav)|*.wav",
+            FileName = "extracted_payload.wav",
+        };
+        if (dlg.ShowDialog() != true) return;
+        File.WriteAllBytes(
+            dlg.FileName,
+            PayloadEnvelope.PrepareAudioForExport(_extractedAudio).Encode());
+        StatusText.Text = ThemeManager.Strings.SuccessSaved;
     }
 
     private void PlayButton_Click(object sender, RoutedEventArgs e)
     {
         if (_loadedWav is null) return;
 
-        if (_playback.HasSource && !_playback.IsPlaying)
-            _playback.Resume();
+        if (_extractedPlayback.IsPlaying)
+            _extractedPlayback.Pause();
+
+        if (_coverPlayback.HasSource && !_coverPlayback.IsPlaying)
+            _coverPlayback.Resume();
         else
-            _playback.Play(_loadedWav);
+            _coverPlayback.Play(_loadedWav);
+        UpdateExtractedPlayButton();
     }
 
-    private void PauseButton_Click(object sender, RoutedEventArgs e) => _playback.Pause();
+    private void PauseButton_Click(object sender, RoutedEventArgs e) => _coverPlayback.Pause();
 
-    private void StopPlaybackButton_Click(object sender, RoutedEventArgs e) => _playback.Stop();
+    private void StopPlaybackButton_Click(object sender, RoutedEventArgs e) => _coverPlayback.Stop();
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {

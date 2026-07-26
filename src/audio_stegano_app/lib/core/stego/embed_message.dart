@@ -12,9 +12,11 @@ import 'dart:typed_data';
 
 import '../audio/wav_io.dart';
 import 'evaluate_stego.dart';
+import 'embed_integrity.dart';
 import 'logistic_map_keygen.dart';
 import 'logistic_positions.dart';
 import 'message_block_autoencoder.dart';
+import 'payload_envelope.dart';
 import 'stego_common.dart';
 
 /// `train/embed_message.m`
@@ -31,12 +33,30 @@ class EmbedMessage {
          autoencoder: autoencoder,
        );
 
-  /// متن → بیت → (اتوانکدر اختیاری) → XOR → LSB در `logistic_positions`
+  /// متن → ASTG envelope → (اتوانکدر) → XOR → LSB در `logistic_positions`
   WatermarkEmbedResult runText({
     required WavFile cover,
     required String text,
   }) {
-    return runBits(cover: cover, binaryMsg: MessageBits.fromUtf8Text(text));
+    return runBits(
+      cover: cover,
+      binaryMsg: PayloadEnvelope.packTextBits(text),
+    );
+  }
+
+  /// صوت payload → ASTG envelope → AE → XOR → LSB
+  WatermarkEmbedResult runAudio({
+    required WavFile cover,
+    required WavFile payloadAudio,
+    int? fixedMsgBitLength,
+  }) {
+    return runBits(
+      cover: cover,
+      binaryMsg: PayloadEnvelope.packAudioBits(
+        payloadAudio,
+        fixedBitLength: fixedMsgBitLength,
+      ),
+    );
   }
 
   WatermarkEmbedResult runBits({
@@ -145,25 +165,49 @@ class EmbedMessage {
     );
   }
 
-  /// embed + متریک — `main_steganography.m`
+  /// embed + متریک — `main_steganography.m` (متن داخل ASTG envelope)
   WatermarkOutcome runWithMetrics({
     required String text,
     required WavFile cover,
     int? fixedMsgBitLength,
   }) {
-    final binaryMsg = fixedMsgBitLength != null && fixedMsgBitLength > 0
-        ? MessageBits.fromUtf8TextPadded(text, fixedMsgBitLength)
-        : MessageBits.fromUtf8Text(text);
+    final binaryMsg = PayloadEnvelope.packTextBits(
+      text,
+      fixedBitLength: fixedMsgBitLength != null && fixedMsgBitLength > 0
+          ? fixedMsgBitLength
+          : null,
+    );
+    return runWithMetricsBits(cover: cover, binaryMsg: binaryMsg);
+  }
+
+  /// embed + متریک برای بیت‌استریم ازپیش‌ساخته (envelope صوت/متن)
+  WatermarkOutcome runWithMetricsBits({
+    required WavFile cover,
+    required Uint8List binaryMsg,
+  }) {
     final embed = runBits(cover: cover, binaryMsg: binaryMsg);
     final stegoDiff = stegoWithPerturbedKey(cover: cover, binaryMsg: binaryMsg);
-    final coverMono = cover.toMono();
+    final coverMono = toMatlabInt16(cover.toMono().samples);
 
     final metrics = WatermarkMetrics.evaluate(
-      cover: coverMono.samples,
+      cover: coverMono,
       stego: embed.stego.samples,
       originalBits: binaryMsg,
       extractedBits: embed.extractedBits,
       stegoWithDiffKey: stegoDiff.samples,
+    );
+
+    EmbedIntegrity.assertOk(
+      EmbedIntegrity.verify(
+        cover: cover,
+        stego: embed.stego,
+        originalBits: binaryMsg,
+        extractedBits: embed.extractedBits,
+        berPercent: metrics.berPercent,
+        r: ctx.r,
+        x0: ctx.x0,
+        autoencoder: ctx.autoencoder,
+      ),
     );
 
     return WatermarkOutcome(

@@ -20,8 +20,14 @@ public sealed class ExtractMessage
 
     public string? RunText(WavFile stego, int msgBitLength, byte[]? binKey = null)
     {
+        var payload = RunPayload(stego, msgBitLength, binKey);
+        return payload?.Text;
+    }
+
+    public StegoPayloadResult? RunPayload(WavFile stego, int msgBitLength, byte[]? binKey = null)
+    {
         var bits = RunBits(stego, msgBitLength, binKey);
-        return bits is null ? null : MessageBits.ToUtf8Text(bits);
+        return bits is null ? null : PayloadEnvelope.UnpackBits(bits);
     }
 
     public byte[]? RunBits(WavFile stego, int msgBitLength, byte[]? binKey = null)

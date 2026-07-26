@@ -33,6 +33,17 @@ public static class WindowsOpenWithPrompt
 
         AppState.Settings.RegisterWindowsFileAssociations = true;
         AppState.Save();
-        WindowsFileAssociationService.Register(exe, s.AppTitle);
+        try
+        {
+            WindowsFileAssociationService.Register(exe, s.AppTitle);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"{s.WindowsOpenWithRegisterFailed}\n\n{ex.Message}",
+                s.AppTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 }

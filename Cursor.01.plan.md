@@ -721,3 +721,126 @@
   "notes": "No file 3.png in en set; Myket banner replaced by post end card overlay"
 }
 ```
+
+---
+
+## Part 80 — Payload type header + Embed audio tab
+
+```json
+{
+  "part": 80,
+  "title": "ASTG content-type envelope + Embed Text|Audio tab + typed extract (Flutter + WPF)",
+  "status": "done",
+  "scope": [
+    "payload_envelope (Dart/C#)",
+    "embed/extract typed + StegoRunner",
+    "Flutter Embed/Extract UI",
+    "WPF EmbedView/ExtractView parity",
+    "legacy UTF-8 without magic"
+  ]
+}
+```
+
+## Result 80
+
+```json
+{
+  "part": 80,
+  "status": "done",
+  "verification": {
+    "dotnetTest": "18 passed (AudioStegano.Core.Tests)",
+    "flutterEnvelopeTest": "6 passed (payload_envelope_test.dart)",
+    "dotnetBuildDesktop": "succeeded",
+    "envelope": "ASTG v1 Type Text|Image|Audio|Other; audio body 8kHz mono PCM u8",
+    "legacy": "extract without magic → UTF-8 text"
+  },
+  "files": [
+    "src/audio_stegano_app/lib/core/stego/payload_envelope.dart",
+    "src/audio_stegano_desktop/src/AudioStegano.Core/Stego/PayloadEnvelope.cs",
+    "embed_message / extract_message (Dart + C#)",
+    "embed_screen.dart / extract_screen.dart",
+    "EmbedView / ExtractView (WPF)"
+  ]
+}
+```
+
+---
+
+## Part 81 — Extracted audio payload quality
+
+```json
+{
+  "request": "فایل صوتی استخراج شده مشکل دارد — fix recovered payload audio quality",
+  "tasks": [
+    "Peak-normalize PCM u8 codec with peakAbs in audio meta (Dart + C#)",
+    "Legacy 8-byte audio meta decode path retained",
+    "Upsample extract play/save to 16 kHz (Flutter + WPF)",
+    "Regression tests for quiet speech and export rate"
+  ],
+  "scope": ["payload_envelope.dart", "PayloadEnvelope.cs", "extract_screen.dart", "ExtractView.xaml.cs", "tests"],
+  "constraints": ["ASTG version stays 1", "Flutter/WPF parity", "no CDN"]
+}
+```
+
+## Result 81
+
+```json
+{
+  "part": 81,
+  "status": "done",
+  "verification": {
+    "dotnetTest": "24 passed (AudioStegano.Core.Tests)",
+    "flutterCoreTest": "40 passed (test/core)",
+    "rootCause": "quiet speech collapsed by >>8 u8 quantize → near silence",
+    "fix": "peakAbs meta + DC remove + peak normalize; export upsample 16 kHz"
+  },
+  "files": [
+    "src/audio_stegano_app/lib/core/stego/payload_envelope.dart",
+    "src/audio_stegano_desktop/src/AudioStegano.Core/Stego/PayloadEnvelope.cs",
+    "src/audio_stegano_app/lib/features/extract/extract_screen.dart",
+    "src/audio_stegano_desktop/src/AudioStegano.Desktop/Views/ExtractView.xaml.cs"
+  ]
+}
+```
+
+---
+
+## Part 82 — Fast payload speech + pre-deploy tests
+
+```json
+{
+  "request": "extracted audio plays too fast; need pre-deploy coding tests",
+  "tasks": [
+    "Fix WPF StopAndRead sample-rate mislabel (8k capture stamped 44100)",
+    "SampleRateReconcile from wall-clock on payload stop (Flutter + WPF)",
+    "Duration regression tests Dart + C#",
+    "_test-pre-deploy.ps1 gate before deploy"
+  ],
+  "scope": ["AudioCaptureService", "SampleRateReconcile", "embed UI", "tests", "_test-pre-deploy.ps1"],
+  "constraints": ["re-embed required for old bad stego files", "Flutter/WPF parity"]
+}
+```
+
+## Result 82
+
+```json
+{
+  "part": 82,
+  "status": "done",
+  "verification": {
+    "preDeployGate": "PASSED (_test-pre-deploy.ps1)",
+    "dotnetTest": "29 passed",
+    "flutterPreDeploy": "28 passed",
+    "rootCause": "WPF StopAndRead default sampleRate=44100 while Start(8000)",
+    "fix": "session rate + SampleRateReconcile + duration tests"
+  },
+  "files": [
+    "src/audio_stegano_desktop/.../AudioCaptureService.cs",
+    "src/audio_stegano_app/lib/core/audio/sample_rate_reconcile.dart",
+    "src/audio_stegano_desktop/.../SampleRateReconcile.cs",
+    "test/core/audio_payload_duration_test.dart",
+    "AudioPayloadDurationTests.cs",
+    "_test-pre-deploy.ps1"
+  ]
+}
+```

@@ -48,7 +48,16 @@ public partial class App : Application
             return;
 
         if (!WindowsFileAssociationService.IsRegistered(exe))
-            WindowsFileAssociationService.Register(exe, ThemeManager.Strings.AppTitle);
+        {
+            try
+            {
+                WindowsFileAssociationService.Register(exe, ThemeManager.Strings.AppTitle);
+            }
+            catch
+            {
+                // Non-fatal: Open-with registration must not block app startup.
+            }
+        }
     }
 
     internal static string? ResolveAudioPathFromArgs(string[] args)
