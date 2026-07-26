@@ -80,6 +80,12 @@ class AudioRecorderService {
       _state == RecorderState.recording ||
       _state == RecorderState.stopping;
   int get currentSampleRate => _sampleRate;
+  /// Mono PCM16 frames currently buffered (capacity ≈ this many LSB bits).
+  int get bufferedMonoSampleCount {
+    final bytesPerFrame = 2 * _numChannels;
+    if (bytesPerFrame <= 0) return 0;
+    return _buffer.length ~/ bytesPerFrame;
+  }
   Stream<List<double>> get spectrumStream => _spectrumController.stream;
 
   Future<bool> ensurePermission() async {

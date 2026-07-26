@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/audio/waveform_display.dart';
+
 /// Overlays cover (original) and stego waveforms with distinct theme colors.
 class DualWaveformChart extends StatelessWidget {
   final List<double> coverEnvelope;
@@ -14,7 +16,7 @@ class DualWaveformChart extends StatelessWidget {
     required this.stegoEnvelope,
     required this.coverLabel,
     required this.stegoLabel,
-    this.height = 120,
+    this.height = 148,
   });
 
   @override
@@ -22,20 +24,32 @@ class DualWaveformChart extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final coverColor = scheme.primary;
     final stegoColor = scheme.tertiary;
+    final normalized = waveformNormalizeForDisplay([
+      coverEnvelope,
+      stegoEnvelope,
+    ]);
+    final cover = normalized.isNotEmpty ? normalized[0] : coverEnvelope;
+    final stego = normalized.length > 1 ? normalized[1] : stegoEnvelope;
 
     return ExcludeSemantics(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: height,
-            child: CustomPaint(
-              painter: _DualWavePainter(
-                cover: coverEnvelope,
-                stego: stegoEnvelope,
-                coverColor: coverColor,
-                stegoColor: stegoColor,
-                gridColor: scheme.outlineVariant.withValues(alpha: 0.35),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: SizedBox(
+              height: height,
+              child: CustomPaint(
+                painter: _DualWavePainter(
+                  cover: cover,
+                  stego: stego,
+                  coverColor: coverColor,
+                  stegoColor: stegoColor,
+                  gridColor: scheme.outlineVariant.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ),
@@ -120,31 +134,44 @@ class _DualWavePainter extends CustomPainter {
     final n = samples.length;
     if (n < 2) return;
 
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    if (dashed) {
-      paint.strokeWidth = 1.75;
-    }
-
+    final fillPath = Path();
     final topPath = Path();
     final bottomPath = Path();
     for (var i = 0; i < n; i++) {
       final x = i / (n - 1) * size.width;
-      final amp = samples[i].clamp(0.0, 1.0) * (midY - 4);
+      final amp = samples[i].clamp(0.0, 1.0) * (midY - 3);
       final yTop = midY - amp;
       final yBottom = midY + amp;
       if (i == 0) {
         topPath.moveTo(x, yTop);
         bottomPath.moveTo(x, yBottom);
+        fillPath.moveTo(x, yTop);
       } else {
         topPath.lineTo(x, yTop);
         bottomPath.lineTo(x, yBottom);
+        fillPath.lineTo(x, yTop);
       }
     }
+    for (var i = n - 1; i >= 0; i--) {
+      final x = i / (n - 1) * size.width;
+      final amp = samples[i].clamp(0.0, 1.0) * (midY - 3);
+      fillPath.lineTo(x, midY + amp);
+    }
+    fillPath.close();
+
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..color = color.withValues(alpha: dashed ? 0.12 : 0.22)
+        ..style = PaintingStyle.fill,
+    );
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = dashed ? 2.25 : 2.75
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     if (dashed) {
       _drawDashedPath(canvas, topPath, paint);

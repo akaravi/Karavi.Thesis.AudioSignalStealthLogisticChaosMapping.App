@@ -15,7 +15,7 @@ public sealed class AppSettings
     public AppLanguage Language { get; set; } = AppLanguage.Fa;
     public double R { get; set; } = WatermarkDefaults.R;
     public double X0 { get; set; } = WatermarkDefaults.X0;
-    public string AccentColor { get; set; } = "#00B4B7";
+    public string AccentColor { get; set; } = ThemeManager.SoftPurpleAccent;
 
     /// <summary>When true, embed/extract use <see cref="AppConfig.DefaultFixedMessageBitLength"/>.</summary>
     public bool DefaultFixedMessageBitLimit { get; set; } = true;
@@ -79,6 +79,9 @@ public static class AppState
                     nameof(AppSettings.DefaultFixedMessageBitLimit)))
                 merged.DefaultFixedMessageBitLimit = true;
             Settings = merged;
+            if (Settings.ThemeMode == AppThemeMode.System)
+                Settings.ThemeMode = AppThemeMode.Light;
+            Settings.AccentColor = ThemeManager.SoftPurpleAccent;
         }
         catch
         {
@@ -89,11 +92,13 @@ public static class AppState
     private static AppSettings Merge(AppSettings target, AppSettings source) =>
         new()
         {
-            ThemeMode = source.ThemeMode,
+            ThemeMode = source.ThemeMode == AppThemeMode.System
+                ? AppThemeMode.Light
+                : source.ThemeMode,
             Language = source.Language,
             R = source.R,
             X0 = source.X0,
-            AccentColor = source.AccentColor,
+            AccentColor = ThemeManager.SoftPurpleAccent,
             DefaultFixedMessageBitLimit = source.DefaultFixedMessageBitLimit,
             LocaleConfigured = source.LocaleConfigured,
             UsageGuideSeen = source.UsageGuideSeen,

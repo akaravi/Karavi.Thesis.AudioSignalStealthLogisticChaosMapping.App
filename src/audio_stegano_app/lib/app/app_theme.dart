@@ -1,18 +1,36 @@
 import 'package:flutter/material.dart';
 
-/// Material 3 themes with light/dark variants and a configurable seed color.
+import 'app_brand_colors.dart';
+import 'app_ui_tokens.dart';
+
+/// Material 3 themes — fixed soft-purple seed; light and dark brightness only.
 class AppTheme {
-  static ThemeData light(Color seed) {
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light);
+  static ThemeData light() {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: AppBrandColors.softPurple,
+      brightness: Brightness.light,
+      dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
+    );
     return _base(scheme, Brightness.light);
   }
 
-  static ThemeData dark(Color seed) {
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
+  static ThemeData dark() {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: AppBrandColors.softPurple,
+      brightness: Brightness.dark,
+      dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
+    );
     return _base(scheme, Brightness.dark);
   }
 
   static ThemeData _base(ColorScheme scheme, Brightness brightness) {
+    final cardShape = RoundedRectangleBorder(
+      borderRadius: AppUiTokens.cardBorderRadius,
+    );
+    final inputBorder = OutlineInputBorder(
+      borderRadius: AppUiTokens.inputBorderRadius,
+    );
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
@@ -55,17 +73,77 @@ class AppTheme {
           );
         }),
       ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scheme.surfaceContainer,
+        indicatorColor: scheme.primaryContainer,
+        selectedIconTheme: IconThemeData(color: scheme.primary),
+        unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+        selectedLabelTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurface,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainerLow,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        margin: EdgeInsets.zero,
+        shape: cardShape,
+        surfaceTintColor: Colors.transparent,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           foregroundColor: scheme.onPrimary,
           backgroundColor: scheme.primary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppUiTokens.radiusInput),
+          ),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          visualDensity: VisualDensity.standard,
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return BorderSide(color: scheme.primary.withValues(alpha: 0.35));
+            }
+            return BorderSide(color: scheme.outlineVariant);
+          }),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return scheme.primaryContainer;
+            }
+            return scheme.surfaceContainerHighest;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return scheme.onPrimaryContainer;
+            }
+            return scheme.onSurfaceVariant;
+          }),
+          iconColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return scheme.primary;
+            }
+            return scheme.onSurfaceVariant;
+          }),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: scheme.surfaceContainerHighest,
+        selectedColor: scheme.primaryContainer,
+        checkmarkColor: scheme.onPrimaryContainer,
+        labelStyle: TextStyle(color: scheme.onSurface),
+        secondaryLabelStyle: TextStyle(color: scheme.onPrimaryContainer),
+        side: BorderSide(color: scheme.outlineVariant),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppUiTokens.radiusChip),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -73,15 +151,25 @@ class AppTheme {
         fillColor: scheme.surfaceContainerHighest,
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
         hintStyle: TextStyle(color: scheme.onSurfaceVariant),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+        helperStyle: TextStyle(color: scheme.onSurfaceVariant),
+        border: inputBorder,
+        enabledBorder: inputBorder.copyWith(
           borderSide: BorderSide(color: scheme.outlineVariant),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+        focusedBorder: inputBorder.copyWith(
           borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
+        errorBorder: inputBorder.copyWith(
+          borderSide: BorderSide(color: scheme.error),
+        ),
+        focusedErrorBorder: inputBorder.copyWith(
+          borderSide: BorderSide(color: scheme.error, width: 2),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: scheme.outlineVariant,
+        thickness: 1,
+        space: 1,
       ),
       textTheme: ThemeData(brightness: brightness).textTheme.apply(
         bodyColor: scheme.onSurface,

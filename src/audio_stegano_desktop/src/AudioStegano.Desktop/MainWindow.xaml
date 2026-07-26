@@ -32,7 +32,7 @@
 
       <Border x:Name="NavRail" Grid.Column="0" Visibility="Collapsed"
               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0"
-              Background="{DynamicResource SurfaceBrush}" Width="88" Padding="0,12">
+              Background="{DynamicResource SurfaceContainerBrush}" Width="88" Padding="0,12">
         <StackPanel x:Name="RailButtons" />
       </Border>
 
@@ -45,7 +45,7 @@
     </Grid>
 
     <!-- Bottom navigation (narrow) -->
-    <Border x:Name="BottomNav" Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+    <Border x:Name="BottomNav" Grid.Row="2" Background="{DynamicResource SurfaceContainerBrush}"
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8,4">
       <UniformGrid x:Name="BottomNavGrid" Rows="1" Columns="4" />
     </Border>

@@ -36,11 +36,21 @@ public sealed partial class AppStrings
         "Record a short low-quality (8 kHz) voice payload — about 4 seconds within the settings bit budget — then record or load the cover audio.",
         "سجّل رسالة صوتية قصيرة بجودة منخفضة (٨ كيلوهرتز) — حوالي ٤ ثوانٍ ضمن حد البت — ثم سجّل أو حمّل الصوت الغطاء.",
         "Enregistrez un message vocal court (8 kHz) — environ 4 s dans le budget de bits — puis enregistrez ou chargez l’audio de couverture.");
+    public string EmbedPayloadAudioHintDynamic => T(
+        "پیام صوتی را ضبط کنید؛ بیت مورد نیاز و حداقل زمان ضبط پوشش بر اساس طول پیام محاسبه می‌شود.",
+        "Record a voice payload; required bits and minimum cover recording time are calculated from its length.",
+        "سجّل الرسالة الصوتية؛ تُحسب البتات والمدة الدنيا لتسجيل الغطاء من طولها.",
+        "Enregistrez le message vocal ; bits requis et durée minimale de couverture selon sa longueur.");
     public string EmbedPayloadImageHint => T(
         "یک عکس انتخاب کنید؛ به‌صورت JPEG فشرده می‌شود تا در سقف بیت تنظیمات جا شود. سپس صوت پوشش را ضبط یا بارگذاری کنید.",
         "Pick an image; it is compressed to JPEG to fit the settings bit budget. Then record or load the cover audio.",
         "اختر صورة؛ تُضغط إلى JPEG لتناسب حد البت. ثم سجّل أو حمّل صوت الغطاء.",
         "Choisissez une image ; elle est compressée en JPEG pour tenir dans le budget de bits. Puis enregistrez ou chargez l’audio de couverture.");
+    public string EmbedPayloadImageHintDynamic => T(
+        "یک عکس انتخاب کنید؛ بیت مورد نیاز و حداقل زمان ضبط پوشش بر اساس حجم فشرده‌شده محاسبه می‌شود.",
+        "Pick an image; required bits and minimum cover recording time are calculated from the compressed size.",
+        "اختر صورة؛ تُحسب البتات والمدة الدنيا لتسجيل الغطاء من الحجم المضغوط.",
+        "Choisissez une image ; bits requis et durée minimale de couverture selon la taille compressée.");
     public string PickPayloadImage => T(
         "انتخاب عکس", "Pick image", "اختيار صورة", "Choisir une image");
     public string ClearPayloadImage => T(
@@ -57,6 +67,38 @@ public sealed partial class AppStrings
         AppLanguage.Ar => $"بت الصورة: {usedBits} / {budgetBits}",
         AppLanguage.Fr => $"Bits image : {usedBits} / {budgetBits}",
         _ => $"بیت عکس: {usedBits} / {budgetBits}",
+    };
+    public string PayloadImageBitsRequired(int usedBits) => _lang switch
+    {
+        AppLanguage.Fa => $"بیت مورد نیاز عکس: {usedBits}",
+        AppLanguage.En => $"Image bits required: {usedBits}",
+        AppLanguage.Ar => $"بتات الصورة المطلوبة: {usedBits}",
+        AppLanguage.Fr => $"Bits image requis : {usedBits}",
+        _ => $"بیت مورد نیاز عکس: {usedBits}",
+    };
+    public string PayloadAudioBudgetLabel(int usedBits, int budgetBits) => _lang switch
+    {
+        AppLanguage.Fa => $"بیت پیام صوتی: {usedBits} / {budgetBits}",
+        AppLanguage.En => $"Voice bits: {usedBits} / {budgetBits}",
+        AppLanguage.Ar => $"بت الرسالة: {usedBits} / {budgetBits}",
+        AppLanguage.Fr => $"Bits vocaux : {usedBits} / {budgetBits}",
+        _ => $"بیت پیام صوتی: {usedBits} / {budgetBits}",
+    };
+    public string PayloadAudioBitsRequired(int usedBits) => _lang switch
+    {
+        AppLanguage.Fa => $"بیت مورد نیاز پیام صوتی: {usedBits}",
+        AppLanguage.En => $"Voice bits required: {usedBits}",
+        AppLanguage.Ar => $"بتات الرسالة المطلوبة: {usedBits}",
+        AppLanguage.Fr => $"Bits vocaux requis : {usedBits}",
+        _ => $"بیت مورد نیاز پیام صوتی: {usedBits}",
+    };
+    public string CoverRecordNeedHint(int bits, int seconds) => _lang switch
+    {
+        AppLanguage.Fa => $"حداقل ضبط پوشش حدود {seconds} ثانیه (برای {bits} بیت).",
+        AppLanguage.En => $"Minimum cover recording ≈ {seconds} s (for {bits} bits).",
+        AppLanguage.Ar => $"الحد الأدنى لتسجيل الغطاء ≈ {seconds} ثانية (لـ {bits} بت).",
+        AppLanguage.Fr => $"Enregistrement couverture mini ≈ {seconds} s (pour {bits} bits).",
+        _ => $"حداقل ضبط پوشش حدود {seconds} ثانیه (برای {bits} بیت).",
     };
     public string ErrorEmptyPayloadImage => T(
         "ابتدا یک عکس انتخاب کنید.",
@@ -87,14 +129,6 @@ public sealed partial class AppStrings
         "Voice payload ready — now record or load the cover audio.",
         "الرسالة الصوتية جاهزة — سجّل أو حمّل صوت الغطاء الآن.",
         "Message vocal prêt — enregistrez ou chargez maintenant l’audio de couverture.");
-    public string PayloadAudioBudgetLabel(int usedBits, int budgetBits) => _lang switch
-    {
-        AppLanguage.Fa => $"بیت پیام صوتی: {usedBits} / {budgetBits}",
-        AppLanguage.En => $"Voice bits: {usedBits} / {budgetBits}",
-        AppLanguage.Ar => $"بت الرسالة: {usedBits} / {budgetBits}",
-        AppLanguage.Fr => $"Bits vocaux : {usedBits} / {budgetBits}",
-        _ => $"بیت پیام صوتی: {usedBits} / {budgetBits}",
-    };
     public string ErrorEmptyPayloadAudio => T(
         "ابتدا پیام صوتی را ضبط کنید.",
         "Record the voice payload first.",
@@ -150,7 +184,6 @@ public sealed partial class AppStrings
         AppLanguage.Fr => $"Capacité audio totale : {capacityBits} bits",
         _ => $"ظرفیت کل فایل صوتی: {capacityBits} بیت",
     };
-    public string ColorSeed => T("رنگ تم", "Theme color", "لون المظهر", "Couleur du thème");
     public string LoadAudioFile => T("بارگذاری فایل", "Upload file", "رفع ملف", "Importer un fichier");
     public string PickFile => T(
         "انتخاب فایل صوتی (WAV/MP3)", "Pick audio file (WAV/MP3)",
@@ -175,7 +208,6 @@ public sealed partial class AppStrings
     public string ThemeMode => T("تم", "Theme", "المظهر", "Thème");
     public string ThemeLight => T("روشن", "Light", "فاتح", "Clair");
     public string ThemeDark => T("تاریک", "Dark", "داكن", "Sombre");
-    public string ThemeSystem => T("سیستم", "System", "النظام", "Système");
     public string Language => T("زبان", "Language", "اللغة", "Langue");
     public string Persian => T("فارسی", "Persian", "الفارسية", "Persan");
     public string English => T("انگلیسی", "English", "الإنجليزية", "Anglais");
@@ -252,6 +284,34 @@ public sealed partial class AppStrings
     public string Verifying => T("در حال تأیید…", "Verifying…", "جارٍ التحقق…", "Vérification…");
     public string Processing => T("در حال پردازش…", "Processing…", "جارٍ المعالجة…", "Traitement…");
     public string Recording => T("در حال ضبط…", "Recording…", "جارٍ التسجيل…", "Enregistrement…");
+    public string RecordingMinProgress => T(
+        "در حال رسیدن به حداقل زمان لازم برای نهان‌نگاری…",
+        "Reaching the minimum duration required for steganography…",
+        "جارٍ الوصول إلى الحد الأدنى من المدة المطلوبة…",
+        "Atteinte de la durée minimale requise…");
+    public string RecordingMinRemaining(int seconds) => _lang switch
+    {
+        AppLanguage.Fa => $"حدود {seconds} ثانیه تا حداقل زمان",
+        AppLanguage.Ar => $"حوالي {seconds} ثانية حتى الحد الأدنى",
+        AppLanguage.Fr => $"Environ {seconds} s avant la durée minimale",
+        _ => $"About {seconds} s until minimum duration",
+    };
+    public string RecordingMinReached => T(
+        "حداقل زمان تأمین شد — می‌توانید ضبط را متوقف کنید",
+        "Minimum duration reached — you can stop recording",
+        "اكتملت المدة الدنيا — يمكنك إيقاف التسجيل",
+        "Durée minimale atteinte — vous pouvez arrêter");
+    public string RecordingTooShort(int seconds) => _lang switch
+    {
+        AppLanguage.Fa =>
+            $"هنوز ظرفیت کافی ضبط نشده. ادامه دهید (حدود {seconds} ثانیه بر اساس نمونه‌های واقعی).",
+        AppLanguage.Ar =>
+            $"لم تُسجَّل عينات كافية بعد. واصل (حوالي {seconds} ثانية حسب المخزن الفعلي).",
+        AppLanguage.Fr =>
+            $"Pas assez d’échantillons. Continuez (environ {seconds} s selon le tampon réel).",
+        _ =>
+            $"Not enough samples yet. Keep recording (about {seconds} s based on real buffer).",
+    };
     public string ErrorEmpty => T(
         "متن نمی‌تواند خالی باشد.", "Text cannot be empty.",
         "لا يمكن أن يكون النص فارغاً.", "Le texte ne peut pas être vide.");
@@ -265,6 +325,20 @@ public sealed partial class AppStrings
         "Recorded audio must be longer before steganography can succeed. Please start recording again.",
         "يجب أن يكون الصوت المسجَّل أطول ليكون الإخفاء ممكناً. ابدأ التسجيل من جديد.",
         "L’audio enregistré doit être plus long pour que l’intégration soit possible. Recommencez l’enregistrement.");
+
+    public string ErrorCapacityExceeded(int neededBits, int availableBits) => _lang switch
+    {
+        AppLanguage.Fa =>
+            $"این محتوا در فایل صوتی جا نمی‌شود و قابل نهان‌نگاری نیست.\nبیت مورد نیاز: {neededBits}\nبیت موجود (ظرفیت پوشش): {availableBits}\nفایل صوتی طولانی‌تر انتخاب کنید یا محتوای کوچک‌تری بدهید.",
+        AppLanguage.En =>
+            $"This payload does not fit in the cover audio and cannot be embedded.\nBits required: {neededBits}\nBits available (cover capacity): {availableBits}\nUse a longer cover audio or a smaller payload.",
+        AppLanguage.Ar =>
+            $"هذا المحتوى لا يتسع في الصوت ولا يمكن إخفاؤه.\nالبتات المطلوبة: {neededBits}\nالبتات المتاحة (سعة الغلاف): {availableBits}\nاختر صوتاً أطول أو محتوى أصغر.",
+        AppLanguage.Fr =>
+            $"Cette charge utile ne tient pas dans l’audio de couverture.\nBits requis : {neededBits}\nBits disponibles (capacité) : {availableBits}\nChoisissez un audio plus long ou une charge plus petite.",
+        _ =>
+            $"این محتوا در فایل صوتی جا نمی‌شود و قابل نهان‌نگاری نیست.\nبیت مورد نیاز: {neededBits}\nبیت موجود (ظرفیت پوشش): {availableBits}\nفایل صوتی طولانی‌تر انتخاب کنید یا محتوای کوچک‌تری بدهید.",
+    };
     public string ErrorMp3Decode => T(
         "خواندن فایل MP3 ممکن نشد. فایل را دوباره انتخاب کنید یا از WAV استفاده کنید.",
         "Could not read the MP3 file. Pick the file again or use WAV.",
@@ -332,6 +406,31 @@ public sealed partial class AppStrings
     public string VerifyEmpty => T(
         "چیزی استخراج نشد — embed با شکست مواجه شده است.", "Nothing extracted — embed seems broken.",
         "لم يُستخرج شيء — يبدو أن الإخفاء فشل.", "Rien extrait — l’intégration semble avoir échoué.");
+    public string VerifyRecoveredTitle => T(
+        "مقایسه محتوا — اصل نهان‌شده و بازیافت‌شده",
+        "Payload compare — original hidden vs recovered",
+        "مقارنة المحتوى — الأصلي المخفي والمستخرج",
+        "Comparaison — original caché vs extrait");
+    public string OriginalHiddenPayload => T(
+        "محتوای اصلی نهان‌شده", "Original hidden payload",
+        "المحتوى الأصلي المخفي", "Charge utile originale");
+    public string RecoveredPayloadLabel => T(
+        "محتوای بازیافت‌شده", "Recovered payload",
+        "المحتوى المستخرج", "Charge utile extraite");
+    public string PlayOriginalPayloadAudio => T(
+        "پخش صوت اصلی نهان‌شده", "Play original hidden audio",
+        "تشغيل الصوت الأصلي المخفي", "Lire l’audio original caché");
+    public string VerifyAbListenTitle => T(
+        "مقایسه شنیداری — آیا تفاوتی حس می‌کنید؟",
+        "A/B listen — can you hear a difference?",
+        "مقارنة سمعية — هل تلاحظ فرقاً؟",
+        "Écoute A/B — entendez-vous une différence ?");
+    public string PlayOriginalCover => T(
+        "پخش صدای اصلی", "Play original",
+        "تشغيل الأصلي", "Lire l’original");
+    public string PlayStegoAudio => T(
+        "پخش بعد از نهان‌نگاری", "Play after watermark",
+        "تشغيل بعد الإخفاء", "Lire après stéganographie");
     public string AboutTitle => T("درباره برنامه", "About this app", "حول التطبيق", "À propos de l’application");
     public string AboutVersion => T("نسخه", "Version", "الإصدار", "Version");
     public string AboutAlgoBody => T(

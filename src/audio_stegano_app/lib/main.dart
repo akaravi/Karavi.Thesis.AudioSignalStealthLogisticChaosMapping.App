@@ -58,8 +58,8 @@ class AudioSteganoApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: strings.appTitle,
       themeMode: settings.themeMode,
-      theme: AppTheme.light(settings.seedColor),
-      darkTheme: AppTheme.dark(settings.seedColor),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       locale: settings.locale,
       supportedLocales: const [
         Locale('fa'),

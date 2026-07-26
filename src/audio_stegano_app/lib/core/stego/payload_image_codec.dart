@@ -7,6 +7,41 @@ import 'payload_envelope.dart';
 /// Compresses a user-picked still image into a JPEG body that fits the
 /// ASTG bit budget (long-edge shrink + quality ladder).
 abstract final class PayloadImageCodec {
+  /// Soft JPEG for embed when no fixed bit budget (size drives cover duration).
+  static Uint8List compressForEmbed(
+    Uint8List sourceBytes, {
+    int? bitBudget,
+  }) {
+    if (bitBudget != null && bitBudget > 0) {
+      return compressToFitBudget(sourceBytes, bitBudget: bitBudget);
+    }
+
+    final decoded = img.decodeImage(sourceBytes);
+    if (decoded == null) {
+      throw const FormatException('Unsupported or corrupt image file');
+    }
+
+    var working = decoded;
+    final longEdge =
+        working.width > working.height ? working.width : working.height;
+    if (longEdge > PayloadImageDefaults.maxLongEdgePx) {
+      working = img.copyResize(
+        working,
+        width: working.width >= working.height
+            ? PayloadImageDefaults.maxLongEdgePx
+            : null,
+        height: working.height > working.width
+            ? PayloadImageDefaults.maxLongEdgePx
+            : null,
+        interpolation: img.Interpolation.average,
+      );
+    }
+
+    return Uint8List.fromList(
+      img.encodeJpg(working, quality: PayloadImageDefaults.jpegQuality),
+    );
+  }
+
   /// Returns JPEG bytes sized for [bitBudget], or throws if even the smallest
   /// attempt exceeds the budget.
   static Uint8List compressToFitBudget(

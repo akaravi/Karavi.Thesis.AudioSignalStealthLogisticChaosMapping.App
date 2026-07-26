@@ -1,5 +1,81 @@
 # Change History
 
+## 2026-07-26 — About: remove person icon overlay on profile photo
+
+- Flutter `CircleAvatar` had `Icons.person_outline` as `child`, which paints on top of `backgroundImage` — removed so only the photo shows.
+
+## 2026-07-26 — PlaybackHub: isolated Play/Pause sessions
+
+- Method-based `PlaybackHub` (Flutter + WPF): one engine per surface (cover/stego/payload original/recovered/extract).
+- Play pauses other sessions; no shared A/B or payload multiplex onto one player.
+- Tab change stops leaving screen’s sessions (`home_shell` / `MainWindow.SelectTab`).
+
+## 2026-07-26 — Web boot: hide top bar, center spinner
+
+- `web/index.html`: hide Flutter `.flutter-loader` top progress bar; purple center spinner above Loading text.
+
+## 2026-07-26 — Dynamic payload bits when fixed budget off
+
+- Settings «حجم پیش‌فرض» off: Embed no longer shows `0 / 262144`; empty payload hides budget line.
+- After image/audio/text payload: show required bits + ≈ cover record seconds; cover stop-gate uses those bits.
+- Image compress soft when no budget; payload audio not capped at 262144 when fixed off (Flutter + WPF).
+
+## 2026-07-26 — Capacity warning shows needed vs available bits
+
+- When payload (text/image/audio/file) exceeds cover LSB capacity: warn with required bits and available bits (Flutter + WPF).
+- Typed `CapacityExceededException` from embed engine; i18n `errorCapacityExceeded`.
+
+## 2026-07-26 — Remove theme color picker; fixed purple light/dark
+
+- Settings: color-seed selection removed (Flutter + WPF); theme control is Light / Dark only.
+- Brand locked to soft purple `#7A68A8` on all pages; legacy `seed` prefs dropped; System theme migrates to Light.
+- i18n: removed unused `themeSystem` / ColorSeed; help copy no longer mentions color picker.
+
+## 2026-07-26 — Dual waveform: peak-normalize for visibility
+
+- Cover/stego comparison chart auto-scales to joint peak (~92% height) so quiet recordings are readable.
+- Thicker strokes + soft fill; WPF chart host no longer fades waveforms at 35% opacity.
+- Flutter + WPF; unit tests for normalize helper.
+
+## 2026-07-26 — Cover record gate uses real sample buffer (not wall-clock)
+
+- Root cause: stop was allowed after ~bits/44100 wall-clock while web/capture undersampled (e.g. 12s clock ≈ 144k samples < 262144 bits).
+- Gate + progress now use `bufferedMonoSampleCount` / `BufferedMonoSampleCount` vs `requiredBits + safety margin`.
+- Flutter + WPF; i18n early-stop copy updated; unit tests sample-based.
+
+## 2026-07-26 — Cover record min duration gate + progress (fixed bits)
+
+- When Settings fixed bit budget is on: cover recording cannot stop until capacity ≥ budget (≈ bits/44100 s).
+- Progress bar + remaining time (Flutter + WPF); payload recording unchanged.
+
+## 2026-07-26 — Soft purple theme (light + dark)
+
+- Product chrome is soft purple end-to-end: default seed `#7A68A8`, purple-family surfaces in Flutter (`ColorScheme.fromSeed` tonalSpot) and WPF Light/Dark dictionaries.
+- Settings seed swatches = soft purple family only; legacy teal `#00B4B7` auto-migrates on hydrate (Flutter + WPF).
+- WPF `ThemeManager` derives PrimaryContainer / Secondary / Nav / Chart from accent so accents stay harmonious.
+
+## 2026-07-26 — UI visual standard across all pages
+
+- Centralized Flutter tokens (`AppUiTokens`) + full component themes (NavigationRail/Bar, Card, SegmentedButton, Chip, Input).
+- Shared `AppSectionCard` + `PageToolbarFab`; Embed/Extract/Settings/About use the same card radius, surfaces, and toolbar FAB chrome.
+- Nav icons: layers / search / settings / person (aligned with Embed reference screenshot).
+- WPF: `SurfaceContainerBrush` elevated cards; ResultCard/Nav/FAB/BottomNav/Rail match Flutter surfaces; Extract icon uses PrimaryBrush.
+
+## 2026-07-26 — Immediate verify: original vs recovered payload side-by-side
+
+- After verify: show **original hidden** and **recovered** together for text, audio payload, and image (Flutter + WPF).
+- Audio payload: play original hidden audio + play recovered; images preview both; text selectable both sides.
+
+## 2026-07-26 — Immediate verify A/B listen (cover vs stego)
+
+- Embed verify result: play **original cover** and **watermarked stego** separately (Flutter + WPF) so the user can judge perceptual difference.
+- i18n + help steps 5/6 updated (fa-first).
+
+## 2026-07-26 — Immediate verify extracts and shows testable payload
+
+- After embed success (and on Verify): real extract from stego; show recovered text / play-save audio / preview-save image on Embed result panel (Flutter + WPF).
+- Separate recovered playback so stego cover and payload do not share one player.
+
 ## 2026-07-26 — ASTG Image payload (hide/recover still image)
 
 - ASTG type `Image` (0x02): JPEG/PNG body; Flutter `PayloadImageCodec` + WPF `PayloadImageCodec` compress to fit Settings bit budget (long-edge ≤240, quality ladder).

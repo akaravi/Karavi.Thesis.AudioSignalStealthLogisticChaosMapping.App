@@ -9,7 +9,7 @@
     <color name="widget_muted">#5F6577</color>
     <color name="widget_record_accent">#E53935</color>
     <color name="widget_record_surface">#FFEBEE</color>
-    <color name="widget_embed_accent">#00897B</color>
-    <color name="widget_embed_surface">#E0F2F1</color>
+    <color name="widget_embed_accent">#7A68A8</color>
+    <color name="widget_embed_surface">#E9DEF8</color>
     <color name="widget_divider">#E3E6EE</color>
 </resources>

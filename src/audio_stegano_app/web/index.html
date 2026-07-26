@@ -12,7 +12,7 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="نهان‌نگاری پیام در صوت — پنهان و استخراج متن در فایل WAV. Audio Steganography: hide and extract secret messages in audio.">
-  <meta name="theme-color" content="#00B4B7">
+  <meta name="theme-color" content="#7A68A8">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -36,6 +36,10 @@
       color: #e8e8e8;
       font-family: system-ui, sans-serif;
     }
+    /* Hide Flutter debug top progress bar (dev/web-server). */
+    .flutter-loader {
+      display: none !important;
+    }
     flt-glass-pane, flutter-view {
       touch-action: manipulation;
     }
@@ -45,7 +49,23 @@
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 1rem;
+      gap: 1.25rem;
+    }
+    #boot-loading .boot-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(122, 104, 168, 0.28);
+      border-top-color: #7A68A8;
+      border-radius: 50%;
+      animation: boot-spin 0.85s linear infinite;
+    }
+    @keyframes boot-spin {
+      to { transform: rotate(360deg); }
+    }
+    #boot-loading p {
+      margin: 0;
+      font-size: 0.95rem;
+      opacity: 0.9;
     }
     #boot-error {
       display: none;
@@ -57,7 +77,8 @@
   </style>
 </head>
 <body>
-  <div id="boot-loading" aria-live="polite">
+  <div id="boot-loading" aria-live="polite" aria-busy="true">
+    <div class="boot-spinner" role="progressbar" aria-label="Loading"></div>
     <p>در حال بارگذاری… / Loading…</p>
   </div>
   <div id="boot-error" role="alert"></div>

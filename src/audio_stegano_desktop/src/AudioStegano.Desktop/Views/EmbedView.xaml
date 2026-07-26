@@ -22,13 +22,13 @@
                    VerticalScrollBarVisibility="Auto"
                    TextChanged="MessageTextBox_TextChanged" />
           <TextBlock x:Name="MessageBitsCounter" Style="{StaticResource BodySmall}"
-                     Margin="0,6,0,0" HorizontalAlignment="Right" TextAlignment="Right" />
+                     TextWrapping="Wrap" Margin="0,6,0,0" HorizontalAlignment="Right" TextAlignment="Right" />
         </StackPanel>
         <StackPanel x:Name="AudioPayloadPanel" Visibility="Collapsed">
           <TextBlock x:Name="AudioPayloadHint" Style="{StaticResource BodySmall}"
                      TextWrapping="Wrap" Margin="0,0,0,8" />
           <TextBlock x:Name="AudioPayloadBudget" Style="{StaticResource BodySmall}"
-                     Margin="0,0,0,8" />
+                     TextWrapping="Wrap" Margin="0,0,0,8" />
           <Button x:Name="ClearPayloadAudioBtn" Style="{StaticResource TonalButton}"
                   HorizontalAlignment="Right" Margin="0,0,0,8" Click="ClearPayloadAudio_Click"
                   Visibility="Collapsed">
@@ -39,7 +39,7 @@
           <TextBlock x:Name="ImagePayloadHint" Style="{StaticResource BodySmall}"
                      TextWrapping="Wrap" Margin="0,0,0,8" />
           <TextBlock x:Name="ImagePayloadBudget" Style="{StaticResource BodySmall}"
-                     Margin="0,0,0,8" />
+                     TextWrapping="Wrap" Margin="0,0,0,8" />
           <Image x:Name="PayloadImagePreview" MaxHeight="140" Stretch="Uniform"
                  Margin="0,0,0,8" Visibility="Collapsed" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -59,6 +59,12 @@
           <StackPanel>
             <TextBlock x:Name="EqualizerTitle" Style="{StaticResource BodySmall}" Margin="0,0,0,6" />
             <controls:EqualizerControl x:Name="Equalizer" />
+            <StackPanel x:Name="CoverMinProgressPanel" Margin="0,10,0,0" Visibility="Collapsed">
+              <ProgressBar x:Name="CoverMinProgressBar" Height="10" Minimum="0" Maximum="1"
+                           Value="0" />
+              <TextBlock x:Name="CoverMinProgressText" Margin="0,6,0,0" TextAlignment="Center"
+                         Style="{StaticResource BodySmall}" TextWrapping="Wrap" />
+            </StackPanel>
             <Grid Margin="0,8,0,0" HorizontalAlignment="Center">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -134,6 +140,102 @@
               <StackPanel Orientation="Horizontal">
                 <TextBlock x:Name="VerifyBannerIcon" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,8,0" />
                 <TextBlock x:Name="VerifyText" TextWrapping="Wrap" VerticalAlignment="Center" />
+              </StackPanel>
+            </Border>
+            <Border x:Name="AbListenPanel" Margin="0,0,0,12" CornerRadius="12" Padding="12"
+                    Background="{DynamicResource SurfaceVariantBrush}" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock x:Name="AbListenTitle" Style="{StaticResource SectionTitle}" FontSize="14"
+                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8" />
+                <WrapPanel>
+                  <Button x:Name="PlayCoverButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
+                          Click="PlayCoverButton_Click">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                      <TextBlock x:Name="PlayCoverLabel" />
+                    </StackPanel>
+                  </Button>
+                  <Button x:Name="PlayStegoButton" Style="{StaticResource FilledButton}" Margin="0,0,8,8"
+                          Click="PlayStegoButton_Click">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                      <TextBlock x:Name="PlayStegoLabel" />
+                    </StackPanel>
+                  </Button>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+            <Border x:Name="RecoveredPayloadPanel" Margin="0,0,0,12" CornerRadius="12" Padding="12"
+                    Background="{DynamicResource SurfaceVariantBrush}" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock x:Name="RecoveredPayloadTitle" Style="{StaticResource SectionTitle}" FontSize="14"
+                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12" />
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0">
+                    <TextBlock x:Name="OriginalPayloadHeading" Style="{StaticResource BodySmall}"
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"
+                               Margin="0,0,0,8" />
+                    <TextBox x:Name="OriginalTextBox" IsReadOnly="True" TextWrapping="Wrap" MinHeight="64"
+                             Background="Transparent" BorderThickness="0" Visibility="Collapsed"
+                             Foreground="{DynamicResource TextBrush}" FontSize="15" />
+                    <Image x:Name="OriginalImage" MaxHeight="160" Stretch="Uniform" Margin="0,0,0,8"
+                           Visibility="Collapsed" />
+                    <WrapPanel>
+                      <Button x:Name="PlayOriginalPayloadButton" Style="{StaticResource TonalButton}"
+                              Margin="0,0,8,0" Click="PlayOriginalPayloadButton_Click" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                          <TextBlock x:Name="PlayOriginalPayloadLabel" />
+                        </StackPanel>
+                      </Button>
+                      <Button x:Name="CopyOriginalButton" Style="{StaticResource TonalButton}"
+                              Click="CopyOriginalButton_Click" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" Margin="0,0,8,0" />
+                          <TextBlock x:Name="CopyOriginalLabel" />
+                        </StackPanel>
+                      </Button>
+                    </WrapPanel>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2">
+                    <TextBlock x:Name="RecoveredPayloadHeading" Style="{StaticResource BodySmall}"
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"
+                               Margin="0,0,0,8" />
+                    <TextBox x:Name="RecoveredTextBox" IsReadOnly="True" TextWrapping="Wrap" MinHeight="64"
+                             Background="Transparent" BorderThickness="0" Visibility="Collapsed"
+                             Foreground="{DynamicResource TextBrush}" FontSize="15" />
+                    <Image x:Name="RecoveredImage" MaxHeight="160" Stretch="Uniform" Margin="0,0,0,8"
+                           Visibility="Collapsed" />
+                    <WrapPanel>
+                      <Button x:Name="PlayRecoveredButton" Style="{StaticResource TonalButton}" Margin="0,0,8,0"
+                              Click="PlayRecoveredButton_Click" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                          <TextBlock x:Name="PlayRecoveredLabel" />
+                        </StackPanel>
+                      </Button>
+                      <Button x:Name="SaveRecoveredButton" Style="{StaticResource TonalButton}" Margin="0,0,8,0"
+                              Click="SaveRecoveredButton_Click" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" Margin="0,0,8,0" />
+                          <TextBlock x:Name="SaveRecoveredLabel" />
+                        </StackPanel>
+                      </Button>
+                      <Button x:Name="CopyRecoveredButton" Style="{StaticResource TonalButton}"
+                              Click="CopyRecoveredButton_Click" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" Margin="0,0,8,0" />
+                          <TextBlock x:Name="CopyRecoveredLabel" />
+                        </StackPanel>
+                      </Button>
+                    </WrapPanel>
+                  </StackPanel>
+                </Grid>
               </StackPanel>
             </Border>
             <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="16" Padding="12">

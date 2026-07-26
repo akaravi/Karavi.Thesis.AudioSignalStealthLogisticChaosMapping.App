@@ -13,9 +13,7 @@ namespace AudioStegano.Desktop.Views;
 
 public partial class ExtractView : UserControl
 {
-    /// Cover stego file vs recovered payload — separate players (parity with Flutter).
-    private readonly AudioPlaybackService _coverPlayback = new();
-    private readonly AudioPlaybackService _extractedPlayback = new();
+    private readonly PlaybackHub _hub = PlaybackHub.Instance;
     private WavFile? _loadedWav;
     private WavFile? _extractedAudio;
     private byte[]? _extractedImageBytes;
@@ -23,8 +21,8 @@ public partial class ExtractView : UserControl
     public ExtractView()
     {
         InitializeComponent();
-        _coverPlayback.PlaybackStateChanged += UpdatePlaybackButtons;
-        _extractedPlayback.PlaybackStateChanged += UpdateExtractedPlayButton;
+        _hub.Engine(PlaybackSessionId.ExtractCover).PlaybackStateChanged += UpdatePlaybackButtons;
+        _hub.Engine(PlaybackSessionId.ExtractPayload).PlaybackStateChanged += UpdateExtractedPlayButton;
         Loaded += (_, _) =>
         {
             ApplyStrings();
@@ -57,8 +55,7 @@ public partial class ExtractView : UserControl
             }
         });
 
-        _coverPlayback.Stop();
-        _extractedPlayback.Stop();
+        _hub.StopSessions(PlaybackHub.ExtractSessions);
         _loadedWav = wav;
         PlaybackPanel.Visibility = wav is not null ? Visibility.Visible : Visibility.Collapsed;
         SetBusy(false);
@@ -122,8 +119,7 @@ public partial class ExtractView : UserControl
     private void NewExtractFab_Click(object sender, RoutedEventArgs e)
     {
         if (BusyBar.Visibility == Visibility.Visible) return;
-        _coverPlayback.Stop();
-        _extractedPlayback.Stop();
+        _hub.StopSessions(PlaybackHub.ExtractSessions);
         _loadedWav = null;
         _extractedAudio = null;
         ClearExtractedImage();
@@ -153,9 +149,9 @@ public partial class ExtractView : UserControl
             return;
         }
 
-        var playing = _coverPlayback.IsPlaying;
-        var hasSource = _coverPlayback.HasSource;
-        var paused = _coverPlayback.IsPaused;
+        var playing = _hub.IsPlaying(PlaybackSessionId.ExtractCover);
+        var hasSource = _hub.HasSource(PlaybackSessionId.ExtractCover);
+        var paused = _hub.IsPaused(PlaybackSessionId.ExtractCover);
         PlayButton.IsEnabled = !playing && _loadedWav is not null;
         PauseButton.IsEnabled = playing;
         StopPlaybackButton.IsEnabled = hasSource && (playing || paused);
@@ -174,7 +170,7 @@ public partial class ExtractView : UserControl
             return;
 
         var s = ThemeManager.Strings;
-        if (_extractedPlayback.IsPlaying)
+        if (_hub.IsPlaying(PlaybackSessionId.ExtractPayload))
         {
             PlayExtractedLabel.Text = s.Pause;
             PlayExtractedButton.IsEnabled = true;
@@ -241,7 +237,7 @@ public partial class ExtractView : UserControl
         SetBusy(true);
         StatusText.Text = s.Processing;
         ResultPanel.Visibility = Visibility.Collapsed;
-        _extractedPlayback.Stop();
+        _hub.Stop(PlaybackSessionId.ExtractPayload);
         _extractedAudio = null;
         ClearExtractedImage();
 
@@ -394,25 +390,17 @@ public partial class ExtractView : UserControl
     private void PlayExtractedButton_Click(object sender, RoutedEventArgs e)
     {
         if (_extractedAudio is null) return;
-        if (_coverPlayback.IsPlaying)
-            _coverPlayback.Pause();
-
-        if (_extractedPlayback.IsPlaying)
+        try
         {
-            _extractedPlayback.Pause();
+            _hub.PlayOrToggle(
+                PlaybackSessionId.ExtractPayload,
+                PayloadEnvelope.PrepareAudioForExport(_extractedAudio));
             UpdateExtractedPlayButton();
-            return;
         }
-
-        if (_extractedPlayback.HasSource && _extractedPlayback.IsPaused)
+        catch (Exception ex)
         {
-            _extractedPlayback.Resume();
-            UpdateExtractedPlayButton();
-            return;
+            StatusText.Text = ex.Message;
         }
-
-        _extractedPlayback.Play(PayloadEnvelope.PrepareAudioForExport(_extractedAudio));
-        UpdateExtractedPlayButton();
     }
 
     private void SaveExtractedButton_Click(object sender, RoutedEventArgs e)
@@ -450,20 +438,22 @@ public partial class ExtractView : UserControl
     private void PlayButton_Click(object sender, RoutedEventArgs e)
     {
         if (_loadedWav is null) return;
-
-        if (_extractedPlayback.IsPlaying)
-            _extractedPlayback.Pause();
-
-        if (_coverPlayback.HasSource && !_coverPlayback.IsPlaying)
-            _coverPlayback.Resume();
-        else
-            _coverPlayback.Play(_loadedWav);
-        UpdateExtractedPlayButton();
+        try
+        {
+            _hub.PlayIfNotPlaying(PlaybackSessionId.ExtractCover, _loadedWav);
+            UpdateExtractedPlayButton();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = ex.Message;
+        }
     }
 
-    private void PauseButton_Click(object sender, RoutedEventArgs e) => _coverPlayback.Pause();
+    private void PauseButton_Click(object sender, RoutedEventArgs e) =>
+        _hub.Pause(PlaybackSessionId.ExtractCover);
 
-    private void StopPlaybackButton_Click(object sender, RoutedEventArgs e) => _coverPlayback.Stop();
+    private void StopPlaybackButton_Click(object sender, RoutedEventArgs e) =>
+        _hub.Stop(PlaybackSessionId.ExtractCover);
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {

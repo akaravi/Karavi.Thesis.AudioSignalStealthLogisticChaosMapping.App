@@ -882,3 +882,436 @@
   ]
 }
 ```
+
+## Part 84 — Immediate verify: extract + test recovered payload on Embed
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 84,
+  "title": "Immediate verify extracts and allows testing",
+  "request": "در تایید فوری باید بتوان همان لحظه استخراج را انجام داد و تست کرد",
+  "scope": [
+    "Auto-extract after embed success",
+    "Show recovered text/audio/image with play/save/copy on Embed result",
+    "Flutter + WPF parity; separate recovered player"
+  ]
+}
+```
+
+## Result 84
+
+```json
+{
+  "part": 84,
+  "status": "done",
+  "verification": "WPF Desktop build green; flutter analyze embed_screen clean; history updated",
+  "files": [
+    "embed_screen.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs",
+    "app_strings.dart / AppStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 85 — Immediate verify A/B listen cover vs stego
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 85,
+  "title": "A/B play original and stego on immediate verify",
+  "request": "در تایید فوری باید هر دو صدا یعنی صدای اصلی و صدا بعد از نهان نگاری قابل play باشد تا کاربر بررسی کند ایا تفاوتی حس می کند یا خیر",
+  "scope": [
+    "Labeled play original cover + play after watermark on Embed result",
+    "Flutter + WPF parity; shared pause/stop; recovered player separate",
+    "i18n + help steps"
+  ]
+}
+```
+
+## Result 85
+
+```json
+{
+  "part": 85,
+  "status": "done",
+  "verification": "WPF Desktop build green; flutter analyze embed/strings clean; apps relaunched",
+  "files": [
+    "embed_screen.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs",
+    "app_strings.dart / AppStrings.cs / HelpStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 86 — Immediate verify original vs recovered payload display
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 86,
+  "title": "Show original hidden and recovered payload after verify",
+  "request": "باید بعد از تایید سریع متن/صوت/عکس اصلی نهان‌شده و بازیافت‌شده هر دو نمایش داده شوند",
+  "scope": [
+    "Side-by-side original vs recovered for text, audio payload, image",
+    "Flutter + WPF parity; play original hidden audio + recovered",
+    "i18n + help"
+  ]
+}
+```
+
+## Result 86
+
+```json
+{
+  "part": 86,
+  "status": "done",
+  "verification": "flutter analyze clean; WPF build green",
+  "files": [
+    "embed_screen.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs",
+    "app_strings.dart / AppStrings.cs / HelpStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 87 — Cover record min duration + progress (fixed bit budget)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 87,
+  "title": "Gate cover recording until min duration for fixed bits",
+  "request": "ضبط پوشش با بودجه بیت ثابت تا حداقل زمان لازم متوقف نشود + نوار پیشرفت",
+  "scope": [
+    "Block early stop when defaultFixedMessageBitLimit",
+    "Progress bar toward min duration (bits/44100)",
+    "Flutter + WPF; CoverRecordBudget helper + tests"
+  ]
+}
+```
+
+## Result 87
+
+```json
+{
+  "part": 87,
+  "status": "done",
+  "verification": "flutter analyze clean; cover_record_budget tests; WPF build green",
+  "files": [
+    "cover_record_budget.dart / CoverRecordBudget.cs",
+    "embed_screen.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs",
+    "app_strings / AppStrings",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 87 — UI visual standard across all pages
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 87,
+  "title": "Unify color and chrome across all pages",
+  "request": "بر اساس styles های موجود قابلیت و رنگ بندی و همه موارد مربوطه را اصلاح کن به یک استاندارد در تمام صفحات برس",
+  "scope": [
+    "Flutter AppUiTokens + AppTheme (rail/bar/card/segment/chip/input)",
+    "Shared AppSectionCard + PageToolbarFab across Embed/Extract/Settings/About",
+    "Nav icons align with Embed reference (layers/search/settings/person)",
+    "WPF SurfaceContainer + MaterialCard/ResultCard/Nav/FAB parity"
+  ]
+}
+```
+
+## Result 87
+
+```json
+{
+  "part": 87,
+  "status": "done",
+  "verification": "flutter analyze (9 UI files) clean; WPF Desktop build 0 errors / 0 warnings",
+  "files": [
+    "app_ui_tokens.dart / app_theme.dart / home_shell.dart",
+    "app_section_card.dart / page_toolbar_fab.dart",
+    "embed_screen.dart / extract_screen.dart / settings_screen.dart / about_screen.dart",
+    "LightTheme.xaml / DarkTheme.xaml / SharedStyles.xaml / MainWindow.xaml / ExtractView.xaml",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 88 — Soft purple theme light + dark
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 88,
+  "title": "Soft purple theme for light and dark",
+  "request": "رنگ ها کنار هم مسابق نیستند. تم نرم فاز را کلا بنفش کن و در دو تم تاریک و روشن",
+  "scope": [
+    "Soft purple brand default #7A68A8",
+    "Flutter + WPF light/dark purple surfaces",
+    "Legacy teal migration; purple seed swatches"
+  ]
+}
+```
+
+## Result 88
+
+```json
+{
+  "part": 88,
+  "status": "done",
+  "verification": "flutter analyze theme/settings clean; WPF Desktop build 0 errors",
+  "files": [
+    "app_brand_colors.dart / app_theme.dart / settings_controller.dart / settings_screen.dart",
+    "LightTheme.xaml / DarkTheme.xaml / ThemeManager.cs / AppState.cs / SettingsView.xaml.cs",
+    "pubspec.yaml / web theme-color / cafebazaar_screenshots_test.dart",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 88 — Cover record gate: sample buffer not wall-clock
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 88,
+  "title": "Fix cover min gate: use buffered samples",
+  "request": "طول زمان اشتباه بود؛ کاربر قبل از حجم مورد نیاز stop کرد",
+  "scope": [
+    "Gate stop on bufferedMonoSampleCount >= requiredBits + margin",
+    "Progress/remaining from real buffer; wall-clock only as UI hint",
+    "Flutter + WPF + tests + i18n"
+  ]
+}
+```
+
+## Result 88
+
+```json
+{
+  "part": 88,
+  "status": "done",
+  "verification": "flutter test cover_record_budget; flutter analyze clean; CoverRecordBudgetTests; WPF Desktop build green",
+  "files": [
+    "cover_record_budget.dart / CoverRecordBudget.cs",
+    "audio_recorder.dart / AudioCaptureService.cs",
+    "embed_screen.dart / EmbedView.xaml.cs",
+    "app_strings / AppStrings",
+    "cover_record_budget_test.dart / CoverRecordBudgetTests.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 89 — Dual waveform clearer (peak normalize)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 89,
+  "title": "Make compare waveform more distinct",
+  "request": "سیگنال مشخص تر باشد",
+  "scope": [
+    "Joint peak normalize cover/stego envelopes for display",
+    "Thicker stroke + fill; remove WPF ChartHost 0.35 opacity",
+    "Flutter DualWaveformChart + WPF DualWaveformControl + tests"
+  ]
+}
+```
+
+## Result 89
+
+```json
+{
+  "part": 89,
+  "status": "done",
+  "verification": "flutter test waveform_display; WaveformDisplayTests; flutter analyze; WPF build",
+  "files": [
+    "waveform_display.dart / WaveformDisplay.cs",
+    "dual_waveform_chart.dart",
+    "DualWaveformControl.xaml / DualWaveformControl.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 94 — PlaybackHub isolated Play/Pause sessions
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 94,
+  "title": "Method-based playback hub — no cross-button interference",
+  "request": "وضعیت دکمه های play pause با درستی عمل نمی کند؛ متدبیس بدون تداخل",
+  "scope": [
+    "PlaybackHub sessions per surface",
+    "Embed A/B + payload split engines",
+    "Extract via hub",
+    "Stop on tab change Flutter+WPF"
+  ]
+}
+```
+
+## Result 94
+
+```json
+{
+  "part": 94,
+  "status": "done",
+  "verification": "dart analyze hub/embed/extract/home_shell; WPF Debug build green",
+  "files": [
+    "playback_hub.dart",
+    "PlaybackHub.cs",
+    "embed_screen.dart / EmbedView.xaml.cs",
+    "extract_screen.dart / ExtractView.xaml.cs",
+    "home_shell.dart / MainWindow.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 93 — Web boot loader: no top bar, center spinner
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 93,
+  "title": "Remove Flutter web top progress bar; center loading spinner",
+  "request": "نوار بالا را حذف کن و یک آیکن لودینگ در وسط صفحه قرار بده",
+  "scope": ["web/index.html hide .flutter-loader", "CSS purple boot-spinner + Loading text"]
+}
+```
+
+## Result 93
+
+```json
+{
+  "part": 93,
+  "status": "done",
+  "verification": "index.html read-back; Flutter web restarted http://127.0.0.1:5320/",
+  "files": ["src/audio_stegano_app/web/index.html", "readmehistory.md"]
+}
+```
+
+## Part 92 — Dynamic bits/cover time when fixed budget off
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 92,
+  "title": "Hide fixed 262144 when unchecked; dynamic cover bits/time from payload",
+  "request": "با برداشتن تیک حجم پیش‌فرض عدد 262144 نشان داده نشود؛ بعد از بارگذاری عکس/صوت بیت و زمان ضبط پوشش دینامیک شود",
+  "scope": [
+    "Embed UI: fixed ON = used/budget; OFF = required bits + cover seconds",
+    "CoverRequiredBits / _coverRequiredBits from live payload",
+    "compressForEmbed without budget when fixed off",
+    "Settings toggle refreshes Embed (WPF RefreshShell)"
+  ]
+}
+```
+
+## Result 92
+
+```json
+{
+  "part": 92,
+  "status": "done",
+  "verification": "dart analyze embed_screen/app_strings/payload_image_codec; WPF Debug build green",
+  "files": [
+    "embed_screen.dart",
+    "app_strings.dart",
+    "payload_image_codec.dart / PayloadImageCodec.cs",
+    "EmbedView.xaml(.cs)",
+    "AppStrings.cs",
+    "SettingsView.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 91 — Capacity exceeded warning with bit counts
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 91,
+  "title": "Warn when payload does not fit cover capacity",
+  "request": "وقتی عکس/فایل در حجم صوت جا نشود هشدار با بیت مورد نیاز و بیت موجود",
+  "scope": [
+    "CapacityExceededException + pre-check before embed",
+    "i18n needed vs available bits",
+    "Flutter Embed + WPF EmbedView"
+  ]
+}
+```
+
+## Result 91
+
+```json
+{
+  "part": 91,
+  "status": "done",
+  "verification": "capacity_exceeded tests; flutter analyze; WPF build",
+  "files": [
+    "capacity_exceeded_exception.dart / CapacityExceededException.cs",
+    "embed_message.dart / EmbedMessage.cs",
+    "embed_screen.dart / EmbedView.xaml.cs",
+    "app_strings / AppStrings",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 90 — Remove theme color picker; fixed purple light/dark only
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 90,
+  "title": "Remove color seed UI; fixed soft purple light/dark",
+  "request": "انتخاب رنگ بندی تم را حذف کن و در همه صفحات تم بنفش با دو حالت روشن و تم تاریک",
+  "scope": [
+    "Remove Settings color-seed picker (Flutter + WPF)",
+    "Fixed soft purple #7A68A8; Light/Dark only (migrate System → Light)",
+    "Drop seed prefs; i18n cleanup themeSystem/ColorSeed"
+  ]
+}
+```
+
+## Result 90
+
+```json
+{
+  "part": 90,
+  "status": "done",
+  "verification": "flutter analyze theme/settings/main + screenshot test clean; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "settings_controller.dart / settings_screen.dart / app_theme.dart / app_brand_colors.dart / app_strings.dart / main.dart",
+    "cafebazaar_screenshots_test.dart",
+    "SettingsView.xaml / SettingsView.xaml.cs / ThemeManager.cs / AppState.cs / AppStrings.cs / HelpStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```

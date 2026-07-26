@@ -11,6 +11,7 @@
 library;
 
 export 'audio_watermarking.dart';
+export 'capacity_exceeded_exception.dart';
 export 'embed_integrity.dart';
 export 'embed_message.dart';
 export 'extract_message.dart';

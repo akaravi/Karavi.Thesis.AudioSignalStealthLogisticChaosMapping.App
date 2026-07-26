@@ -38,4 +38,51 @@ public static class WaveformDisplay
         }
         return outList;
     }
+
+    public static double EnvelopePeak(params IReadOnlyList<double>?[] series)
+    {
+        var peak = 0.0;
+        foreach (var s in series)
+        {
+            if (s is null) continue;
+            for (var i = 0; i < s.Count; i++)
+            {
+                if (s[i] > peak) peak = s[i];
+            }
+        }
+        return peak;
+    }
+
+    /// <summary>
+    /// Joint peak rescale so quiet recordings fill most of the chart height.
+    /// Same gain for every series (fair cover vs stego comparison).
+    /// </summary>
+    public static IReadOnlyList<double>[] NormalizeForDisplay(
+        IReadOnlyList<double>?[] series,
+        double targetPeak = 0.92,
+        double minPeak = 1e-4)
+    {
+        var peak = EnvelopePeak(series);
+        if (peak < minPeak)
+        {
+            return series.Select(s => (IReadOnlyList<double>)(s ?? Array.Empty<double>())).ToArray();
+        }
+
+        var gain = targetPeak / peak;
+        var result = new IReadOnlyList<double>[series.Length];
+        for (var i = 0; i < series.Length; i++)
+        {
+            var src = series[i];
+            if (src is null || src.Count == 0)
+            {
+                result[i] = Array.Empty<double>();
+                continue;
+            }
+            var dst = new double[src.Count];
+            for (var j = 0; j < src.Count; j++)
+                dst[j] = Math.Clamp(src[j] * gain, 0, 1);
+            result[i] = dst;
+        }
+        return result;
+    }
 }

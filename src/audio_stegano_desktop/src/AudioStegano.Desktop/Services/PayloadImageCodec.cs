@@ -10,6 +10,37 @@ namespace AudioStegano.Desktop.Services;
 /// </summary>
 public static class PayloadImageCodec
 {
+    /// <summary>
+    /// Soft JPEG when no fixed bit budget; otherwise compresses under [bitBudget].
+    /// </summary>
+    public static byte[] CompressForEmbed(byte[] sourceBytes, int? bitBudget)
+    {
+        if (bitBudget is > 0)
+            return CompressToFitBudget(sourceBytes, bitBudget.Value);
+
+        BitmapSource bitmap;
+        using (var ms = new MemoryStream(sourceBytes))
+        {
+            var decoder = BitmapDecoder.Create(
+                ms,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+            bitmap = decoder.Frames[0];
+        }
+
+        var longEdge = Math.Max(bitmap.PixelWidth, bitmap.PixelHeight);
+        if (longEdge > PayloadImageDefaults.MaxLongEdgePx)
+        {
+            var scale = (double)PayloadImageDefaults.MaxLongEdgePx / longEdge;
+            bitmap = new TransformedBitmap(
+                bitmap,
+                new System.Windows.Media.ScaleTransform(scale, scale));
+            bitmap.Freeze();
+        }
+
+        return EncodeJpeg(bitmap, PayloadImageDefaults.JpegQuality);
+    }
+
     public static byte[] CompressToFitBudget(byte[] sourceBytes, int bitBudget)
     {
         var maxBytes = PayloadImageDefaults.MaxImageBytesForBitBudget(bitBudget);

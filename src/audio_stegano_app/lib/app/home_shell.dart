@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/audio/playback_hub.dart';
 import '../core/platform/android_open_file_intent.dart';
 import '../core/platform/desktop_open_audio_args.dart';
 import '../core/platform/windows_open_file_intent.dart';
@@ -28,6 +29,17 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   StreamSubscription<OpenedAudioFile>? _windowsOpenSub;
 
   static const _extractTabIndex = 1;
+
+  void _selectTab(int i) {
+    if (i == _index) return;
+    final leaving = _index;
+    if (leaving == 0) {
+      unawaited(PlaybackHub.instance.stopSessions(PlaybackHub.embedSessions));
+    } else if (leaving == _extractTabIndex) {
+      unawaited(PlaybackHub.instance.stopSessions(PlaybackHub.extractSessions));
+    }
+    setState(() => _index = i);
+  }
 
   @override
   void initState() {
@@ -66,7 +78,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   void _scheduleOpenFile(OpenedAudioFile file) {
     if (!mounted) return;
     ref.read(pendingOpenAudioFileProvider.notifier).setPending(file);
-    setState(() => _index = _extractTabIndex);
+    _selectTab(_extractTabIndex);
   }
 
   @override
@@ -86,11 +98,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       SettingsScreen(),
       AboutScreen(),
     ];
+    // Icons aligned with Embed reference chrome (layers / search / gear / person).
     final destinations = [
-      _Dest(Icons.shield_outlined, Icons.shield, s.embedTab),
+      _Dest(Icons.layers_outlined, Icons.layers, s.embedTab),
       _Dest(Icons.search_outlined, Icons.search, s.extractTab),
       _Dest(Icons.settings_outlined, Icons.settings, s.settingsTab),
-      _Dest(Icons.groups_outlined, Icons.groups, s.aboutUsTab),
+      _Dest(Icons.person_outline, Icons.person, s.aboutUsTab),
     ];
 
     // Stack of Offstage pages keeps each tab's state alive while removing
@@ -127,7 +140,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 NavigationRail(
                   selectedIndex: _index,
                   labelType: NavigationRailLabelType.all,
-                  onDestinationSelected: (i) => setState(() => _index = i),
+                  backgroundColor: scheme.surfaceContainer,
+                  indicatorColor: scheme.primaryContainer,
+                  onDestinationSelected: _selectTab,
                   destinations: [
                     for (final d in destinations)
                       NavigationRailDestination(
@@ -137,7 +152,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                       ),
                   ],
                 ),
-                const VerticalDivider(width: 1),
+                VerticalDivider(
+                  width: 1,
+                  color: scheme.outlineVariant,
+                ),
                 Expanded(child: body),
               ],
             )
@@ -146,7 +164,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           ? null
           : NavigationBar(
               selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
+              onDestinationSelected: _selectTab,
               destinations: [
                 for (final d in destinations)
                   NavigationDestination(

@@ -34,19 +34,19 @@ public sealed partial class AppStrings
     public string HelpTabsBody => T(
         "• نهان‌نگاری: پنهان‌سازی پیام در صوت\n"
             + "• رمزگشایی: استخراج پیام از فایل صوتی\n"
-            + "• تنظیمات: تم، زبان، رنگ و پارامترهای کلید (r و x0)\n"
+            + "• تنظیمات: تم (روشن/تاریک)، زبان و پارامترهای کلید (r و x0)\n"
             + "• درباره ما: معرفی پروژه و راه‌های ارتباط",
         "• Embed: hide a message inside audio\n"
             + "• Extract: recover the message from an audio file\n"
-            + "• Settings: theme, language, color and key params (r, x0)\n"
+            + "• Settings: theme (light/dark), language and key params (r, x0)\n"
             + "• About: project info and contact links",
         "• الإخفاء: إدراج رسالة داخل الصوت\n"
             + "• الاستخراج: استرجاع الرسالة من ملف صوتي\n"
-            + "• الإعدادات: المظهر واللغة ومعاملات المفتاح (r و x0)\n"
+            + "• الإعدادات: المظهر (فاتح/داكن) واللغة ومعاملات المفتاح (r و x0)\n"
             + "• من نحن: معلومات المشروع وروابط التواصل",
         "• Intégrer : cacher un message dans l’audio\n"
             + "• Extraire : récupérer le message depuis un fichier audio\n"
-            + "• Paramètres : thème, langue, couleur et clé (r, x0)\n"
+            + "• Paramètres : thème (clair/sombre), langue et clé (r, x0)\n"
             + "• À propos : projet et contact");
 
     public string HelpSectionEmbedSteps => T(
@@ -89,22 +89,28 @@ public sealed partial class AppStrings
             + "bits. Copiez ou notez impérativement ce nombre — il est requis pour "
             + "l’extraction.");
     public string HelpEmbedStep5 => T(
-        "۵) پخش و مقایسه: می‌توانید فایل نهان‌نگاری‌شده را پخش کنید، نمودار موج "
-            + "اصلی و نهان‌نگاری‌شده را مقایسه کنید و متریک‌های کیفیت (SNR، PSNR، …) را ببینید.",
-        "5) Play & compare: play back the stego file, compare cover and stego "
-            + "waveforms, and view quality metrics (SNR, PSNR, …).",
-        "٥) التشغيل والمقارنة: شغّل ملف الإخفاء، قارن الموجات وشاهد مقاييس الجودة "
-            + "(SNR، PSNR، …).",
-        "5) Lecture et comparaison : écoutez, comparez les ondes et consultez "
-            + "les métriques (SNR, PSNR, …).");
+        "۵) پخش و مقایسه: صدای اصلی (پوشش) و صدای بعد از نهان‌نگاری را جداگانه پخش "
+            + "کنید تا بشنوید آیا تفاوتی حس می‌کنید؛ نمودار موج و متریک‌های کیفیت "
+            + "(SNR، PSNR، …) را هم ببینید.",
+        "5) Play & compare: play original cover and watermarked stego separately to "
+            + "judge perceptual difference; also compare waveforms and quality metrics "
+            + "(SNR, PSNR, …).",
+        "٥) التشغيل والمقارنة: شغّل الغلاف الأصلي والصوت بعد الإخفاء لمعرفة إن كان هناك "
+            + "فرق مسموع؛ قارن الموجات ومقاييس الجودة (SNR، PSNR، …).",
+        "5) Lecture et comparaison : écoutez l’original et le stégo séparément pour "
+            + "juger la différence perceptuelle ; comparez aussi ondes et métriques "
+            + "(SNR, PSNR, …).");
     public string HelpEmbedStep6 => T(
-        "۶) تأیید فوری: دکمه «تأیید فوری» همان لحظه پیام را استخراج می‌کند و با متن "
-            + "اصلی مقایسه می‌کند تا از موفقیت جاسازی مطمئن شوید.",
-        "6) Verify roundtrip: the “Verify” button extracts the message right away "
-            + "and compares it with the original to confirm success.",
-        "٦) تحقق فوري: زر «تحقق فوري» يستخرج الرسالة فوراً ويقارنها بالأصل.",
-        "6) Vérification rapide : « Vérifier » extrait immédiatement et compare "
-            + "au texte original.");
+        "۶) تأیید فوری: پس از نهان‌سازی (و با دکمه «تأیید فوری») پیام استخراج می‌شود؛ "
+            + "اصل نهان‌شده و نسخهٔ بازیافت‌شده (متن/صوت/عکس) کنار هم نمایش داده می‌شوند؛ "
+            + "همچنین می‌توانید صدای پوشش و استگو را مقایسه کنید.",
+        "6) Immediate verify: after embed (and via “Verify”) the payload is extracted; "
+            + "original hidden vs recovered content (text/audio/image) are shown together; "
+            + "you can also A/B-play cover vs stego.",
+        "٦) تحقق فوري: بعد الإخفاء تُستخرج الرسالة؛ يُعرض الأصلي المخفي والمستخرج "
+            + "(نص/صوت/صورة) معاً؛ ويمكنك أيضاً مقارنة الغلاف بالمخفي.",
+        "6) Vérification rapide : extraction ; original caché vs extrait (texte/audio/image) "
+            + "affichés ensemble ; écoute A/B cover vs stégo aussi.");
     public string HelpEmbedStep7 => T(
         "۷) ذخیره یا اشتراک‌گذاری: روی «ذخیره فایل نهان‌نگاری شده» بزنید یا از "
             + "آیکن اشتراک‌گذاری برای فرستادن فایل WAV استفاده کنید. توصیه: فایل را "

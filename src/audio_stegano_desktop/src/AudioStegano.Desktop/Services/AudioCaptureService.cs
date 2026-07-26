@@ -17,6 +17,16 @@ public sealed class AudioCaptureService : IDisposable
     /// <summary>Sample rate of the active or last started capture session.</summary>
     public int SampleRate => _sampleRate;
 
+    /// <summary>Mono PCM16 frames currently buffered (≈ LSB capacity in bits).</summary>
+    public int BufferedMonoSampleCount
+    {
+        get
+        {
+            lock (_lock)
+                return _buffer.Count / 2;
+        }
+    }
+
     public event Action<double>? AmplitudeDb;
     public event Action<double[]>? SpectrumBands;
 

@@ -11,6 +11,7 @@ library;
 import 'dart:typed_data';
 
 import '../audio/wav_io.dart';
+import 'capacity_exceeded_exception.dart';
 import 'evaluate_stego.dart';
 import 'embed_integrity.dart';
 import 'logistic_map_keygen.dart';
@@ -74,8 +75,9 @@ class EmbedMessage {
     final mono = cover.toMono();
     final capacity = mono.samples.length;
     if (binaryMsg.length > capacity) {
-      throw ArgumentError(
-        'Message too long: needs ${binaryMsg.length} bits, capacity $capacity',
+      throw CapacityExceededException(
+        neededBits: binaryMsg.length,
+        availableBits: capacity,
       );
     }
 

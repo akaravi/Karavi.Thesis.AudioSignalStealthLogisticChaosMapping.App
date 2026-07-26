@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using AudioStegano.Desktop.Localization;
 using AudioStegano.Desktop.Services;
 
@@ -11,11 +10,6 @@ namespace AudioStegano.Desktop.Views;
 
 public partial class SettingsView : UserControl
 {
-    private static readonly string[] SeedColors =
-    [
-        "#00B4B7", "#1B73E8", "#2E7D32", "#E65100", "#C62828", "#455A64",
-    ];
-
     private bool _loading;
 
     public SettingsView()
@@ -32,7 +26,6 @@ public partial class SettingsView : UserControl
         var s = ThemeManager.Strings;
         ThemeLabel.Text = s.ThemeMode;
         LanguageLabel.Text = s.Language;
-        ColorSeedLabel.Text = s.ColorSeed;
         LogisticLabel.Text = s.LogisticParams;
         RLabel.Text = s.RParam;
         X0Label.Text = s.X0Param;
@@ -47,9 +40,14 @@ public partial class SettingsView : UserControl
             ? Visibility.Visible
             : Visibility.Collapsed;
 
+        if (AppState.Settings.ThemeMode == AppThemeMode.System)
+        {
+            AppState.Settings.ThemeMode = AppThemeMode.Light;
+            AppState.Save();
+        }
+
         BuildThemeSegments(s);
         BuildLanguageSegments(s);
-        BuildColorSeeds();
 
         var st = AppState.Settings;
         RSlider.Value = LogisticParamBounds.ClampR(st.R);
@@ -113,6 +111,7 @@ public partial class SettingsView : UserControl
         AppState.Settings.DefaultFixedMessageBitLimit =
             DefaultFixedMsgBitLimitCheck.IsChecked == true;
         AppState.Save();
+        RefreshShell();
     }
 
     private void SyncLogisticPreview(AppStrings s)
@@ -125,12 +124,14 @@ public partial class SettingsView : UserControl
     private void BuildThemeSegments(AppStrings s)
     {
         ThemeSegments.Children.Clear();
-        var labels = new[] { s.ThemeLight, s.ThemeDark, s.ThemeSystem };
-        var modes = new[] { AppThemeMode.Light, AppThemeMode.Dark, AppThemeMode.System };
-        for (var i = 0; i < 3; i++)
+        var labels = new[] { s.ThemeLight, s.ThemeDark };
+        var modes = new[] { AppThemeMode.Light, AppThemeMode.Dark };
+        for (var i = 0; i < 2; i++)
         {
             var mode = modes[i];
-            var btn = CreateSegment(labels[i], AppState.Settings.ThemeMode == mode);
+            var selected = AppState.Settings.ThemeMode == mode
+                || (mode == AppThemeMode.Light && AppState.Settings.ThemeMode == AppThemeMode.System);
+            var btn = CreateSegment(labels[i], selected);
             var captured = mode;
             btn.Click += (_, _) =>
             {
@@ -161,43 +162,6 @@ public partial class SettingsView : UserControl
             RefreshShell();
         };
         LanguageSegments.Children.Add(btn);
-    }
-
-    private void BuildColorSeeds()
-    {
-        ColorSeedPanel.Children.Clear();
-        var current = AppState.Settings.AccentColor.ToUpperInvariant();
-        foreach (var hex in SeedColors)
-        {
-            var color = (Color)ColorConverter.ConvertFromString(hex)!;
-            var ring = current == hex.ToUpperInvariant();
-            var btn = new Button
-            {
-                Width = 36,
-                Height = 36,
-                Margin = new Thickness(0, 0, 8, 8),
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand,
-                Tag = hex,
-            };
-            var ellipse = new Ellipse
-            {
-                Width = 28,
-                Height = 28,
-                Fill = new SolidColorBrush(color),
-                Stroke = ring ? (Brush)FindResource("TextBrush") : null,
-                StrokeThickness = ring ? 3 : 0,
-            };
-            btn.Content = ellipse;
-            btn.Click += (_, _) =>
-            {
-                AppState.Settings.AccentColor = hex;
-                AppState.Save();
-                RefreshShell();
-            };
-            ColorSeedPanel.Children.Add(btn);
-        }
     }
 
     private static Button CreateSegment(string label, bool selected) =>

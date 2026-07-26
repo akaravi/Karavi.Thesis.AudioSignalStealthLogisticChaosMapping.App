@@ -33,8 +33,7 @@ public sealed class EmbedMessage
         var mono = cover.ToMono();
         var capacity = mono.Samples.Length;
         if (binaryMsg.Length > capacity)
-            throw new ArgumentException(
-                $"Message too long: needs {binaryMsg.Length} bits, capacity {capacity}");
+            throw new CapacityExceededException(binaryMsg.Length, capacity);
 
         var coverInt = StegoAudioHelper.ToMatlabInt16(mono.Samples);
         var stegoInt = (short[])coverInt.Clone();

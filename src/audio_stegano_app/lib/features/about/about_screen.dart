@@ -3,7 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/about_constants.dart';
 import '../../app/app_strings.dart';
+import '../../app/app_ui_tokens.dart';
 import '../../app/app_version.dart';
+import '../shared/app_section_card.dart';
 import '../shared/directional_latin_text.dart';
 import '../shared/tab_scroll_body.dart';
 
@@ -16,63 +18,57 @@ class AboutScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return TabScrollBody(
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: scheme.primaryContainer,
-                      backgroundImage: const AssetImage(
-                        AboutConstants.profilePhotoAsset,
-                      ),
-                      onBackgroundImageError: (_, _) {},
-                      child: Icon(
-                        Icons.person_outline,
-                        size: 36,
-                        color: scheme.onPrimaryContainer,
-                      ),
+        AppSectionCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: scheme.primaryContainer,
+                    foregroundColor: scheme.onPrimaryContainer,
+                    backgroundImage: const AssetImage(
+                      AboutConstants.profilePhotoAsset,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            s.aboutProfileTitle,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            s.aboutThesis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${s.aboutVersion}: ${AppVersion.display}',
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(
-                                  color: scheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ],
-                      ),
+                    onBackgroundImageError: (_, _) {},
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.aboutProfileTitle,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          s.aboutThesis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${s.aboutVersion}: ${AppVersion.display}',
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(s.aboutBio, style: Theme.of(context).textTheme.bodyMedium),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(s.aboutBio, style: Theme.of(context).textTheme.bodyMedium),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppUiTokens.sectionGap),
         _SectionCard(
           title: s.aboutSupervisorSection,
           children: [
@@ -82,7 +78,7 @@ class AboutScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppUiTokens.sectionGap),
         _SectionCard(
           title: s.aboutLinksSection,
           children: [
@@ -112,7 +108,7 @@ class AboutScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppUiTokens.sectionGap),
         _SectionCard(
           title: s.aboutContactSection,
           children: [
@@ -132,26 +128,23 @@ class AboutScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  s.aboutAlgo,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  s.aboutAlgoBody,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
+        const SizedBox(height: AppUiTokens.sectionGap),
+        AppSectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                s.aboutAlgo,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.aboutAlgoBody,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
         ),
       ],
@@ -167,24 +160,22 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
+    return AppSectionCard(
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
-            ...children,
-          ],
-        ),
+          ),
+          ...children,
+        ],
       ),
     );
   }

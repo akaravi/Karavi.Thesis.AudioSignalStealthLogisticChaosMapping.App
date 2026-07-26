@@ -18,13 +18,16 @@ namespace AudioStegano.Desktop.Views;
 public partial class EmbedView : UserControl
 {
     private readonly AudioCaptureService _capture = new();
-    private readonly AudioPlaybackService _playback = new();
+    private readonly PlaybackHub _hub = PlaybackHub.Instance;
     private double[] _eqBands = new double[SpectrumAnalyzer.BandCount];
     private WavFile? _cover;
     private WavFile? _stego;
     private WatermarkOutcome? _outcome;
     private WavFile? _payloadAudio;
     private byte[]? _payloadImageBytes;
+    private WavFile? _recoveredAudio;
+    private byte[]? _recoveredImageBytes;
+    private string? _recoveredText;
     private bool _audioPayloadMode;
     private bool _imagePayloadMode;
     private bool _recordingPayload;
@@ -38,8 +41,13 @@ public partial class EmbedView : UserControl
     {
         InitializeComponent();
         _capture.SpectrumBands += OnSpectrumBands;
-        _playback.SpectrumBands += OnSpectrumBands;
-        _playback.PlaybackStateChanged += UpdatePlaybackButtons;
+        foreach (var id in PlaybackHub.AbSessions)
+        {
+            _hub.Engine(id).SpectrumBands += OnSpectrumBands;
+            _hub.Engine(id).PlaybackStateChanged += UpdatePlaybackButtons;
+        }
+        _hub.Engine(PlaybackSessionId.EmbedPayloadOriginal).PlaybackStateChanged += UpdateRecoveredPlayButton;
+        _hub.Engine(PlaybackSessionId.EmbedPayloadRecovered).PlaybackStateChanged += UpdateRecoveredPlayButton;
         RecordBtn.Click += (_, _) => RecordBtn_Click(this, new RoutedEventArgs());
         LoadFileBtn.Click += (_, _) => LoadFileBtn_Click(this, new RoutedEventArgs());
         Loaded += (_, _) =>
@@ -59,9 +67,10 @@ public partial class EmbedView : UserControl
         PayloadModeImage.Content = s.EmbedPayloadImageTab;
         MessageLabel.Text = s.TextHint;
         MessageTextBox.SetValue(ToolTipService.ToolTipProperty, s.TextHint);
-        AudioPayloadHint.Text = s.EmbedPayloadAudioHint;
+        var useFixed = AppState.Settings.DefaultFixedMessageBitLimit;
+        AudioPayloadHint.Text = useFixed ? s.EmbedPayloadAudioHint : s.EmbedPayloadAudioHintDynamic;
         ClearPayloadAudioLabel.Text = s.ClearPayloadAudio;
-        ImagePayloadHint.Text = s.EmbedPayloadImageHint;
+        ImagePayloadHint.Text = useFixed ? s.EmbedPayloadImageHint : s.EmbedPayloadImageHintDynamic;
         PickPayloadImageLabel.Text = s.PickPayloadImage;
         ClearPayloadImageLabel.Text = s.ClearPayloadImage;
         AudioSourceOrLabel.Text = s.AudioSourceOr;
@@ -76,6 +85,17 @@ public partial class EmbedView : UserControl
         SaveLabel.Text = s.SaveStego;
         ShareLabel.Text = s.ShareStego;
         VerifyLabel.Text = s.Verify;
+        AbListenTitle.Text = s.VerifyAbListenTitle;
+        PlayCoverLabel.Text = s.PlayOriginalCover;
+        PlayStegoLabel.Text = s.PlayStegoAudio;
+        RecoveredPayloadTitle.Text = s.VerifyRecoveredTitle;
+        OriginalPayloadHeading.Text = s.OriginalHiddenPayload;
+        RecoveredPayloadHeading.Text = s.RecoveredPayloadLabel;
+        PlayOriginalPayloadLabel.Text = s.PlayOriginalPayloadAudio;
+        PlayRecoveredLabel.Text = s.PlayExtractedAudio;
+        SaveRecoveredLabel.Text = s.SaveExtractedAudio;
+        CopyOriginalLabel.Text = s.Copy;
+        CopyRecoveredLabel.Text = s.Copy;
         MetricsTapHint.Text = s.MetricHelpTapHint;
         ToolTipService.SetToolTip(NewEmbedFab, s.EmbedNew);
         ToolTipService.SetToolTip(HelpFab, s.HelpTooltip);
@@ -154,8 +174,10 @@ public partial class EmbedView : UserControl
         try
         {
             var source = File.ReadAllBytes(dlg.FileName);
-            var budget = AppConfig.Current.DefaultFixedMessageBitLength;
-            var compressed = PayloadImageCodec.CompressToFitBudget(source, budget);
+            int? budget = AppState.Settings.DefaultFixedMessageBitLimit
+                ? AppConfig.Current.DefaultFixedMessageBitLength
+                : null;
+            var compressed = PayloadImageCodec.CompressForEmbed(source, budget);
             _payloadImageBytes = compressed;
             using var ms = new MemoryStream(compressed);
             var bmp = new System.Windows.Media.Imaging.BitmapImage();
@@ -171,7 +193,10 @@ public partial class EmbedView : UserControl
         }
         catch (InvalidOperationException)
         {
-            ShowEmbedWarning(s.ErrorPayloadImageBudget);
+            ShowEmbedWarning(
+                AppState.Settings.DefaultFixedMessageBitLimit
+                    ? s.ErrorPayloadImageBudget
+                    : s.ErrorPayloadImageDecode);
         }
         catch (Exception)
         {
@@ -182,16 +207,31 @@ public partial class EmbedView : UserControl
     private void UpdateAudioPayloadUi()
     {
         var s = ThemeManager.Strings;
+        var useFixed = AppState.Settings.DefaultFixedMessageBitLimit;
         var budget = AppConfig.Current.DefaultFixedMessageBitLength;
         if (_payloadAudio is null)
         {
-            AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(0, budget);
+            if (useFixed)
+            {
+                AudioPayloadBudget.Visibility = Visibility.Visible;
+                AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(0, budget);
+            }
+            else
+            {
+                AudioPayloadBudget.Text = string.Empty;
+                AudioPayloadBudget.Visibility = Visibility.Collapsed;
+            }
             ClearPayloadAudioBtn.Visibility = Visibility.Collapsed;
         }
         else
         {
             var used = PayloadEnvelope.BitLengthForAudio(_payloadAudio);
-            AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(used, budget);
+            AudioPayloadBudget.Visibility = Visibility.Visible;
+            if (useFixed)
+                AudioPayloadBudget.Text = s.PayloadAudioBudgetLabel(used, budget);
+            else
+                AudioPayloadBudget.Text =
+                    $"{s.PayloadAudioBitsRequired(used)}\n{s.CoverRecordNeedHint(used, CoverNeedSecondsForBits(used))}";
             ClearPayloadAudioBtn.Visibility = Visibility.Visible;
         }
     }
@@ -199,18 +239,41 @@ public partial class EmbedView : UserControl
     private void UpdateImagePayloadUi()
     {
         var s = ThemeManager.Strings;
+        var useFixed = AppState.Settings.DefaultFixedMessageBitLimit;
         var budget = AppConfig.Current.DefaultFixedMessageBitLength;
         if (_payloadImageBytes is null)
         {
-            ImagePayloadBudget.Text = s.PayloadImageBudgetLabel(0, budget);
+            if (useFixed)
+            {
+                ImagePayloadBudget.Visibility = Visibility.Visible;
+                ImagePayloadBudget.Text = s.PayloadImageBudgetLabel(0, budget);
+            }
+            else
+            {
+                ImagePayloadBudget.Text = string.Empty;
+                ImagePayloadBudget.Visibility = Visibility.Collapsed;
+            }
             ClearPayloadImageBtn.Visibility = Visibility.Collapsed;
         }
         else
         {
             var used = PayloadEnvelope.BitLengthForImage(_payloadImageBytes);
-            ImagePayloadBudget.Text = s.PayloadImageBudgetLabel(used, budget);
+            ImagePayloadBudget.Visibility = Visibility.Visible;
+            if (useFixed)
+                ImagePayloadBudget.Text = s.PayloadImageBudgetLabel(used, budget);
+            else
+                ImagePayloadBudget.Text =
+                    $"{s.PayloadImageBitsRequired(used)}\n{s.CoverRecordNeedHint(used, CoverNeedSecondsForBits(used))}";
             ClearPayloadImageBtn.Visibility = Visibility.Visible;
         }
+    }
+
+    private static int CoverNeedSecondsForBits(int bits)
+    {
+        var seconds = (int)Math.Ceiling(
+            CoverRecordBudget.RemainingFromSamples(
+                0, bits, CoverRecordBudget.CoverSampleRate).TotalSeconds);
+        return Math.Clamp(seconds, 1, 3600);
     }
 
     private void UpdateFabStates()
@@ -232,6 +295,8 @@ public partial class EmbedView : UserControl
             PlayButton.IsEnabled = false;
             PauseButton.IsEnabled = false;
             StopPlaybackButton.IsEnabled = false;
+            PlayCoverButton.IsEnabled = false;
+            PlayStegoButton.IsEnabled = false;
         }
         else
             UpdatePlaybackButtons();
@@ -273,7 +338,9 @@ public partial class EmbedView : UserControl
             return;
         }
 
-        try { _playback.Stop(); }
+        try { _hub.StopAbSessions(); }
+        catch { /* ignore */ }
+        try { _hub.Stop(PlaybackSessionId.EmbedPayloadOriginal); _hub.Stop(PlaybackSessionId.EmbedPayloadRecovered); }
         catch { /* ignore */ }
         MessageTextBox.Clear();
         ResetForNewEmbed();
@@ -324,8 +391,10 @@ public partial class EmbedView : UserControl
     }
 
     private static bool IsEmbedCapacityError(string message) =>
+        CapacityExceededException.TryParse(message, out _) ||
         message.Contains("too long", StringComparison.OrdinalIgnoreCase) ||
-        message.Contains("Message too long", StringComparison.Ordinal);
+        message.Contains("Message too long", StringComparison.Ordinal) ||
+        message.Contains("capacity exceeded", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsEmbedIntegrityError(string message)
     {
@@ -397,8 +466,11 @@ public partial class EmbedView : UserControl
             var remaining = AppConfig.Current.DefaultFixedMessageBitLength - used;
             MessageBitsCounter.Text = s.MessageBitsUsedAndRemaining(used, remaining);
         }
-        else
+        else if (used <= 0)
             MessageBitsCounter.Text = s.MessageBitsUsed(used);
+        else
+            MessageBitsCounter.Text =
+                $"{s.MessageBitsUsed(used)}\n{s.CoverRecordNeedHint(used, CoverNeedSecondsForBits(used))}";
     }
 
     private void ApplyEmbedLayout()
@@ -427,7 +499,7 @@ public partial class EmbedView : UserControl
         }
         _eqBands = bands;
         Equalizer.SetBands(bands);
-        Equalizer.IsActive = _capture.IsRecording || _playback.HasSource;
+        Equalizer.IsActive = _capture.IsRecording || _hub.IsPlaying(PlaybackSessionId.EmbedCover) || _hub.IsPlaying(PlaybackSessionId.EmbedStego) || _hub.HasSource(PlaybackSessionId.EmbedCover) || _hub.HasSource(PlaybackSessionId.EmbedStego);
     }
 
     private void UpdatePlaybackButtons()
@@ -437,12 +509,18 @@ public partial class EmbedView : UserControl
             Dispatcher.BeginInvoke(UpdatePlaybackButtons);
             return;
         }
-        var playing = _playback.IsPlaying;
-        var hasSource = _playback.HasSource;
-        var paused = _playback.IsPaused;
-        PlayButton.IsEnabled = !playing && (_stego is not null);
-        PauseButton.IsEnabled = playing;
-        StopPlaybackButton.IsEnabled = hasSource && (playing || paused);
+        var coverPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedCover);
+        var stegoPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedStego);
+        var abPlaying = coverPlaying || stegoPlaying;
+        var abLoaded = _hub.HasSource(PlaybackSessionId.EmbedCover) || _hub.HasSource(PlaybackSessionId.EmbedStego);
+        var coverPaused = _hub.IsPaused(PlaybackSessionId.EmbedCover);
+        var stegoPaused = _hub.IsPaused(PlaybackSessionId.EmbedStego);
+        var canInteract = !_verifying && _stego is not null;
+        PlayButton.IsEnabled = canInteract && !stegoPlaying;
+        PauseButton.IsEnabled = canInteract && abPlaying;
+        StopPlaybackButton.IsEnabled = canInteract && abLoaded && (abPlaying || coverPaused || stegoPaused);
+        PlayCoverButton.IsEnabled = canInteract && _cover is not null && (!coverPlaying || coverPaused);
+        PlayStegoButton.IsEnabled = canInteract && (!stegoPlaying || stegoPaused);
     }
 
     private async void RecordBtn_Click(object sender, RoutedEventArgs e)
@@ -452,6 +530,14 @@ public partial class EmbedView : UserControl
 
         if (_capture.IsRecording)
         {
+            if (!_recordingPayload && !IsCoverRecordMinSatisfied())
+            {
+                var remain = CoverRecordRemainingSeconds();
+                StatusText.Text = s.RecordingTooShort(remain);
+                UpdateCoverMinProgressUi();
+                return;
+            }
+
             _busy = true;
             BusyBar.Visibility = Visibility.Visible;
             StatusText.Text = s.Processing;
@@ -479,7 +565,7 @@ public partial class EmbedView : UserControl
                     recorded = SampleRateReconcile.Reconcile(recorded, wallClock);
                     var budget = AppConfig.Current.DefaultFixedMessageBitLength;
                     var needed = PayloadEnvelope.BitLengthForAudio(recorded);
-                    if (needed > budget)
+                    if (AppState.Settings.DefaultFixedMessageBitLimit && needed > budget)
                     {
                         ShowEmbedWarning(s.ErrorPayloadAudioBudget);
                         _payloadAudio = null;
@@ -584,10 +670,14 @@ public partial class EmbedView : UserControl
         _recordStartUtc = DateTime.UtcNow;
         Equalizer.RecordingElapsed = TimeSpan.Zero;
         _recordTimer?.Stop();
-        _recordTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _recordTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _recordTimer.Tick += (_, _) =>
+        {
             Equalizer.RecordingElapsed = DateTime.UtcNow - _recordStartUtc;
+            UpdateCoverMinProgressUi();
+        };
         _recordTimer.Start();
+        UpdateCoverMinProgressUi();
     }
 
     private void StopRecordTimer()
@@ -595,6 +685,92 @@ public partial class EmbedView : UserControl
         _recordTimer?.Stop();
         _recordTimer = null;
         Equalizer.RecordingElapsed = null;
+        CoverMinProgressPanel.Visibility = Visibility.Collapsed;
+        CoverMinProgressBar.Value = 0;
+        CoverMinProgressText.Text = string.Empty;
+    }
+
+    private int? CoverRequiredBits()
+    {
+        if (_recordingPayload) return null;
+        if (AppState.Settings.DefaultFixedMessageBitLimit)
+        {
+            var bits = AppConfig.Current.DefaultFixedMessageBitLength;
+            return bits > 0 ? bits : null;
+        }
+
+        if (_payloadAudio is not null)
+        {
+            var n = PayloadEnvelope.BitLengthForAudio(_payloadAudio);
+            return n > 0 ? n : null;
+        }
+
+        if (_payloadImageBytes is not null)
+        {
+            var n = PayloadEnvelope.BitLengthForImage(_payloadImageBytes);
+            return n > 0 ? n : null;
+        }
+
+        if (PayloadModeText.IsChecked == true)
+        {
+            var text = MessageTextBox.Text.Trim();
+            if (string.IsNullOrEmpty(text)) return null;
+            var n = PayloadEnvelope.BitLengthForText(text);
+            return n > 0 ? n : null;
+        }
+
+        return null;
+    }
+
+    private bool IsCoverRecordMinSatisfied()
+    {
+        var bits = CoverRequiredBits();
+        if (bits is null) return true;
+        return CoverRecordBudget.SamplesSatisfied(_capture.BufferedMonoSampleCount, bits.Value);
+    }
+
+    private int CoverRecordRemainingSeconds()
+    {
+        var bits = CoverRequiredBits();
+        if (bits is null) return 0;
+        var rate = _capture.SampleRate > 0 ? _capture.SampleRate : CoverRecordBudget.CoverSampleRate;
+        return Math.Max(1, (int)Math.Ceiling(
+            CoverRecordBudget.RemainingFromSamples(
+                _capture.BufferedMonoSampleCount, bits.Value, rate).TotalSeconds));
+    }
+
+    private void UpdateCoverMinProgressUi()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(UpdateCoverMinProgressUi);
+            return;
+        }
+
+        var bits = CoverRequiredBits();
+        if (!_capture.IsRecording || _recordingPayload || bits is null)
+        {
+            CoverMinProgressPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var s = ThemeManager.Strings;
+        var buffered = _capture.BufferedMonoSampleCount;
+        var progress = CoverRecordBudget.ProgressFromSamples(buffered, bits.Value);
+        CoverMinProgressPanel.Visibility = Visibility.Visible;
+        CoverMinProgressBar.Value = progress;
+        if (CoverRecordBudget.SamplesSatisfied(buffered, bits.Value))
+        {
+            CoverMinProgressText.Text = s.RecordingMinReached;
+            StatusText.Text = s.RecordingMinReached;
+        }
+        else
+        {
+            var remain = CoverRecordRemainingSeconds();
+            CoverMinProgressText.Text =
+                $"{s.RecordingMinProgress} {s.RecordingMinRemaining(remain)}";
+            StatusText.Text = CoverMinProgressText.Text;
+        }
     }
 
     private async void LoadFileBtn_Click(object sender, RoutedEventArgs e)
@@ -693,9 +869,10 @@ public partial class EmbedView : UserControl
             try
             {
                 var bits = PayloadEnvelope.PackAudioBits(_payloadAudio, fixedBitLength: fixedLen);
-                if (bits.Length > cover.ToMono().Samples.Length)
+                var available = cover.ToMono().Samples.Length;
+                if (bits.Length > available)
                 {
-                    ShowEmbedWarning(s.ErrorTooLong);
+                    ShowEmbedWarning(s.ErrorCapacityExceeded(bits.Length, available));
                     return;
                 }
                 await Task.Run(() =>
@@ -726,9 +903,10 @@ public partial class EmbedView : UserControl
             try
             {
                 var bits = PayloadEnvelope.PackImageBits(_payloadImageBytes, fixedBitLength: fixedLen);
-                if (bits.Length > cover.ToMono().Samples.Length)
+                var available = cover.ToMono().Samples.Length;
+                if (bits.Length > available)
                 {
-                    ShowEmbedWarning(s.ErrorTooLong);
+                    ShowEmbedWarning(s.ErrorCapacityExceeded(bits.Length, available));
                     return;
                 }
                 await Task.Run(() =>
@@ -757,12 +935,13 @@ public partial class EmbedView : UserControl
                 return;
             }
 
+            var available = cover.ToMono().Samples.Length;
             var required = useFixedLen
                 ? AppConfig.Current.DefaultFixedMessageBitLength
                 : PayloadEnvelope.BitLengthForText(messageText);
-            if (required > cover.ToMono().Samples.Length)
+            if (required > available)
             {
-                ShowEmbedWarning(s.ErrorTooLong);
+                ShowEmbedWarning(s.ErrorCapacityExceeded(required, available));
                 return;
             }
 
@@ -789,8 +968,12 @@ public partial class EmbedView : UserControl
 
         if (error is not null)
         {
-            if (IsEmbedCapacityError(error))
-                ShowEmbedWarning(s.ErrorTooLong);
+            if (CapacityExceededException.TryParse(error, out var capacityEx) && capacityEx is not null)
+                ShowEmbedWarning(s.ErrorCapacityExceeded(capacityEx.NeededBits, capacityEx.AvailableBits));
+            else if (IsEmbedCapacityError(error))
+                ShowEmbedWarning(s.ErrorCapacityExceeded(
+                    PayloadEnvelope.BitLengthForText(messageText),
+                    cover.ToMono().Samples.Length));
             else if (IsEmbedIntegrityError(error))
                 ShowEmbedWarning(s.ErrorEmbedIntegrity);
             else
@@ -798,7 +981,7 @@ public partial class EmbedView : UserControl
         }
         else if (outcome is not null)
         {
-            ShowResult(outcome, cover);
+            await ShowResultAsync(outcome, cover);
             if (loadedFileName is not null)
                 StatusText.Text = s.AudioFileLoaded(loadedFileName);
         }
@@ -806,13 +989,16 @@ public partial class EmbedView : UserControl
 
     private void ResetForNewEmbed()
     {
-        try { _playback.Stop(); }
+        try { _hub.StopAbSessions(); }
+        catch { /* ignore */ }
+        try { _hub.Stop(PlaybackSessionId.EmbedPayloadOriginal); _hub.Stop(PlaybackSessionId.EmbedPayloadRecovered); }
         catch { /* ignore */ }
         _cover = null;
         _stego = null;
         _outcome = null;
         _payloadAudio = null;
         ClearImagePreview();
+        ClearRecoveredPayloadUi();
         _recordingPayload = false;
         _audioPayloadMode = false;
         _imagePayloadMode = false;
@@ -824,6 +1010,8 @@ public partial class EmbedView : UserControl
         ImagePayloadPanel.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Collapsed;
         VerifyBanner.Visibility = Visibility.Collapsed;
+        AbListenPanel.Visibility = Visibility.Collapsed;
+        
         EmbedInputPanel.Visibility = Visibility.Visible;
         MessageTextBox.IsEnabled = true;
         StatusText.Text = string.Empty;
@@ -835,7 +1023,7 @@ public partial class EmbedView : UserControl
         UpdateFabStates();
     }
 
-    private void ShowResult(WatermarkOutcome outcome, WavFile? cover)
+    private async Task ShowResultAsync(WatermarkOutcome outcome, WavFile? cover)
     {
         var s = ThemeManager.Strings;
         _outcome = outcome;
@@ -883,8 +1071,11 @@ public partial class EmbedView : UserControl
         VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 46, 125, 50));
         VerifyBannerIcon.Text = "\uE73E";
         VerifyText.Foreground = (Brush)FindResource("SuccessBrush");
+        AbListenPanel.Visibility = cover is not null ? Visibility.Visible : Visibility.Collapsed;
+        
         UpdatePlaybackButtons();
         UpdateResultActionButtons();
+        await ExtractAndShowRecoveredAsync(autoAfterEmbed: true);
         var showRecovery = !AppState.Settings.DefaultFixedMessageBitLimit &&
                            AppConfig.Current.ShowEmbedRecoveryDialog;
         ShowEmbedCompleteDialog(outcome.BitsEmbedded, outcome.CapacityBits, showRecovery);
@@ -921,28 +1112,32 @@ public partial class EmbedView : UserControl
             MessageBoxImage.Information);
     }
 
-    private void PlayButton_Click(object sender, RoutedEventArgs e)
+    private void PlayButton_Click(object sender, RoutedEventArgs e) =>
+        PlayStegoButton_Click(sender, e);
+
+    private void PlayCoverButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_cover is null) return;
+        try { _hub.PlayIfNotPlaying(PlaybackSessionId.EmbedCover, _cover); }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void PlayStegoButton_Click(object sender, RoutedEventArgs e)
     {
         if (_stego is null) return;
-        try
-        {
-            if (_playback.HasSource && (_playback.IsPaused || !_playback.IsPlaying))
-                _playback.Resume();
-            else
-                _playback.Play(_stego);
-        }
+        try { _hub.PlayIfNotPlaying(PlaybackSessionId.EmbedStego, _stego); }
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 
     private void PauseButton_Click(object sender, RoutedEventArgs e)
     {
-        try { _playback.Pause(); }
+        try { _hub.PauseAbSessions(); }
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 
     private void StopPlaybackButton_Click(object sender, RoutedEventArgs e)
     {
-        try { _playback.Stop(); }
+        try { _hub.StopAbSessions(); }
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 
@@ -961,18 +1156,30 @@ public partial class EmbedView : UserControl
 
     private async void VerifyButton_Click(object sender, RoutedEventArgs e)
     {
+        await ExtractAndShowRecoveredAsync(autoAfterEmbed: false);
+    }
+
+    private async Task ExtractAndShowRecoveredAsync(bool autoAfterEmbed)
+    {
         if (_stego is null || _outcome is null || _verifying) return;
         var s = ThemeManager.Strings;
         _verifying = true;
         UpdateFabStates();
         UpdateResultActionButtons();
-        VerifyProgress.Visibility = Visibility.Visible;
-        VerifyIcon.Visibility = Visibility.Collapsed;
-        VerifyBanner.Visibility = Visibility.Visible;
-        VerifyText.Text = s.Verifying;
-        VerifyBanner.Background = (Brush)FindResource("SurfaceVariantBrush");
-        VerifyBannerIcon.Text = "\uE121";
-        VerifyText.Foreground = (Brush)FindResource("TextBrush");
+        try { _hub.Stop(PlaybackSessionId.EmbedPayloadOriginal); _hub.Stop(PlaybackSessionId.EmbedPayloadRecovered); }
+        catch { /* ignore */ }
+        ClearRecoveredPayloadUi();
+
+        if (!autoAfterEmbed)
+        {
+            VerifyProgress.Visibility = Visibility.Visible;
+            VerifyIcon.Visibility = Visibility.Collapsed;
+            VerifyBanner.Visibility = Visibility.Visible;
+            VerifyText.Text = s.Verifying;
+            VerifyBanner.Background = (Brush)FindResource("SurfaceVariantBrush");
+            VerifyBannerIcon.Text = "\uE121";
+            VerifyText.Foreground = (Brush)FindResource("TextBrush");
+        }
 
         var original = MessageTextBox.Text.Trim();
         var bits = _outcome.BitsEmbedded;
@@ -995,9 +1202,7 @@ public partial class EmbedView : UserControl
         if (_audioPayloadMode)
         {
             if (_payloadAudio is null || payload?.Audio is null)
-            {
                 ok = false;
-            }
             else
             {
                 var expected = PayloadEnvelope.DecodeAudioBody(
@@ -1019,14 +1224,17 @@ public partial class EmbedView : UserControl
             ok = payload?.Text is not null && payload.Text == original;
         }
 
+        VerifyBanner.Visibility = Visibility.Visible;
         if (!ok && payload?.Text is null or "" && payload?.Audio is null && payload?.ImageBytes is null)
         {
             VerifyText.Text = s.VerifyEmpty;
             VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 179, 38, 30));
             VerifyBannerIcon.Text = "\uE783";
             VerifyText.Foreground = (Brush)FindResource("ErrorBrush");
+            return;
         }
-        else if (ok)
+
+        if (ok)
         {
             VerifyText.Text = s.VerifyMatch;
             VerifyBanner.Background = new SolidColorBrush(Color.FromArgb(40, 46, 125, 50));
@@ -1040,5 +1248,227 @@ public partial class EmbedView : UserControl
             VerifyBannerIcon.Text = "\uE783";
             VerifyText.Foreground = (Brush)FindResource("ErrorBrush");
         }
+
+        if (payload is not null)
+            ShowRecoveredPayload(payload);
+    }
+
+    private void ClearRecoveredPayloadUi()
+    {
+        _recoveredAudio = null;
+        _recoveredImageBytes = null;
+        _recoveredText = null;
+        
+        RecoveredPayloadPanel.Visibility = Visibility.Collapsed;
+        OriginalTextBox.Visibility = Visibility.Collapsed;
+        OriginalTextBox.Text = string.Empty;
+        RecoveredTextBox.Visibility = Visibility.Collapsed;
+        RecoveredTextBox.Text = string.Empty;
+        OriginalImage.Source = null;
+        OriginalImage.Visibility = Visibility.Collapsed;
+        RecoveredImage.Source = null;
+        RecoveredImage.Visibility = Visibility.Collapsed;
+        PlayOriginalPayloadButton.Visibility = Visibility.Collapsed;
+        PlayRecoveredButton.Visibility = Visibility.Collapsed;
+        SaveRecoveredButton.Visibility = Visibility.Collapsed;
+        CopyOriginalButton.Visibility = Visibility.Collapsed;
+        CopyRecoveredButton.Visibility = Visibility.Collapsed;
+    }
+
+    private static System.Windows.Media.Imaging.BitmapImage? LoadBitmap(byte[] bytes)
+    {
+        try
+        {
+            using var ms = new MemoryStream(bytes);
+            var bmp = new System.Windows.Media.Imaging.BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bmp.StreamSource = ms;
+            bmp.EndInit();
+            bmp.Freeze();
+            return bmp;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void ShowRecoveredPayload(StegoPayloadResult payload)
+    {
+        var s = ThemeManager.Strings;
+        RecoveredPayloadTitle.Text = s.VerifyRecoveredTitle;
+        OriginalPayloadHeading.Text = s.OriginalHiddenPayload;
+        RecoveredPayloadHeading.Text = s.RecoveredPayloadLabel;
+        RecoveredPayloadPanel.Visibility = Visibility.Visible;
+        
+
+        if (payload.ImageBytes is not null)
+        {
+            _recoveredImageBytes = payload.ImageBytes;
+            _recoveredAudio = null;
+            _recoveredText = null;
+            OriginalTextBox.Visibility = Visibility.Collapsed;
+            RecoveredTextBox.Visibility = Visibility.Collapsed;
+            PlayOriginalPayloadButton.Visibility = Visibility.Collapsed;
+            PlayRecoveredButton.Visibility = Visibility.Collapsed;
+            CopyOriginalButton.Visibility = Visibility.Collapsed;
+            CopyRecoveredButton.Visibility = Visibility.Collapsed;
+            SaveRecoveredButton.Visibility = Visibility.Visible;
+            SaveRecoveredLabel.Text = s.SaveExtractedImage;
+
+            OriginalImage.Source = _payloadImageBytes is not null
+                ? LoadBitmap(_payloadImageBytes)
+                : null;
+            OriginalImage.Visibility = OriginalImage.Source is not null
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            RecoveredImage.Source = LoadBitmap(payload.ImageBytes);
+            RecoveredImage.Visibility = RecoveredImage.Source is not null
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            return;
+        }
+
+        if (payload.Audio is not null)
+        {
+            _recoveredAudio = payload.Audio;
+            _recoveredImageBytes = null;
+            _recoveredText = null;
+            OriginalTextBox.Visibility = Visibility.Collapsed;
+            RecoveredTextBox.Visibility = Visibility.Collapsed;
+            OriginalImage.Visibility = Visibility.Collapsed;
+            RecoveredImage.Visibility = Visibility.Collapsed;
+            CopyOriginalButton.Visibility = Visibility.Collapsed;
+            CopyRecoveredButton.Visibility = Visibility.Collapsed;
+            PlayOriginalPayloadButton.Visibility =
+                _payloadAudio is not null ? Visibility.Visible : Visibility.Collapsed;
+            PlayRecoveredButton.Visibility = Visibility.Visible;
+            SaveRecoveredButton.Visibility = Visibility.Visible;
+            SaveRecoveredLabel.Text = s.SaveExtractedAudio;
+            PlayOriginalPayloadLabel.Text = s.PlayOriginalPayloadAudio;
+            PlayRecoveredLabel.Text = s.PlayExtractedAudio;
+            UpdateRecoveredPlayButton();
+            return;
+        }
+
+        _recoveredText = payload.Text ?? string.Empty;
+        _recoveredAudio = null;
+        _recoveredImageBytes = null;
+        OriginalImage.Visibility = Visibility.Collapsed;
+        RecoveredImage.Visibility = Visibility.Collapsed;
+        PlayOriginalPayloadButton.Visibility = Visibility.Collapsed;
+        PlayRecoveredButton.Visibility = Visibility.Collapsed;
+        SaveRecoveredButton.Visibility = Visibility.Collapsed;
+
+        var originalText = MessageTextBox.Text ?? string.Empty;
+        OriginalTextBox.Visibility = Visibility.Visible;
+        OriginalTextBox.Text = originalText;
+        ContentTextDirectionHelper.ApplyTo(OriginalTextBox, originalText);
+        CopyOriginalButton.Visibility = Visibility.Visible;
+        CopyOriginalLabel.Text = s.Copy;
+
+        RecoveredTextBox.Visibility = Visibility.Visible;
+        RecoveredTextBox.Text = _recoveredText;
+        ContentTextDirectionHelper.ApplyTo(RecoveredTextBox, _recoveredText);
+        CopyRecoveredButton.Visibility = Visibility.Visible;
+        CopyRecoveredLabel.Text = s.Copy;
+    }
+
+    private void UpdateRecoveredPlayButton()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(UpdateRecoveredPlayButton);
+            return;
+        }
+
+        var s = ThemeManager.Strings;
+        var originalPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedPayloadOriginal);
+        var recoveredPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedPayloadRecovered);
+        if (PlayOriginalPayloadButton.Visibility == Visibility.Visible)
+        {
+            PlayOriginalPayloadLabel.Text =
+                originalPlaying ? s.Pause : s.PlayOriginalPayloadAudio;
+            PlayOriginalPayloadButton.IsEnabled = _payloadAudio is not null && !_verifying;
+        }
+
+        if (PlayRecoveredButton.Visibility == Visibility.Visible)
+        {
+            PlayRecoveredLabel.Text =
+                recoveredPlaying ? s.Pause : s.PlayExtractedAudio;
+            PlayRecoveredButton.IsEnabled = _recoveredAudio is not null && !_verifying;
+        }
+    }
+
+    private void PlayOriginalPayloadButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_payloadAudio is null) return;
+        try
+        {
+            _hub.PlayOrToggle(
+                PlaybackSessionId.EmbedPayloadOriginal,
+                PayloadEnvelope.PrepareAudioForExport(_payloadAudio));
+        }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void PlayRecoveredButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_recoveredAudio is null) return;
+        try
+        {
+            _hub.PlayOrToggle(
+                PlaybackSessionId.EmbedPayloadRecovered,
+                PayloadEnvelope.PrepareAudioForExport(_recoveredAudio));
+        }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void CopyOriginalButton_Click(object sender, RoutedEventArgs e)
+    {
+        var text = MessageTextBox.Text;
+        if (string.IsNullOrEmpty(text)) return;
+        Clipboard.SetText(text);
+        StatusText.Text = ThemeManager.Strings.Copied;
+    }
+
+    private void SaveRecoveredButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_recoveredImageBytes is not null)
+        {
+            var isPng = _recoveredImageBytes.Length >= 4 &&
+                        _recoveredImageBytes[0] == 0x89 &&
+                        _recoveredImageBytes[1] == 0x50;
+            var ext = isPng ? "png" : "jpg";
+            var dlg = new SaveFileDialog
+            {
+                Filter = isPng ? "PNG (*.png)|*.png" : "JPEG (*.jpg)|*.jpg",
+                FileName = $"verified_payload.{ext}",
+            };
+            if (dlg.ShowDialog() != true) return;
+            File.WriteAllBytes(dlg.FileName, _recoveredImageBytes);
+            StatusText.Text = ThemeManager.Strings.SuccessSaved;
+            return;
+        }
+
+        if (_recoveredAudio is null) return;
+        var wavDlg = new SaveFileDialog
+        {
+            Filter = "WAV (*.wav)|*.wav",
+            FileName = "verified_payload.wav",
+        };
+        if (wavDlg.ShowDialog() != true) return;
+        File.WriteAllBytes(
+            wavDlg.FileName,
+            PayloadEnvelope.PrepareAudioForExport(_recoveredAudio).Encode());
+        StatusText.Text = ThemeManager.Strings.SuccessSaved;
+    }
+
+    private void CopyRecoveredButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_recoveredText)) return;
+        Clipboard.SetText(_recoveredText);
+        StatusText.Text = ThemeManager.Strings.Copied;
     }
 }

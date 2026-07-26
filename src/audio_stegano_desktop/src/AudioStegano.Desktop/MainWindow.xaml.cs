@@ -106,6 +106,14 @@ public partial class MainWindow : Window
 
     private void SelectTab(int index)
     {
+        if (index != _selectedIndex)
+        {
+            if (_selectedIndex == 0)
+                PlaybackHub.Instance.StopSessions(PlaybackHub.EmbedSessions);
+            else if (_selectedIndex == 1)
+                PlaybackHub.Instance.StopSessions(PlaybackHub.ExtractSessions);
+        }
+
         _selectedIndex = index;
         EmbedPage.Visibility = index == 0 ? Visibility.Visible : Visibility.Collapsed;
         ExtractPage.Visibility = index == 1 ? Visibility.Visible : Visibility.Collapsed;

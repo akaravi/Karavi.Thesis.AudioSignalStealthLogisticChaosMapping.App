@@ -17,15 +17,10 @@ const goldensDir = '../goldens/cafebazaar';
 
 void _mockPrefs({ThemeMode theme = ThemeMode.light}) {
   SharedPreferences.setMockInitialValues({
-    'theme': switch (theme) {
-      ThemeMode.light => 'light',
-      ThemeMode.dark => 'dark',
-      ThemeMode.system => 'system',
-    },
+    'theme': theme == ThemeMode.dark ? 'dark' : 'light',
     'locale': 'fa',
     'locale_configured': true,
     'usage_guide_seen': true,
-    'seed': const Color(0xFF00B4B7).toARGB32(),
     'logistic_r': AppConfig.defaults.logisticR,
     'logistic_x0': AppConfig.defaults.logisticX0,
   });
@@ -131,8 +126,8 @@ class _StoreMaterialApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: strings.appTitle,
       themeMode: settings.themeMode,
-      theme: AppTheme.light(settings.seedColor),
-      darkTheme: AppTheme.dark(settings.seedColor),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       locale: settings.locale,
       supportedLocales: const [
         Locale('fa'),

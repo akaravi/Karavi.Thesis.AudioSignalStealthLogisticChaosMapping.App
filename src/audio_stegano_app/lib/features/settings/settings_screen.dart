@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/app_config_provider.dart';
 import '../../app/app_strings.dart';
+import '../../app/app_ui_tokens.dart';
 import '../../app/logistic_param_bounds.dart';
 import '../../app/settings_controller.dart';
+import '../shared/app_section_card.dart';
 import '../shared/logistic_map_preview_chart.dart';
 import '../shared/logistic_param_field.dart';
 import '../shared/tab_scroll_body.dart';
@@ -50,13 +52,12 @@ class SettingsScreen extends ConsumerWidget {
                 icon: const Icon(Icons.dark_mode_outlined, size: 18),
                 label: Text(s.themeDark),
               ),
-              ButtonSegment(
-                value: ThemeMode.system,
-                icon: const Icon(Icons.settings_brightness_outlined, size: 18),
-                label: Text(s.themeSystem),
-              ),
             ],
-            selected: {settings.themeMode},
+            selected: {
+              settings.themeMode == ThemeMode.dark
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
+            },
             onSelectionChanged: (set) => ctrl.setTheme(set.first),
           ),
         ]),
@@ -78,36 +79,6 @@ class SettingsScreen extends ConsumerWidget {
                   checkmarkColor: scheme.onPrimaryContainer,
                 ),
             ],
-          ),
-        ]),
-        _section(context, s.colorSeed, compact: true, [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children:
-                const [
-                  Color(0xFF00B4B7),
-                  Color(0xFF1B73E8),
-                  Color(0xFF2E7D32),
-                  Color(0xFFE65100),
-                  Color(0xFFC62828),
-                  Color(0xFF455A64),
-                ].map((c) {
-                  return GestureDetector(
-                    onTap: () => ctrl.setSeedColor(c),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: c,
-                        shape: BoxShape.circle,
-                        border: settings.seedColor.toARGB32() == c.toARGB32()
-                            ? Border.all(color: scheme.onSurface, width: 3)
-                            : null,
-                      ),
-                    ),
-                  );
-                }).toList(),
           ),
         ]),
         _section(context, s.logisticParams, [
@@ -160,7 +131,7 @@ class SettingsScreen extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
           ),
         ]),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppUiTokens.sectionGap),
         Center(
           child: TextButton.icon(
             onPressed: ctrl.resetToDefaults,
@@ -179,34 +150,32 @@ class SettingsScreen extends ConsumerWidget {
     bool compact = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final pad = compact ? 10.0 : 16.0;
+    final pad = compact
+        ? AppUiTokens.cardPaddingCompact
+        : AppUiTokens.cardPadding;
     final gap = compact ? 6.0 : 12.0;
-    final bottom = compact ? 10.0 : 16.0;
+    final bottom = compact ? 10.0 : AppUiTokens.sectionGap;
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
-      child: Card(
-        color: scheme.surfaceContainerLow,
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: EdgeInsets.all(pad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                title,
-                style:
-                    (compact
-                            ? Theme.of(context).textTheme.titleSmall
-                            : Theme.of(context).textTheme.titleMedium)
-                        ?.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-              ),
-              SizedBox(height: gap),
-              ...children,
-            ],
-          ),
+      child: AppSectionCard(
+        padding: pad,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style:
+                  (compact
+                          ? Theme.of(context).textTheme.titleSmall
+                          : Theme.of(context).textTheme.titleMedium)
+                      ?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+            ),
+            SizedBox(height: gap),
+            ...children,
+          ],
         ),
       ),
     );

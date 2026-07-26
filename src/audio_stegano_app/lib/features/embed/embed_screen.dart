@@ -18,27 +18,32 @@ import '../../app/session_log.dart';
 import '../../app/settings_controller.dart';
 import '../../core/audio/audio_input_loader.dart';
 import '../../core/audio/audio_load_errors.dart';
-import '../../core/audio/audio_player.dart';
 import '../../core/audio/audio_recorder.dart';
+import '../../core/audio/playback_hub.dart';
 import '../../core/audio/sample_rate_reconcile.dart';
 import '../../core/audio/stego_file_naming.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/audio/spectrum_analyzer.dart';
 import '../../core/audio/waveform_display.dart';
+import '../../core/stego/cover_record_budget.dart';
 import '../../core/stego/stego.dart';
 import '../shared/audio_file_drop_surface.dart';
 import '../shared/audio_equalizer_view.dart';
+import '../shared/app_section_card.dart';
 import '../shared/dual_waveform_chart.dart';
 import '../shared/circle_action_button.dart';
+import '../shared/directional_selectable_text.dart';
 import '../shared/directional_text_field.dart';
 import '../shared/embed_metric_kind.dart';
 import '../shared/help_sheet.dart';
 import '../shared/embed_warning_dialog.dart';
 import '../shared/metric_help_dialog.dart';
 import '../shared/message_bit_length_formatter.dart';
+import '../shared/page_toolbar_fab.dart';
 import '../shared/record_button.dart';
 import '../shared/stego_share.dart';
 import '../shared/tab_scroll_body.dart';
+import '../../app/app_ui_tokens.dart';
 
 enum _EmbedPayloadKind { text, audio, image }
 
@@ -53,7 +58,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   final _textCtrl = TextEditingController();
   final _textFocus = FocusNode();
   final AudioRecorderService _recorder = AudioRecorderService();
-  final AudioPlayerService _player = AudioPlayerService();
+  final _hub = PlaybackHub.instance;
 
   bool _busy = false;
   bool _processing = false;
@@ -73,14 +78,23 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   String? _statusMessage;
   String? _verifyStatus;
   bool? _verifyOk;
+  StegoPayloadResult? _recoveredPayload;
+  bool _coverPlaying = false;
+  bool _stegoPlaying = false;
+  bool _payloadOriginalPlaying = false;
+  bool _payloadRecoveredPlaying = false;
+  bool _coverLoaded = false;
+  bool _stegoLoaded = false;
   List<double> _eqBands = List<double>.filled(kSpectrumBandCount, 0);
-  bool _isPlaying = false;
-  bool _playbackLoaded = false;
-  StreamSubscription<List<double>>? _spectrumSub;
-  StreamSubscription<PlayerState>? _playStateSub;
+  final List<StreamSubscription<PlayerState>> _playStateSubs = [];
+  final List<StreamSubscription<List<double>>> _spectrumSubs = [];
   StreamSubscription<RecorderState>? _stateSub;
+  StreamSubscription<List<double>>? _recordSpectrumSub;
   DateTime? _recordStartedAt;
   Timer? _recordTickTimer;
+
+  bool get _abPlaying => _coverPlaying || _stegoPlaying;
+  bool get _abLoaded => _coverLoaded || _stegoLoaded;
 
   @override
   void initState() {
@@ -92,48 +106,62 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       if (!mounted) return;
       setState(() {});
     });
+    _bindPlaybackHub();
+  }
+
+  void _bindPlaybackHub() {
+    void syncFlags() {
+      if (!mounted) return;
+      setState(() {
+        _coverPlaying = _hub.isPlaying(PlaybackSessionId.embedCover);
+        _stegoPlaying = _hub.isPlaying(PlaybackSessionId.embedStego);
+        _payloadOriginalPlaying =
+            _hub.isPlaying(PlaybackSessionId.embedPayloadOriginal);
+        _payloadRecoveredPlaying =
+            _hub.isPlaying(PlaybackSessionId.embedPayloadRecovered);
+        _coverLoaded = _hub.hasSource(PlaybackSessionId.embedCover);
+        _stegoLoaded = _hub.hasSource(PlaybackSessionId.embedStego);
+        if (!_abPlaying) {
+          _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+        }
+      });
+    }
+
+    for (final id in PlaybackHub.embedSessions) {
+      _playStateSubs.add(_hub.listenState(id, (_) => syncFlags()));
+    }
+    for (final id in PlaybackHub.abSessions) {
+      _spectrumSubs.add(_hub.listenSpectrum(id, (bands) {
+        if (!mounted) return;
+        if (!_hub.isPlaying(id)) return;
+        setState(() => _eqBands = List<double>.from(bands));
+      }));
+    }
   }
 
   @override
   void dispose() {
     _recordTickTimer?.cancel();
     _stateSub?.cancel();
-    _cancelSpectrum();
+    _recordSpectrumSub?.cancel();
+    for (final s in _playStateSubs) {
+      unawaited(s.cancel());
+    }
+    for (final s in _spectrumSubs) {
+      unawaited(s.cancel());
+    }
     unawaited(_recorder.dispose());
-    unawaited(_player.dispose());
+    unawaited(_hub.stopSessions(PlaybackHub.embedSessions));
     _textCtrl.dispose();
     _textFocus.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _cancelSpectrum() async {
-    final sub = _spectrumSub;
-    _spectrumSub = null;
+  Future<void> _cancelRecordSpectrum() async {
+    final sub = _recordSpectrumSub;
+    _recordSpectrumSub = null;
     if (sub != null) await sub.cancel();
-    final playSub = _playStateSub;
-    _playStateSub = null;
-    if (playSub != null) await playSub.cancel();
-  }
-
-  void _attachPlaybackSpectrum() {
-    _playStateSub?.cancel();
-    _playStateSub = _player.stateStream.listen((st) {
-      if (!mounted) return;
-      final completed = st.processingState == ProcessingState.completed;
-      setState(() {
-        _isPlaying = completed ? false : st.playing;
-        _playbackLoaded = _stego != null && (_player.hasSource || completed);
-      });
-      if (!st.playing) {
-        setState(() => _eqBands = List<double>.filled(kSpectrumBandCount, 0));
-      }
-    });
-    _spectrumSub?.cancel();
-    _spectrumSub = _player.spectrumStream.listen((bands) {
-      if (!mounted) return;
-      setState(() => _eqBands = List<double>.from(bands));
-    });
   }
 
   Future<void> _toggleRecord() async {
@@ -141,6 +169,10 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     if (_recorder.isRecording) {
       if (_recordingPayload) {
         await _stopPayloadRecording();
+      } else if (!_coverRecordMinSatisfied) {
+        final s = AppStrings.of(context);
+        final remain = _coverRecordRemainingSeconds;
+        _showStatus(s.recordingTooShort(remain));
       } else {
         await _stopAndProcess();
       }
@@ -182,17 +214,20 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       if (!mounted) return;
       setState(() => _eqBands = List<double>.from(bands));
     });
-    _spectrumSub = sub;
+    _recordSpectrumSub = sub;
     _recordStartedAt = DateTime.now();
     _recordTickTimer?.cancel();
     _recordTickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted || !_recorder.isRecording) return;
-      final budget = _settingsBitBudget();
-      final maxDur = PayloadAudioDefaults.maxDurationForBitBudget(budget);
-      final elapsed = _recordingElapsed;
-      if (elapsed != null && elapsed >= maxDur) {
-        unawaited(_stopPayloadRecording());
-        return;
+      final settings = ref.read(settingsProvider);
+      if (settings.defaultFixedMessageBitLimit) {
+        final budget = _settingsBitBudget();
+        final maxDur = PayloadAudioDefaults.maxDurationForBitBudget(budget);
+        final elapsed = _recordingElapsed;
+        if (elapsed != null && elapsed >= maxDur) {
+          unawaited(_stopPayloadRecording());
+          return;
+        }
       }
       setState(() {});
     });
@@ -217,7 +252,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       });
     }
     try {
-      await _cancelSpectrum();
+      await _cancelRecordSpectrum();
       _clearRecordTimer();
       WavFile? raw;
       try {
@@ -247,8 +282,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       final budget = _settingsBitBudget();
       final bitsNeeded = PayloadEnvelope.bitLengthForAudio(reconciled);
       final settings = ref.read(settingsProvider);
-      final cap = settings.defaultFixedMessageBitLimit ? budget : budget;
-      if (bitsNeeded > cap) {
+      if (settings.defaultFixedMessageBitLimit && bitsNeeded > budget) {
         setState(() {
           _processing = false;
           _recordingPayload = false;
@@ -301,12 +335,23 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       if (!mounted) return;
       setState(() => _eqBands = List<double>.from(bands));
     });
-    _spectrumSub = sub;
+    _recordSpectrumSub = sub;
     _recordStartedAt = DateTime.now();
     _recordTickTimer?.cancel();
-    _recordTickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _recordTickTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
       if (!mounted || !_recorder.isRecording) return;
-      setState(() {});
+      setState(() {
+        if (!_recordingPayload && _coverRequiredBits != null) {
+          final s = AppStrings.of(context);
+          if (_coverRecordMinSatisfied) {
+            _statusMessage = s.recordingMinReached;
+          } else {
+            final remain = _coverRecordRemainingSeconds;
+            _statusMessage =
+                '${s.recordingMinProgress} ${s.recordingMinRemaining(remain)}';
+          }
+        }
+      });
     });
     setState(() {
       _recordingPayload = false;
@@ -316,7 +361,17 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _result = null;
       _verifyStatus = null;
       _verifyOk = null;
-      _statusMessage = s.recording;
+      final bits = _coverRequiredBits;
+      if (bits != null) {
+        final remain = CoverRecordBudget.remainingFromSamples(
+          bufferedSamples: 0,
+          requiredBits: bits,
+        ).inSeconds.clamp(1, 3600);
+        _statusMessage =
+            '${s.recordingMinProgress} ${s.recordingMinRemaining(remain)}';
+      } else {
+        _statusMessage = s.recording;
+      }
     });
   }
 
@@ -332,6 +387,71 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     return DateTime.now().difference(start);
   }
 
+  /// Bits the cover must hold: fixed settings budget, or live payload size.
+  int? get _coverRequiredBits {
+    if (_recordingPayload) return null;
+    final settings = ref.read(settingsProvider);
+    if (settings.defaultFixedMessageBitLimit) {
+      final bits = ref.read(appConfigProvider).defaultFixedMessageBitLength;
+      return bits > 0 ? bits : null;
+    }
+    switch (_payloadKind) {
+      case _EmbedPayloadKind.audio:
+        final a = _payloadAudio;
+        if (a == null) return null;
+        final n = PayloadEnvelope.bitLengthForAudio(a);
+        return n > 0 ? n : null;
+      case _EmbedPayloadKind.image:
+        final img = _payloadImageBytes;
+        if (img == null) return null;
+        final n = PayloadEnvelope.bitLengthForImage(img);
+        return n > 0 ? n : null;
+      case _EmbedPayloadKind.text:
+        final text = _textCtrl.text.trim();
+        if (text.isEmpty) return null;
+        final n = PayloadEnvelope.bitLengthForText(text);
+        return n > 0 ? n : null;
+    }
+  }
+
+  int _coverNeedSecondsForBits(int bits) {
+    return CoverRecordBudget.remainingFromSamples(
+      bufferedSamples: 0,
+      requiredBits: bits,
+      sampleRate: CoverRecordBudget.coverSampleRate,
+    ).inSeconds.clamp(1, 3600);
+  }
+
+  bool get _coverRecordMinSatisfied {
+    final bits = _coverRequiredBits;
+    if (bits == null) return true;
+    return CoverRecordBudget.samplesSatisfied(
+      _recorder.bufferedMonoSampleCount,
+      bits,
+    );
+  }
+
+  double get _coverRecordProgress {
+    final bits = _coverRequiredBits;
+    if (bits == null) return 1;
+    return CoverRecordBudget.progressFromSamples(
+      _recorder.bufferedMonoSampleCount,
+      bits,
+    );
+  }
+
+  int get _coverRecordRemainingSeconds {
+    final bits = _coverRequiredBits;
+    if (bits == null) return 0;
+    return CoverRecordBudget.remainingFromSamples(
+      bufferedSamples: _recorder.bufferedMonoSampleCount,
+      requiredBits: bits,
+      sampleRate: _recorder.currentSampleRate > 0
+          ? _recorder.currentSampleRate
+          : CoverRecordBudget.coverSampleRate,
+    ).inSeconds.clamp(1, 3600);
+  }
+
   Future<void> _stopAndProcess() async {
     final s = AppStrings.of(context);
     if (mounted) {
@@ -341,7 +461,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       });
     }
     try {
-      await _cancelSpectrum();
+      await _cancelRecordSpectrum();
       _clearRecordTimer();
 
       WavFile? cover;
@@ -565,12 +685,15 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     if (required > available) {
       if (!mounted) return;
       _releaseEmbedInteractionLocks();
-      await _showEmbedWarning(s.errorTooLong);
+      await _showEmbedWarning(
+        s.errorCapacityExceeded(required, available),
+      );
       return;
     }
 
     EmbedRunResult? produced;
     String? error;
+    CapacityExceededException? capacityError;
     try {
       if (_payloadKind == _EmbedPayloadKind.audio ||
           _payloadKind == _EmbedPayloadKind.image) {
@@ -590,17 +713,25 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         );
       }
     } catch (e) {
-      error = e.toString();
+      capacityError = CapacityExceededException.tryParse(e);
+      if (capacityError == null) {
+        error = e.toString();
+      }
     }
     if (!mounted) return;
-    final success = produced != null && error == null;
+    final success = produced != null && error == null && capacityError == null;
+    try {
+      await _hub.stopSessions(PlaybackHub.embedSessions);
+    } catch (_) {}
     setState(() {
       _processing = false;
       _cover = cover;
       _result = produced;
       _stego = produced?.stego;
       _embedInputHidden = success;
-      if (error != null) {
+      if (capacityError != null) {
+        _statusMessage = null;
+      } else if (error != null) {
         _statusMessage = _isEmbedCapacityError(error) ? null : error;
       } else if (loadedName != null) {
         _statusMessage = s.audioFileLoaded(loadedName);
@@ -609,17 +740,38 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       }
       _verifyStatus = null;
       _verifyOk = null;
+      _recoveredPayload = null;
+      _coverPlaying = false;
+      _stegoPlaying = false;
+      _payloadOriginalPlaying = false;
+      _payloadRecoveredPlaying = false;
+      _coverLoaded = false;
+      _stegoLoaded = false;
     });
-    if (error != null && _isEmbedCapacityError(error)) {
-      await _showEmbedWarning(s.errorTooLong);
+    if (capacityError != null) {
+      await _showEmbedWarning(
+        s.errorCapacityExceeded(
+          capacityError.neededBits,
+          capacityError.availableBits,
+        ),
+      );
+    } else if (error != null && _isEmbedCapacityError(error)) {
+      final parsed = CapacityExceededException.tryParse(error);
+      if (parsed != null) {
+        await _showEmbedWarning(
+          s.errorCapacityExceeded(parsed.neededBits, parsed.availableBits),
+        );
+      } else {
+        await _showEmbedWarning(
+          s.errorCapacityExceeded(required, available),
+        );
+      }
     } else if (error != null && _isEmbedIntegrityError(error)) {
       await _showEmbedWarning(s.errorEmbedIntegrity);
     }
     if (success) {
-      setState(() {
-        _verifyOk = true;
-        _verifyStatus = s.verifyMatch;
-      });
+      // Immediate verify: extract from stego now so the user can test recovered content.
+      await _verifyRoundtrip();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final ctx = _resultCardKey.currentContext;
         if (ctx != null) {
@@ -756,10 +908,19 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final result = _result;
     if (stego == null || result == null) return;
     final s = AppStrings.of(context);
+    try {
+      await _hub.stopSessions([
+      PlaybackSessionId.embedPayloadOriginal,
+      PlaybackSessionId.embedPayloadRecovered,
+    ]);
+    } catch (_) {}
     setState(() {
       _verifying = true;
       _verifyStatus = s.verifying;
       _verifyOk = null;
+      _recoveredPayload = null;
+      _payloadOriginalPlaying = false;
+      _payloadRecoveredPlaying = false;
     });
     final settings = ref.read(settingsProvider);
     StegoPayloadResult? payload;
@@ -776,6 +937,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _verifying = false;
         _verifyOk = false;
         _verifyStatus = e.toString();
+        _recoveredPayload = null;
+        _payloadOriginalPlaying = false;
+        _payloadRecoveredPlaying = false;
       });
       return;
     }
@@ -786,6 +950,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _verifying = false;
         _verifyOk = false;
         _verifyStatus = s.verifyEmpty;
+        _recoveredPayload = null;
+        _payloadOriginalPlaying = false;
+        _payloadRecoveredPlaying = false;
       });
       return;
     }
@@ -816,6 +983,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     setState(() {
       _verifying = false;
       _verifyOk = ok;
+      _recoveredPayload = recoveredPayload;
       if (_payloadKind == _EmbedPayloadKind.audio) {
         _verifyStatus = ok
             ? s.verifyMatch
@@ -837,6 +1005,93 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     });
   }
 
+  Future<void> _playOriginalPayloadAudio() async {
+    final wav = _payloadAudio;
+    if (wav == null) return;
+    try {
+      await _hub.playOrToggle(
+        PlaybackSessionId.embedPayloadOriginal,
+        PayloadEnvelope.prepareAudioForExport(wav),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _playRecoveredAudio() async {
+    final wav = _recoveredPayload?.audio;
+    if (wav == null) return;
+    try {
+      await _hub.playOrToggle(
+        PlaybackSessionId.embedPayloadRecovered,
+        PayloadEnvelope.prepareAudioForExport(wav),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _saveRecoveredAudio() async {
+    final wav = _recoveredPayload?.audio;
+    if (wav == null) return;
+    final s = AppStrings.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final bytes = PayloadEnvelope.prepareAudioForExport(wav).encode();
+    try {
+      final path = await FilePicker.saveFile(
+        dialogTitle: s.saveExtractedAudio,
+        fileName: 'verified_payload.wav',
+        type: FileType.custom,
+        allowedExtensions: ['wav'],
+        bytes: bytes,
+      );
+      if (path == null) {
+        if (kIsWeb && mounted) {
+          messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+        }
+        return;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _saveRecoveredImage() async {
+    final imageBytes = _recoveredPayload?.imageBytes;
+    if (imageBytes == null) return;
+    final s = AppStrings.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final isPng = imageBytes.length >= 4 &&
+        imageBytes[0] == 0x89 &&
+        imageBytes[1] == 0x50;
+    final ext = isPng ? 'png' : 'jpg';
+    try {
+      final path = await FilePicker.saveFile(
+        dialogTitle: s.saveExtractedImage,
+        fileName: 'verified_payload.$ext',
+        type: FileType.custom,
+        allowedExtensions: [ext],
+        bytes: imageBytes,
+      );
+      if (path == null) {
+        if (kIsWeb && mounted) {
+          messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+        }
+        return;
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(s.successSaved)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
   void _showStatus(String msg) {
     if (!mounted) return;
     setState(() => _statusMessage = msg);
@@ -851,8 +1106,11 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   }
 
   bool _isEmbedCapacityError(String message) {
+    if (CapacityExceededException.tryParse(message) != null) return true;
     final lower = message.toLowerCase();
-    return lower.contains('too long') || lower.contains('message too long');
+    return lower.contains('too long') ||
+        lower.contains('message too long') ||
+        lower.contains('capacity exceeded');
   }
 
   bool _isEmbedIntegrityError(String message) {
@@ -917,10 +1175,12 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     }
 
-    final budget = _settingsBitBudget();
+    final budget = ref.read(settingsProvider).defaultFixedMessageBitLimit
+        ? _settingsBitBudget()
+        : null;
     late final Uint8List compressed;
     try {
-      compressed = PayloadImageCodec.compressToFitBudget(
+      compressed = PayloadImageCodec.compressForEmbed(
         bytes,
         bitBudget: budget,
       );
@@ -930,7 +1190,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       return;
     } catch (_) {
       if (!mounted) return;
-      await _showEmbedWarning(s.errorPayloadImageBudget);
+      await _showEmbedWarning(
+        budget != null ? s.errorPayloadImageBudget : s.errorPayloadImageDecode,
+      );
       return;
     }
     if (!mounted) return;
@@ -950,8 +1212,8 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _payloadImageBytes != null ||
       _textCtrl.text.trim().isNotEmpty ||
       _recorder.isRecording ||
-      _isPlaying ||
-      _playbackLoaded ||
+      _abPlaying ||
+      _abLoaded ||
       _statusMessage != null ||
       _verifyStatus != null;
 
@@ -969,10 +1231,10 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       if (_recorder.isRecording) {
         await _recorder.cancel();
       }
-      await _cancelSpectrum();
+      await _cancelRecordSpectrum();
       _clearRecordTimer();
       try {
-        await _player.stop();
+        await _hub.stopSessions(PlaybackHub.embedSessions);
       } catch (e, st) {
         if (kDebugMode) {
           debugPrint('Embed new: stop playback: $e\n$st');
@@ -995,9 +1257,14 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         _statusMessage = null;
         _verifyStatus = null;
         _verifyOk = null;
+        _recoveredPayload = null;
+        _coverPlaying = false;
+        _stegoPlaying = false;
+        _payloadOriginalPlaying = false;
+        _payloadRecoveredPlaying = false;
+        _coverLoaded = false;
+        _stegoLoaded = false;
         _eqBands = List<double>.filled(kSpectrumBandCount, 0);
-        _isPlaying = false;
-        _playbackLoaded = false;
       });
       SessionLog.write('Embed: new session');
       if (_scrollCtrl.hasClients) {
@@ -1017,36 +1284,21 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   }
 
   Widget _buildNewEmbedFab(AppStrings s) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      elevation: 4,
-      shadowColor: scheme.shadow.withValues(alpha: 0.4),
-      color: scheme.primaryContainer,
-      shape: const CircleBorder(),
-      child: IconButton(
-        tooltip: s.embedNew,
-        onPressed: _newEmbedFabEnabled ? _startNewEmbed : null,
-        icon: Icon(Icons.note_add_outlined, color: scheme.onPrimaryContainer),
-      ),
+    return PageToolbarFab(
+      tooltip: s.embedNew,
+      icon: Icons.note_add_outlined,
+      onPressed: _newEmbedFabEnabled ? _startNewEmbed : null,
+      primary: true,
     );
   }
 
   Widget _buildHelpFab(AppStrings s) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      elevation: 4,
-      shadowColor: scheme.shadow.withValues(alpha: 0.4),
-      color: scheme.secondaryContainer,
-      shape: const CircleBorder(),
-      child: IconButton(
-        tooltip: s.helpTooltip,
-        onPressed: () =>
-            showHelpSheet(context, initialSection: HelpSection.embed),
-        icon: Icon(
-          Icons.help_outline_rounded,
-          color: scheme.onSecondaryContainer,
-        ),
-      ),
+    return PageToolbarFab(
+      tooltip: s.helpTooltip,
+      icon: Icons.help_outline_rounded,
+      onPressed: () =>
+          showHelpSheet(context, initialSection: HelpSection.embed),
+      primary: false,
     );
   }
 
@@ -1119,16 +1371,22 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     }
   }
 
-  Future<void> _playStego() async {
-    final stego = _stego;
-    if (stego == null) return;
+  Future<void> _playCover() async {
+    final wav = _cover;
+    if (wav == null) return;
     try {
-      _attachPlaybackSpectrum();
-      if (_playbackLoaded && !_isPlaying && _player.hasSource) {
-        await _player.resume();
-      } else {
-        await _player.playWav(stego);
-      }
+      await _hub.playIfNotPlaying(PlaybackSessionId.embedCover, wav);
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _playStego() async {
+    final wav = _stego;
+    if (wav == null) return;
+    try {
+      await _hub.playIfNotPlaying(PlaybackSessionId.embedStego, wav);
     } catch (e) {
       if (!mounted) return;
       _showStatus(e.toString());
@@ -1137,7 +1395,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
 
   Future<void> _pauseStego() async {
     try {
-      await _player.pause();
+      await _hub.pauseSessions(PlaybackHub.abSessions);
     } catch (e) {
       if (!mounted) return;
       _showStatus(e.toString());
@@ -1146,11 +1404,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
 
   Future<void> _stopStego() async {
     try {
-      await _player.stop();
+      await _hub.stopSessions(PlaybackHub.abSessions);
       if (!mounted) return;
       setState(() {
-        _isPlaying = false;
-        _playbackLoaded = false;
         _eqBands = List<double>.filled(kSpectrumBandCount, 0);
       });
     } catch (e) {
@@ -1168,7 +1424,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     if (useFixedLimit) {
       return s.messageBitsUsedAndRemaining(used, fixedBits - used);
     }
-    return s.messageBitsUsed(used);
+    if (used <= 0) return s.messageBitsUsed(used);
+    final needSec = _coverNeedSecondsForBits(used);
+    return '${s.messageBitsUsed(used)}\n${s.coverRecordNeedHint(used, needSec)}';
   }
 
   @override
@@ -1180,7 +1438,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final fixedBits = deploy.defaultFixedMessageBitLength;
     final appConfig = deploy;
     final isRecording = _recorder.isRecording;
-    final eqActive = isRecording || _isPlaying || _playbackLoaded;
+    final eqActive = isRecording || _abPlaying || _abLoaded;
     final canPickFile = !isRecording && !_processing && !_busy;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1272,18 +1530,36 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                   )
                 else if (_payloadKind == _EmbedPayloadKind.audio) ...[
                   Text(
-                    s.embedPayloadAudioHint,
+                    useFixedLimit
+                        ? s.embedPayloadAudioHint
+                        : s.embedPayloadAudioHintDynamic,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
                   if (_payloadAudio != null) ...[
                     Text(
-                      s.payloadAudioBudgetLabel(
-                        PayloadEnvelope.bitLengthForAudio(_payloadAudio!),
-                        fixedBits,
-                      ),
+                      useFixedLimit
+                          ? s.payloadAudioBudgetLabel(
+                              PayloadEnvelope.bitLengthForAudio(_payloadAudio!),
+                              fixedBits,
+                            )
+                          : s.payloadAudioBitsRequired(
+                              PayloadEnvelope.bitLengthForAudio(_payloadAudio!),
+                            ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    if (!useFixedLimit) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        s.coverRecordNeedHint(
+                          PayloadEnvelope.bitLengthForAudio(_payloadAudio!),
+                          _coverNeedSecondsForBits(
+                            PayloadEnvelope.bitLengthForAudio(_payloadAudio!),
+                          ),
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
                       child: TextButton.icon(
@@ -1297,7 +1573,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                         label: Text(s.clearPayloadAudio),
                       ),
                     ),
-                  ] else if (_recordingPayload && isRecording) ...[
+                  ] else if (_recordingPayload && isRecording && useFixedLimit) ...[
                     Text(
                       s.payloadAudioBudgetLabel(
                         0,
@@ -1308,13 +1584,15 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                   ],
                 ] else ...[
                   Text(
-                    s.embedPayloadImageHint,
+                    useFixedLimit
+                        ? s.embedPayloadImageHint
+                        : s.embedPayloadImageHintDynamic,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
                   if (_payloadImageBytes != null) ...[
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppUiTokens.imageBorderRadius,
                       child: Image.memory(
                         _payloadImageBytes!,
                         height: 120,
@@ -1323,12 +1601,36 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      s.payloadImageBudgetLabel(
-                        PayloadEnvelope.bitLengthForImage(_payloadImageBytes!),
-                        fixedBits,
-                      ),
+                      useFixedLimit
+                          ? s.payloadImageBudgetLabel(
+                              PayloadEnvelope.bitLengthForImage(
+                                _payloadImageBytes!,
+                              ),
+                              fixedBits,
+                            )
+                          : s.payloadImageBitsRequired(
+                              PayloadEnvelope.bitLengthForImage(
+                                _payloadImageBytes!,
+                              ),
+                            ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    if (!useFixedLimit) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        s.coverRecordNeedHint(
+                          PayloadEnvelope.bitLengthForImage(
+                            _payloadImageBytes!,
+                          ),
+                          _coverNeedSecondsForBits(
+                            PayloadEnvelope.bitLengthForImage(
+                              _payloadImageBytes!,
+                            ),
+                          ),
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
                       child: TextButton.icon(
@@ -1358,13 +1660,12 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                 AudioFileDropSurface(
                   enabled: canPickFile && _payloadReadyForCover,
                   onFilePath: _embedFromDroppedPath,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 12,
-                      ),
-                      child: Column(
+                  child: AppSectionCard(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 12,
+                    ),
+                    child: Column(
                       children: [
                         AudioEqualizerView(
                           bands: _eqBands,
@@ -1373,6 +1674,26 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                               ? _recordingElapsed
                               : null,
                         ),
+                        if (isRecording &&
+                            !_recordingPayload &&
+                            _coverRequiredBits != null) ...[
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: _coverRecordProgress,
+                              minHeight: 10,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _coverRecordMinSatisfied
+                                ? s.recordingMinReached
+                                : s.recordingMinProgress,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         AudioSourceActionsPanel(
                           orLabel: s.audioSourceOr,
@@ -1419,8 +1740,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                     ),
                   ),
                 ),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppUiTokens.sectionGap),
               ],
               if (_stego != null)
                 KeyedSubtree(key: _resultCardKey, child: _buildResultCard(s)),
@@ -1438,17 +1758,11 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final durationSec = stego.samples.length / stego.sampleRate;
     final scheme = theme.colorScheme;
     final onCard = scheme.onSurface;
-    return Card(
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: scheme.primary.withValues(alpha: 0.45)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return AppSectionCard(
+      outlined: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
             Row(
               children: [
                 Icon(Icons.check_circle_outline, color: scheme.primary),
@@ -1468,10 +1782,18 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
               const SizedBox(height: 12),
               _buildVerifyBanner(theme),
             ],
+            if (_cover != null && _stego != null) ...[
+              const SizedBox(height: 12),
+              _buildAbListenPanel(s, theme),
+            ],
+            if (_recoveredPayload != null) ...[
+              const SizedBox(height: 12),
+              _buildRecoveredPayloadPanel(s, theme),
+            ],
             const SizedBox(height: 12),
             Material(
               color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppUiTokens.inputBorderRadius,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -1487,7 +1809,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
               ),
             ),
           ],
-        ),
       ),
     );
   }
@@ -1508,23 +1829,16 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
         runSpacing: 8,
         children: [
           Tooltip(
-            message: s.play,
-            child: IconButton.filled(
-              onPressed: _verifying || _isPlaying ? null : _playStego,
-              icon: const Icon(Icons.play_arrow_rounded),
-            ),
-          ),
-          Tooltip(
             message: s.pause,
             child: IconButton.filledTonal(
-              onPressed: _verifying || !_isPlaying ? null : _pauseStego,
+              onPressed: _verifying || !_abPlaying ? null : _pauseStego,
               icon: const Icon(Icons.pause_rounded),
             ),
           ),
           Tooltip(
             message: s.stopPlayback,
             child: IconButton.filledTonal(
-              onPressed: _verifying || !_playbackLoaded ? null : _stopStego,
+              onPressed: _verifying || !_abLoaded ? null : _stopStego,
               icon: const Icon(Icons.stop_rounded),
             ),
           ),
@@ -1564,6 +1878,55 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAbListenPanel(AppStrings s, ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final coverPlaying = _coverPlaying;
+    final stegoPlaying = _stegoPlaying;
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              s.verifyAbListenTitle,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: _verifying || _cover == null ? null : _playCover,
+                  icon: Icon(
+                    coverPlaying
+                        ? Icons.graphic_eq_rounded
+                        : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(s.playOriginalCover),
+                ),
+                FilledButton.icon(
+                  onPressed: _verifying || _stego == null ? null : _playStego,
+                  icon: Icon(
+                    stegoPlaying
+                        ? Icons.graphic_eq_rounded
+                        : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(s.playStegoAudio),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1801,6 +2164,169 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRecoveredPayloadPanel(AppStrings s, ThemeData theme) {
+    final payload = _recoveredPayload;
+    if (payload == null) return const SizedBox.shrink();
+    final scheme = theme.colorScheme;
+    final isAudio = payload.audio != null;
+    final isImage = payload.imageBytes != null;
+    final originalPlaying = _payloadOriginalPlaying;
+    final recoveredPlaying = _payloadRecoveredPlaying;
+
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              s.verifyRecoveredTitle,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              s.originalHiddenPayload,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (isImage) ...[
+              if (_payloadImageBytes != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    _payloadImageBytes!,
+                    height: 140,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              else
+                Text('—', style: theme.textTheme.bodyMedium),
+            ] else if (isAudio) ...[
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FilledButton.tonalIcon(
+                  onPressed: _verifying || _payloadAudio == null
+                      ? null
+                      : _playOriginalPayloadAudio,
+                  icon: Icon(
+                    originalPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(
+                    originalPlaying ? s.pause : s.playOriginalPayloadAudio,
+                  ),
+                ),
+              ),
+            ] else ...[
+              DirectionalSelectableText(
+                _textCtrl.text.trim(),
+                style: theme.textTheme.bodyLarge,
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    final text = _textCtrl.text.trim();
+                    if (text.isEmpty) return;
+                    final messenger = ScaffoldMessenger.of(context);
+                    await Clipboard.setData(ClipboardData(text: text));
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(s.copied)),
+                    );
+                  },
+                  icon: const Icon(Icons.copy),
+                  label: Text(s.copy),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Divider(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+            const SizedBox(height: 8),
+            Text(
+              s.recoveredPayloadLabel,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (isImage) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  payload.imageBytes!,
+                  height: 140,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: FilledButton.tonalIcon(
+                  onPressed: _verifying ? null : _saveRecoveredImage,
+                  icon: const Icon(Icons.save_outlined),
+                  label: Text(s.saveExtractedImage),
+                ),
+              ),
+            ] else if (isAudio)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: [
+                  FilledButton.tonalIcon(
+                    onPressed: _verifying ? null : _playRecoveredAudio,
+                    icon: Icon(
+                      recoveredPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                    ),
+                    label: Text(
+                      recoveredPlaying ? s.pause : s.playExtractedAudio,
+                    ),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: _verifying ? null : _saveRecoveredAudio,
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(s.saveExtractedAudio),
+                  ),
+                ],
+              )
+            else ...[
+              DirectionalSelectableText(
+                payload.text ?? '',
+                style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    final text = payload.text;
+                    if (text == null || text.isEmpty) return;
+                    final messenger = ScaffoldMessenger.of(context);
+                    await Clipboard.setData(ClipboardData(text: text));
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(s.copied)),
+                    );
+                  },
+                  icon: const Icon(Icons.copy),
+                  label: Text(s.copy),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

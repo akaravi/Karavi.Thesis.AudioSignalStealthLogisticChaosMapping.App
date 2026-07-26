@@ -84,12 +84,28 @@ class AppStrings {
       'Enregistrez un message vocal court (8 kHz) — environ 4 s dans le budget de bits — puis enregistrez ou chargez l’audio de couverture.',
     ),
   );
+  String get embedPayloadAudioHintDynamic => _t(
+    const _S(
+      'پیام صوتی را ضبط کنید؛ بیت مورد نیاز و حداقل زمان ضبط پوشش بر اساس طول پیام محاسبه می‌شود.',
+      'Record a voice payload; required bits and minimum cover recording time are calculated from its length.',
+      'سجّل الرسالة الصوتية؛ تُحسب البتات والمدة الدنيا لتسجيل الغطاء من طولها.',
+      'Enregistrez le message vocal ; bits requis et durée minimale de couverture selon sa longueur.',
+    ),
+  );
   String get embedPayloadImageHint => _t(
     const _S(
       'یک عکس انتخاب کنید؛ به‌صورت JPEG فشرده می‌شود تا در سقف بیت تنظیمات جا شود. سپس صوت پوشش را ضبط یا بارگذاری کنید.',
       'Pick an image; it is compressed to JPEG to fit the settings bit budget. Then record or load the cover audio.',
       'اختر صورة؛ تُضغط إلى JPEG لتناسب حد البت. ثم سجّل أو حمّل صوت الغطاء.',
       'Choisissez une image ; elle est compressée en JPEG pour tenir dans le budget de bits. Puis enregistrez ou chargez l’audio de couverture.',
+    ),
+  );
+  String get embedPayloadImageHintDynamic => _t(
+    const _S(
+      'یک عکس انتخاب کنید؛ بیت مورد نیاز و حداقل زمان ضبط پوشش بر اساس حجم فشرده‌شده محاسبه می‌شود.',
+      'Pick an image; required bits and minimum cover recording time are calculated from the compressed size.',
+      'اختر صورة؛ تُحسب البتات والمدة الدنيا لتسجيل الغطاء من الحجم المضغوط.',
+      'Choisissez une image ; bits requis et durée minimale de couverture selon la taille compressée.',
     ),
   );
   String get pickPayloadImage => _t(
@@ -124,6 +140,36 @@ class AppStrings {
       'Bits image : $usedBits / $budgetBits',
     ),
   );
+  String payloadImageBitsRequired(int usedBits) => switch (locale) {
+    AppLocale.fa => 'بیت مورد نیاز عکس: $usedBits',
+    AppLocale.en => 'Image bits required: $usedBits',
+    AppLocale.ar => 'بتات الصورة المطلوبة: $usedBits',
+    AppLocale.fr => 'Bits image requis : $usedBits',
+  };
+  String payloadAudioBudgetLabel(int usedBits, int budgetBits) => _t(
+    _S(
+      'بیت پیام صوتی: $usedBits / $budgetBits',
+      'Voice bits: $usedBits / $budgetBits',
+      'بت الرسالة: $usedBits / $budgetBits',
+      'Bits vocaux : $usedBits / $budgetBits',
+    ),
+  );
+  String payloadAudioBitsRequired(int usedBits) => switch (locale) {
+    AppLocale.fa => 'بیت مورد نیاز پیام صوتی: $usedBits',
+    AppLocale.en => 'Voice bits required: $usedBits',
+    AppLocale.ar => 'بتات الرسالة المطلوبة: $usedBits',
+    AppLocale.fr => 'Bits vocaux requis : $usedBits',
+  };
+  String coverRecordNeedHint(int bits, int seconds) => switch (locale) {
+    AppLocale.fa =>
+      'حداقل ضبط پوشش حدود $seconds ثانیه (برای $bits بیت).',
+    AppLocale.en =>
+      'Minimum cover recording ≈ $seconds s (for $bits bits).',
+    AppLocale.ar =>
+      'الحد الأدنى لتسجيل الغطاء ≈ $seconds ثانية (لـ $bits بت).',
+    AppLocale.fr =>
+      'Enregistrement couverture mini ≈ $seconds s (pour $bits bits).',
+  };
   String get errorEmptyPayloadImage => _t(
     const _S(
       'ابتدا یک عکس انتخاب کنید.',
@@ -178,14 +224,6 @@ class AppStrings {
       'Voice payload ready — now record or load the cover audio.',
       'الرسالة الصوتية جاهزة — سجّل أو حمّل صوت الغطاء الآن.',
       'Message vocal prêt — enregistrez ou chargez maintenant l’audio de couverture.',
-    ),
-  );
-  String payloadAudioBudgetLabel(int usedBits, int budgetBits) => _t(
-    _S(
-      'بیت پیام صوتی: $usedBits / $budgetBits',
-      'Voice bits: $usedBits / $budgetBits',
-      'بت الرسالة: $usedBits / $budgetBits',
-      'Bits vocaux : $usedBits / $budgetBits',
     ),
   );
   String get errorEmptyPayloadAudio => _t(
@@ -422,8 +460,6 @@ class AppStrings {
   String get themeMode => _t(const _S('تم', 'Theme', 'المظهر', 'Thème'));
   String get themeLight => _t(const _S('روشن', 'Light', 'فاتح', 'Clair'));
   String get themeDark => _t(const _S('تاریک', 'Dark', 'داكن', 'Sombre'));
-  String get themeSystem =>
-      _t(const _S('سیستم', 'System', 'النظام', 'Système'));
   String get language => _t(const _S('زبان', 'Language', 'اللغة', 'Langue'));
   String get chooseLanguage => _t(
     const _S(
@@ -545,8 +581,7 @@ class AppStrings {
       'Aperçu de la séquence chaotique pour r et x0 actuels (pointillé : seuil clé binaire)',
     ),
   );
-  String get colorSeed =>
-      _t(const _S('رنگ تم', 'Theme color', 'لون المظهر', 'Couleur du thème'));
+
   String get permissionDenied => _t(
     const _S(
       'دسترسی به میکروفن رد شد.',
@@ -589,6 +624,31 @@ class AppStrings {
       'L’audio enregistré doit être plus long pour que l’intégration soit possible. Recommencez l’enregistrement.',
     ),
   );
+
+  /// Cover capacity insufficient for payload (text / image / audio / file).
+  String errorCapacityExceeded(int neededBits, int availableBits) =>
+      switch (locale) {
+        AppLocale.fa =>
+          'این محتوا در فایل صوتی جا نمی‌شود و قابل نهان‌نگاری نیست.\n'
+              'بیت مورد نیاز: $neededBits\n'
+              'بیت موجود (ظرفیت پوشش): $availableBits\n'
+              'فایل صوتی طولانی‌تر انتخاب کنید یا محتوای کوچک‌تری بدهید.',
+        AppLocale.en =>
+          'This payload does not fit in the cover audio and cannot be embedded.\n'
+              'Bits required: $neededBits\n'
+              'Bits available (cover capacity): $availableBits\n'
+              'Use a longer cover audio or a smaller payload.',
+        AppLocale.ar =>
+          'هذا المحتوى لا يتسع في الصوت ولا يمكن إخفاؤه.\n'
+              'البتات المطلوبة: $neededBits\n'
+              'البتات المتاحة (سعة الغلاف): $availableBits\n'
+              'اختر صوتاً أطول أو محتوى أصغر.',
+        AppLocale.fr =>
+          'Cette charge utile ne tient pas dans l’audio de couverture.\n'
+              'Bits requis : $neededBits\n'
+              'Bits disponibles (capacité) : $availableBits\n'
+              'Choisissez un audio plus long ou une charge plus petite.',
+      };
   String get successSaved => _t(
     const _S(
       'فایل ذخیره شد',
@@ -711,6 +771,38 @@ class AppStrings {
       'Prêt à enregistrer…',
     ),
   );
+  String get recordingMinProgress => _t(
+    const _S(
+      'در حال رسیدن به حداقل زمان لازم برای نهان‌نگاری…',
+      'Reaching the minimum duration required for steganography…',
+      'جارٍ الوصول إلى الحد الأدنى من المدة المطلوبة…',
+      'Atteinte de la durée minimale requise…',
+    ),
+  );
+  String recordingMinRemaining(int seconds) => switch (locale) {
+    AppLocale.fa => 'حدود $seconds ثانیه تا حداقل زمان',
+    AppLocale.en => 'About $seconds s until minimum duration',
+    AppLocale.ar => 'حوالي $seconds ثانية حتى الحد الأدنى',
+    AppLocale.fr => 'Environ $seconds s avant la durée minimale',
+  };
+  String get recordingMinReached => _t(
+    const _S(
+      'حداقل زمان تأمین شد — می‌توانید ضبط را متوقف کنید',
+      'Minimum duration reached — you can stop recording',
+      'اكتملت المدة الدنيا — يمكنك إيقاف التسجيل',
+      'Durée minimale atteinte — vous pouvez arrêter',
+    ),
+  );
+  String recordingTooShort(int seconds) => switch (locale) {
+    AppLocale.fa =>
+      'هنوز ظرفیت کافی ضبط نشده. ادامه دهید (حدود $seconds ثانیه بر اساس نمونه‌های واقعی).',
+    AppLocale.en =>
+      'Not enough samples yet. Keep recording (about $seconds s based on real buffer).',
+    AppLocale.ar =>
+      'لم تُسجَّل عينات كافية بعد. واصل (حوالي $seconds ثانية حسب المخزن الفعلي).',
+    AppLocale.fr =>
+      'Pas assez d’échantillons. Continuez (environ $seconds s selon le tampon réel).',
+  };
   String get recording => _t(
     const _S('در حال ضبط…', 'Recording…', 'جارٍ التسجيل…', 'Enregistrement…'),
   );
@@ -809,6 +901,62 @@ class AppStrings {
       'Nothing extracted — embed seems broken.',
       'لم يُستخرج شيء — يبدو أن الإخفاء فشل.',
       'Rien extrait — l’intégration semble avoir échoué.',
+    ),
+  );
+  String get verifyRecoveredTitle => _t(
+    const _S(
+      'مقایسه محتوا — اصل نهان‌شده و بازیافت‌شده',
+      'Payload compare — original hidden vs recovered',
+      'مقارنة المحتوى — الأصلي المخفي والمستخرج',
+      'Comparaison — original caché vs extrait',
+    ),
+  );
+  String get originalHiddenPayload => _t(
+    const _S(
+      'محتوای اصلی نهان‌شده',
+      'Original hidden payload',
+      'المحتوى الأصلي المخفي',
+      'Charge utile originale',
+    ),
+  );
+  String get recoveredPayloadLabel => _t(
+    const _S(
+      'محتوای بازیافت‌شده',
+      'Recovered payload',
+      'المحتوى المستخرج',
+      'Charge utile extraite',
+    ),
+  );
+  String get playOriginalPayloadAudio => _t(
+    const _S(
+      'پخش صوت اصلی نهان‌شده',
+      'Play original hidden audio',
+      'تشغيل الصوت الأصلي المخفي',
+      'Lire l’audio original caché',
+    ),
+  );
+  String get verifyAbListenTitle => _t(
+    const _S(
+      'مقایسه شنیداری — آیا تفاوتی حس می‌کنید؟',
+      'A/B listen — can you hear a difference?',
+      'مقارنة سمعية — هل تلاحظ فرقاً؟',
+      'Écoute A/B — entendez-vous une différence ?',
+    ),
+  );
+  String get playOriginalCover => _t(
+    const _S(
+      'پخش صدای اصلی',
+      'Play original',
+      'تشغيل الأصلي',
+      'Lire l’original',
+    ),
+  );
+  String get playStegoAudio => _t(
+    const _S(
+      'پخش بعد از نهان‌نگاری',
+      'Play after watermark',
+      'تشغيل بعد الإخفاء',
+      'Lire après stéganographie',
     ),
   );
 
@@ -977,19 +1125,19 @@ class AppStrings {
     const _S(
       '• نهان‌نگاری: پنهان‌سازی پیام در صوت\n'
           '• رمزگشایی: استخراج پیام از فایل صوتی\n'
-          '• تنظیمات: تم، زبان، رنگ و پارامترهای کلید (r و x0)\n'
+          '• تنظیمات: تم (روشن/تاریک)، زبان و پارامترهای کلید (r و x0)\n'
           '• درباره ما: معرفی پروژه و راه‌های ارتباط',
       '• Embed: hide a message inside audio\n'
           '• Extract: recover the message from an audio file\n'
-          '• Settings: theme, language, color and key params (r, x0)\n'
+          '• Settings: theme (light/dark), language and key params (r, x0)\n'
           '• About: project info and contact links',
       '• الإخفاء: إدراج رسالة داخل الصوت\n'
           '• الاستخراج: استرجاع الرسالة من ملف صوتي\n'
-          '• الإعدادات: المظهر واللغة ومعاملات المفتاح (r و x0)\n'
+          '• الإعدادات: المظهر (فاتح/داكن) واللغة ومعاملات المفتاح (r و x0)\n'
           '• من نحن: معلومات المشروع وروابط التواصل',
       '• Intégrer : cacher un message dans l’audio\n'
           '• Extraire : récupérer le message depuis un fichier audio\n'
-          '• Paramètres : thème, langue, couleur et clé (r, x0)\n'
+          '• Paramètres : thème (clair/sombre), langue et clé (r, x0)\n'
           '• À propos : projet et contact',
     ),
   );
@@ -1050,25 +1198,31 @@ class AppStrings {
   );
   String get helpEmbedStep5 => _t(
     const _S(
-      '۵) پخش و مقایسه: می‌توانید فایل نهان‌نگاری‌شده را پخش کنید، نمودار موج '
-          'اصلی و نهان‌نگاری‌شده را مقایسه کنید و متریک‌های کیفیت (SNR، PSNR، …) را ببینید.',
-      '5) Play & compare: play back the stego file, compare cover and stego '
-          'waveforms, and view quality metrics (SNR, PSNR, …).',
-      '٥) التشغيل والمقارنة: شغّل ملف الإخفاء، قارن الموجات وشاهد مقاييس الجودة '
-          '(SNR، PSNR، …).',
-      '5) Lecture et comparaison : écoutez, comparez les ondes et consultez '
-          'les métriques (SNR, PSNR, …).',
+      '۵) پخش و مقایسه: صدای اصلی (پوشش) و صدای بعد از نهان‌نگاری را جداگانه پخش '
+          'کنید تا بشنوید آیا تفاوتی حس می‌کنید؛ نمودار موج و متریک‌های کیفیت '
+          '(SNR، PSNR، …) را هم ببینید.',
+      '5) Play & compare: play original cover and watermarked stego separately to '
+          'judge perceptual difference; also compare waveforms and quality metrics '
+          '(SNR, PSNR, …).',
+      '٥) التشغيل والمقارنة: شغّل الغلاف الأصلي والصوت بعد الإخفاء لمعرفة إن كان هناك '
+          'فرق مسموع؛ قارن الموجات ومقاييس الجودة (SNR، PSNR، …).',
+      '5) Lecture et comparaison : écoutez l’original et le stégo séparément pour '
+          'juger la différence perceptuelle ; comparez aussi ondes et métriques '
+          '(SNR, PSNR, …).',
     ),
   );
   String get helpEmbedStep6 => _t(
     const _S(
-      '۶) تأیید فوری: دکمه «تأیید فوری» همان لحظه پیام را استخراج می‌کند و با متن '
-          'اصلی مقایسه می‌کند تا از موفقیت جاسازی مطمئن شوید.',
-      '6) Verify roundtrip: the “Verify” button extracts the message right away '
-          'and compares it with the original to confirm success.',
-      '٦) تحقق فوري: زر «تحقق فوري» يستخرج الرسالة فوراً ويقارنها بالأصل.',
-      '6) Vérification rapide : « Vérifier » extrait immédiatement et compare '
-          'au texte original.',
+      '۶) تأیید فوری: پس از نهان‌سازی (و با دکمه «تأیید فوری») پیام از روی فایل '
+          'استگو استخراج می‌شود؛ اصل نهان‌شده و نسخهٔ بازیافت‌شده (متن/صوت/عکس) '
+          'کنار هم نمایش داده می‌شوند؛ همچنین می‌توانید صدای پوشش و استگو را مقایسه کنید.',
+      '6) Immediate verify: after embed (and via “Verify”) the payload is extracted; '
+          'original hidden vs recovered content (text/audio/image) are shown together; '
+          'you can also A/B-play cover vs stego.',
+      '٦) تحقق فوري: بعد الإخفاء تُستخرج الرسالة؛ يُعرض الأصلي المخفي والمستخرج '
+          '(نص/صوت/صورة) معاً؛ ويمكنك أيضاً مقارنة الغلاف بالمخفي.',
+      '6) Vérification rapide : extraction ; original caché vs extrait (texte/audio/image) '
+          'affichés ensemble ; écoute A/B cover vs stégo aussi.',
     ),
   );
   String get helpEmbedStep7 => _t(
