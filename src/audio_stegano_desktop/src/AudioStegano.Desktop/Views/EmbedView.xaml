@@ -105,24 +105,35 @@
             <!-- Primary CTAs — icon toolbar -->
             <WrapPanel Margin="0,0,0,16" HorizontalAlignment="Center">
               <Button x:Name="SaveButton" Style="{StaticResource IconFilledButton}" Margin="0,0,8,8"
+                      Background="{DynamicResource IconSaveBrush}"
+                      Foreground="{DynamicResource OnPrimaryBrush}"
                       Click="SaveButton_Click" ToolTipService.ShowOnDisabled="True">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" FontSize="16" />
               </Button>
               <Button x:Name="ShareButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,8"
+                      Background="{DynamicResource IconShareContainerBrush}"
+                      Foreground="{DynamicResource IconShareBrush}"
                       Click="ShareButton_Click" ToolTipService.ShowOnDisabled="True">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE72D;" FontSize="16" />
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE72D;" FontSize="16"
+                           Foreground="{DynamicResource IconShareBrush}" />
               </Button>
               <Button x:Name="VerifyButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,8"
+                      Background="{DynamicResource IconVerifyContainerBrush}"
+                      Foreground="{DynamicResource IconVerifyBrush}"
                       Click="VerifyButton_Click" ToolTipService.ShowOnDisabled="True">
                 <Grid>
-                  <TextBlock x:Name="VerifyIcon" FontFamily="Segoe MDL2 Assets" Text="&#xE73E;" FontSize="16" />
+                  <TextBlock x:Name="VerifyIcon" FontFamily="Segoe MDL2 Assets" Text="&#xE73E;" FontSize="16"
+                             Foreground="{DynamicResource IconVerifyBrush}" />
                   <ProgressBar x:Name="VerifyProgress" Width="16" Height="16" IsIndeterminate="True"
                                Visibility="Collapsed" />
                 </Grid>
               </Button>
               <Button x:Name="CopyMessageButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,8"
+                      Background="{DynamicResource IconCopyContainerBrush}"
+                      Foreground="{DynamicResource IconCopyBrush}"
                       Click="CopyMessageButton_Click" ToolTipService.ShowOnDisabled="True">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" FontSize="16" />
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" FontSize="16"
+                           Foreground="{DynamicResource IconCopyBrush}" />
               </Button>
             </WrapPanel>
 

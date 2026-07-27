@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/about_constants.dart';
+import '../../app/app_icon_accents.dart';
 import '../../app/app_strings.dart';
 import '../../app/app_ui_tokens.dart';
 import '../../app/app_version.dart';
+import '../shared/accent_icon.dart';
 import '../shared/app_section_card.dart';
 import '../shared/directional_latin_text.dart';
 import '../shared/tab_scroll_body.dart';
@@ -74,6 +76,7 @@ class AboutScreen extends StatelessWidget {
           children: [
             _InfoTile(
               icon: Icons.school_outlined,
+              accent: AppIconAccent.thesis,
               title: s.aboutSupervisorName,
             ),
           ],
@@ -84,24 +87,28 @@ class AboutScreen extends StatelessWidget {
           children: [
             _LinkTile(
               icon: Icons.code,
+              accent: AppIconAccent.github,
               label: s.aboutGitHubApp,
               url: AboutConstants.gitHubApp,
               errorMessage: s.aboutOpenLinkFailed,
             ),
             _LinkTile(
               icon: Icons.school_outlined,
+              accent: AppIconAccent.thesis,
               label: s.aboutGitHubThesis,
               url: AboutConstants.gitHubThesis,
               errorMessage: s.aboutOpenLinkFailed,
             ),
             _LinkTile(
               icon: Icons.language,
+              accent: AppIconAccent.web,
               label: s.aboutPersonalSite,
               url: AboutConstants.personalSite,
               errorMessage: s.aboutOpenLinkFailed,
             ),
             _LinkTile(
               icon: Icons.business_outlined,
+              accent: AppIconAccent.company,
               label: s.aboutCompanySite,
               url: AboutConstants.companySite,
               errorMessage: s.aboutOpenLinkFailed,
@@ -114,6 +121,7 @@ class AboutScreen extends StatelessWidget {
           children: [
             _LinkTile(
               icon: Icons.phone_in_talk_outlined,
+              accent: AppIconAccent.phone,
               label: s.aboutCall,
               subtitle: AboutConstants.phoneNumber,
               url: 'tel:${AboutConstants.phoneNumber}',
@@ -121,6 +129,7 @@ class AboutScreen extends StatelessWidget {
             ),
             _LinkTile(
               icon: Icons.email_outlined,
+              accent: AppIconAccent.email,
               label: s.aboutEmail,
               subtitle: AboutConstants.email,
               url: 'mailto:${AboutConstants.email}',
@@ -183,15 +192,24 @@ class _SectionCard extends StatelessWidget {
 
 class _InfoTile extends StatelessWidget {
   final IconData icon;
+  final AppIconAccent accent;
   final String title;
 
-  const _InfoTile({required this.icon, required this.title});
+  const _InfoTile({
+    required this.icon,
+    required this.accent,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return ListTile(
-      leading: Icon(icon, color: scheme.primary),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: AppIconAccents.container(accent, brightness),
+        child: AccentIcon(icon, accent: accent, size: 20),
+      ),
       title: Text(
         title,
         style: Theme.of(
@@ -204,6 +222,7 @@ class _InfoTile extends StatelessWidget {
 
 class _LinkTile extends StatelessWidget {
   final IconData icon;
+  final AppIconAccent accent;
   final String label;
   final String? subtitle;
   final String url;
@@ -211,6 +230,7 @@ class _LinkTile extends StatelessWidget {
 
   const _LinkTile({
     required this.icon,
+    required this.accent,
     required this.label,
     this.subtitle,
     required this.url,
@@ -233,8 +253,13 @@ class _LinkTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return ListTile(
-      leading: Icon(icon, color: scheme.primary),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: AppIconAccents.container(accent, brightness),
+        child: AccentIcon(icon, accent: accent, size: 20),
+      ),
       title: Text(label),
       subtitle: subtitle != null
           ? DirectionalLatinText(
@@ -247,7 +272,12 @@ class _LinkTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall,
             ),
-      trailing: Icon(Icons.open_in_new, color: scheme.onSurfaceVariant),
+      trailing: AccentIcon(
+        Icons.open_in_new,
+        accent: accent,
+        size: 18,
+        selected: false,
+      ),
       onTap: () => _open(context),
     );
   }

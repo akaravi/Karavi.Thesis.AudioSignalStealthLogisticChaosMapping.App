@@ -42,15 +42,23 @@ function New-KaraviFlutterWebRunArgumentList {
     param(
         [Parameter(Mandatory = $true)][string]$Device,
         [Parameter(Mandatory = $true)][int]$WebPort,
-        [string]$WebHostname = '127.0.0.1'
+        [string]$WebHostname = '127.0.0.1',
+        # Default RELEASE — debug web ships ~100MB+ of *.dart.lib.js (DevTools Network bloat).
+        # Pass -DebugBuild only when hot-reload debugging is required.
+        [switch]$DebugBuild
     )
 
-    return @(
+    $args = @(
         'run', '-d', $Device,
         "--web-port=$WebPort",
         "--web-hostname=$WebHostname",
         (Get-KaraviFlutterWebNoCdnSwitch)
     )
+    if (-not $DebugBuild) {
+        $args += '--release'
+        $args += '--tree-shake-icons'
+    }
+    return $args
 }
 
 function Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals {
@@ -257,6 +265,45 @@ function Copy-KaraviFlutterWebBundledNotoFonts {
     if (Test-Path -LiteralPath $sourceRoot) {
         Write-Host "Skipping obsolete web/fonts copy (use pubspec fonts only)." -ForegroundColor DarkGray
     }
+}
+
+function Start-KaraviFlutterWebStaticReleaseServer {
+    param(
+        [Parameter(Mandatory = $true)][string]$WebOutputDirectory,
+        [Parameter(Mandatory = $true)][int]$WebPort,
+        [string]$WebHostname = '127.0.0.1',
+        [string]$StdoutLogPath = '',
+        [string]$StderrLogPath = ''
+    )
+
+    $indexPath = Join-Path $WebOutputDirectory 'index.html'
+    if (-not (Test-Path -LiteralPath $indexPath)) {
+        throw "Flutter web release output missing: $indexPath — run flutter build web --release --no-web-resources-cdn --tree-shake-icons first."
+    }
+
+    $python = (Get-Command python -ErrorAction SilentlyContinue).Source
+    if (-not $python) {
+        $python = (Get-Command py -ErrorAction SilentlyContinue).Source
+    }
+    if (-not $python) {
+        throw 'Python not found — needed to serve build/web on the local web port.'
+    }
+
+    $argList = @('-m', 'http.server', "$WebPort", '--bind', $WebHostname)
+    $startParams = @{
+        FilePath         = $python
+        ArgumentList     = $argList
+        WorkingDirectory = $WebOutputDirectory
+        PassThru         = $true
+        WindowStyle      = 'Hidden'
+    }
+    if ($StdoutLogPath) {
+        $startParams['RedirectStandardOutput'] = $StdoutLogPath
+    }
+    if ($StderrLogPath) {
+        $startParams['RedirectStandardError'] = $StderrLogPath
+    }
+    return Start-Process @startParams
 }
 
 function Invoke-KaraviFlutterWebNoCdnPostProcess {

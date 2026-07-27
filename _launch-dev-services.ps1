@@ -30,13 +30,15 @@ $wpf.Id | Out-File -Encoding ascii (Join-Path $logDir 'wpf.pid')
 
 $webPort = Get-KaraviDevPort -Name 'FlutterWeb'
 $vmPort = Get-KaraviDevPort -Name 'FlutterWindowsVm'
-$webArgs = New-KaraviFlutterWebRunArgumentList -Device 'web-server' -WebPort $webPort
-$web = Start-Process -FilePath $flutter `
-    -ArgumentList $webArgs `
-    -WorkingDirectory $flutterApp `
-    -RedirectStandardOutput (Join-Path $logDir 'flutter_web_run.log') `
-    -RedirectStandardError (Join-Path $logDir 'flutter_web_run.err') `
-    -PassThru -WindowStyle Hidden
+$webBuild = Join-Path $flutterApp 'build\web'
+if (-not (Test-Path (Join-Path $webBuild 'index.html'))) {
+    throw "Missing $webBuild — run flutter build web --release --no-web-resources-cdn --tree-shake-icons first."
+}
+$web = Start-KaraviFlutterWebStaticReleaseServer `
+    -WebOutputDirectory $webBuild `
+    -WebPort $webPort `
+    -StdoutLogPath (Join-Path $logDir 'flutter_web_run.log') `
+    -StderrLogPath (Join-Path $logDir 'flutter_web_run.err')
 $web.Id | Out-File -Encoding ascii (Join-Path $logDir 'flutter_web.pid')
 
 $winArgs = @('run', '-d', 'windows', "--host-vmservice-port=$vmPort", "--device-vmservice-port=$vmPort")

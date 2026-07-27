@@ -12,10 +12,12 @@ import '../features/about/about_screen.dart';
 import '../features/embed/embed_screen.dart';
 import '../features/extract/extract_screen.dart';
 import '../features/settings/settings_screen.dart';
+import 'app_icon_accents.dart';
 import 'app_strings.dart';
 import 'busy_overlay_provider.dart';
 import 'opened_audio_file.dart';
 import 'pending_open_audio_provider.dart';
+import '../features/shared/accent_icon.dart';
 import '../features/shared/app_busy_overlay.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
@@ -101,12 +103,32 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       SettingsScreen(),
       AboutScreen(),
     ];
-    // Icons aligned with Embed reference chrome (layers / search / gear / person).
+    // Semantic accents: embed violet · extract teal · settings amber · about rose.
     final destinations = [
-      _Dest(Icons.layers_outlined, Icons.layers, s.embedTab),
-      _Dest(Icons.search_outlined, Icons.search, s.extractTab),
-      _Dest(Icons.settings_outlined, Icons.settings, s.settingsTab),
-      _Dest(Icons.person_outline, Icons.person, s.aboutUsTab),
+      _Dest(
+        Icons.layers_outlined,
+        Icons.layers,
+        s.embedTab,
+        AppIconAccent.embed,
+      ),
+      _Dest(
+        Icons.search_outlined,
+        Icons.search,
+        s.extractTab,
+        AppIconAccent.extract,
+      ),
+      _Dest(
+        Icons.settings_outlined,
+        Icons.settings,
+        s.settingsTab,
+        AppIconAccent.settings,
+      ),
+      _Dest(
+        Icons.person_outline,
+        Icons.person,
+        s.aboutUsTab,
+        AppIconAccent.about,
+      ),
     ];
 
     // Stack of Offstage pages keeps each tab's state alive while removing
@@ -151,8 +173,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   destinations: [
                     for (final d in destinations)
                       NavigationRailDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
+                        icon: AccentIcon(
+                          d.icon,
+                          accent: d.accent,
+                          selected: false,
+                        ),
+                        selectedIcon: AccentIcon(
+                          d.selectedIcon,
+                          accent: d.accent,
+                        ),
                         label: Text(d.label),
                       ),
                   ],
@@ -174,8 +203,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               destinations: [
                 for (final d in destinations)
                   NavigationDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selectedIcon),
+                    icon: AccentIcon(
+                      d.icon,
+                      accent: d.accent,
+                      selected: false,
+                    ),
+                    selectedIcon: AccentIcon(
+                      d.selectedIcon,
+                      accent: d.accent,
+                    ),
                     label: d.label,
                   ),
               ],
@@ -195,5 +231,6 @@ class _Dest {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-  const _Dest(this.icon, this.selectedIcon, this.label);
+  final AppIconAccent accent;
+  const _Dest(this.icon, this.selectedIcon, this.label, this.accent);
 }

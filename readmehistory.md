@@ -1,5 +1,11 @@
 # Change History
 
+## 2026-07-27 — Fix 140MB web Network (debug vs release)
+
+- Root cause: local `flutter run` **debug** (~1400 `*.dart.lib.js`) — not product size.
+- Default local web: serve `build/web` release static (~13 MB; MaterialIcons tree-shaken ~16 KB).
+- Helpers: `Start-KaraviFlutterWebStaticReleaseServer`; run/launch scripts updated; rule `flutter-web-release-default.mdc`.
+
 ## 2026-07-27 — A/B listen: Pause/Stop inside each Play card
 
 - Rule: `.cursor/rules/ab-listen-play-transport.mdc`.
@@ -416,3 +422,10 @@ Ran `.\_update-ver.ps1` (patch +1). Synced:
 - Nine scenes remapped: splash → quick guide → embed recording → metrics → extract → full guide → settings → languages → about/outro.
 - App name/version synced to **Audio Steganography v1.2.6**; Myket CTA moved to scene 9 voiceover + post end card (no Myket banner in screenshot set).
 
+
+## 2026-07-27 — Colorful semantic icons (design-auditor)
+
+- Palette: `AppIconAccents` / WPF `Icon*Brush` — meaning-driven hues (embed violet · extract teal · settings amber · about rose · verify green · share blue · save violet · help sky · create emerald).
+- Flutter: `AccentIcon` · `AccentGlowIcon` · `AccentActionIconButton`; nav · About tiles · result/extract actions · toolbar FAB glow.
+- WPF: theme brushes + colored nav/FABs/About/action buttons; soft DropShadow on FABs/hero.
+- Grades (auditor): Design B+ · AI Slop A- · A11y B+ (semantic color, not rainbow slop).

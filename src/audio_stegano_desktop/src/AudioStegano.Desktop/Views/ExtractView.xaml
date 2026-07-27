@@ -6,8 +6,14 @@
       <StackPanel MaxWidth="720">
         <Border x:Name="ExtractCard" Style="{StaticResource MaterialCard}" Padding="20">
           <StackPanel>
-            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8E6;" FontSize="56"
-                       Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" />
+            <Border Width="56" Height="56" CornerRadius="16" HorizontalAlignment="Center"
+                    Background="{DynamicResource IconSaveBrush}">
+              <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="5" Opacity="0.35" Color="#FF5B21B6" />
+              </Border.Effect>
+              <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8E6;" FontSize="28"
+                         Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
             <TextBlock x:Name="PickTitle" Style="{StaticResource SectionTitle}"
                        HorizontalAlignment="Center" Margin="0,12,0,16" TextAlignment="Center" />
             <StackPanel x:Name="BitLengthPanel">
@@ -16,6 +22,7 @@
             </StackPanel>
             <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,12">
               <Button x:Name="PickButton" Style="{StaticResource FilledButton}" Click="PickButton_Click"
+                      Background="{DynamicResource IconSettingsBrush}"
                       Margin="0,0,8,8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                   <TextBlock x:Name="PickIcon" FontFamily="Segoe MDL2 Assets" Text="&#xE838;" Margin="0,0,8,0" />
@@ -24,20 +31,28 @@
               </Button>
               <StackPanel x:Name="PlaybackPanel" Orientation="Horizontal" Visibility="Collapsed">
                 <Button x:Name="PlayButton" Style="{StaticResource IconFilledButton}" Margin="0,0,8,0"
+                        Background="{DynamicResource IconCreateBrush}"
                         Click="PlayButton_Click">
                   <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" FontSize="16" />
                 </Button>
                 <Button x:Name="PauseButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,0"
+                        Background="{DynamicResource IconShareContainerBrush}"
+                        Foreground="{DynamicResource IconSettingsBrush}"
                         Click="PauseButton_Click" IsEnabled="False">
-                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" FontSize="16" />
+                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" FontSize="16"
+                             Foreground="{DynamicResource IconSettingsBrush}" />
                 </Button>
                 <Button x:Name="StopPlaybackButton" Style="{StaticResource IconTonalButton}" Margin="0,0,8,0"
+                        Background="{DynamicResource IconCopyContainerBrush}"
+                        Foreground="{DynamicResource IconEmailBrush}"
                         Click="StopPlaybackButton_Click" IsEnabled="False">
-                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" FontSize="16" />
+                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" FontSize="16"
+                             Foreground="{DynamicResource IconEmailBrush}" />
                 </Button>
               </StackPanel>
             </WrapPanel>
             <Button x:Name="ExtractButton" Style="{StaticResource FilledButton}" Click="ExtractButton_Click"
+                    Background="{DynamicResource IconAboutBrush}"
                     HorizontalAlignment="Stretch" IsEnabled="False">
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE785;" Margin="0,0,8,0" />

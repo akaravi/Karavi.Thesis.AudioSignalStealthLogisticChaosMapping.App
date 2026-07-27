@@ -19,6 +19,28 @@
   <Color x:Key="SuccessColor">#FF81C784</Color>
   <Color x:Key="NavIndicatorColor">#FF4A3D66</Color>
   <Color x:Key="ChartStegoColor">#FFB39DDB</Color>
+  <!-- Semantic icon accents (parity with Flutter AppIconAccents — dark) -->
+  <Color x:Key="IconEmbedColor">#FFD4C2F0</Color>
+  <Color x:Key="IconExtractColor">#FF5EEAD4</Color>
+  <Color x:Key="IconSettingsColor">#FFFBBF24</Color>
+  <Color x:Key="IconAboutColor">#FFF9A8D4</Color>
+  <Color x:Key="IconHelpColor">#FF7DD3FC</Color>
+  <Color x:Key="IconCreateColor">#FF6EE7B7</Color>
+  <Color x:Key="IconVerifyColor">#FF86EFAC</Color>
+  <Color x:Key="IconShareColor">#FF93C5FD</Color>
+  <Color x:Key="IconSaveColor">#FFE9D5FF</Color>
+  <Color x:Key="IconCopyColor">#FFA5B4FC</Color>
+  <Color x:Key="IconGithubColor">#FFCBD5E1</Color>
+  <Color x:Key="IconThesisColor">#FFC4B5FD</Color>
+  <Color x:Key="IconWebColor">#FF93C5FD</Color>
+  <Color x:Key="IconCompanyColor">#FF5EEAD4</Color>
+  <Color x:Key="IconPhoneColor">#FF86EFAC</Color>
+  <Color x:Key="IconEmailColor">#FFFDA4AF</Color>
+  <Color x:Key="IconCreateContainerColor">#476EE7B7</Color>
+  <Color x:Key="IconHelpContainerColor">#477DD3FC</Color>
+  <Color x:Key="IconVerifyContainerColor">#4786EFAC</Color>
+  <Color x:Key="IconShareContainerColor">#4793C5FD</Color>
+  <Color x:Key="IconCopyContainerColor">#47A5B4FC</Color>
 
   <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
   <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
@@ -38,4 +60,25 @@
   <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
   <SolidColorBrush x:Key="NavIndicatorBrush" Color="{StaticResource NavIndicatorColor}" />
   <SolidColorBrush x:Key="ChartStegoBrush" Color="{StaticResource ChartStegoColor}" />
+  <SolidColorBrush x:Key="IconEmbedBrush" Color="{StaticResource IconEmbedColor}" />
+  <SolidColorBrush x:Key="IconExtractBrush" Color="{StaticResource IconExtractColor}" />
+  <SolidColorBrush x:Key="IconSettingsBrush" Color="{StaticResource IconSettingsColor}" />
+  <SolidColorBrush x:Key="IconAboutBrush" Color="{StaticResource IconAboutColor}" />
+  <SolidColorBrush x:Key="IconHelpBrush" Color="{StaticResource IconHelpColor}" />
+  <SolidColorBrush x:Key="IconCreateBrush" Color="{StaticResource IconCreateColor}" />
+  <SolidColorBrush x:Key="IconVerifyBrush" Color="{StaticResource IconVerifyColor}" />
+  <SolidColorBrush x:Key="IconShareBrush" Color="{StaticResource IconShareColor}" />
+  <SolidColorBrush x:Key="IconSaveBrush" Color="{StaticResource IconSaveColor}" />
+  <SolidColorBrush x:Key="IconCopyBrush" Color="{StaticResource IconCopyColor}" />
+  <SolidColorBrush x:Key="IconGithubBrush" Color="{StaticResource IconGithubColor}" />
+  <SolidColorBrush x:Key="IconThesisBrush" Color="{StaticResource IconThesisColor}" />
+  <SolidColorBrush x:Key="IconWebBrush" Color="{StaticResource IconWebColor}" />
+  <SolidColorBrush x:Key="IconCompanyBrush" Color="{StaticResource IconCompanyColor}" />
+  <SolidColorBrush x:Key="IconPhoneBrush" Color="{StaticResource IconPhoneColor}" />
+  <SolidColorBrush x:Key="IconEmailBrush" Color="{StaticResource IconEmailColor}" />
+  <SolidColorBrush x:Key="IconCreateContainerBrush" Color="{StaticResource IconCreateContainerColor}" />
+  <SolidColorBrush x:Key="IconHelpContainerBrush" Color="{StaticResource IconHelpContainerColor}" />
+  <SolidColorBrush x:Key="IconVerifyContainerBrush" Color="{StaticResource IconVerifyContainerColor}" />
+  <SolidColorBrush x:Key="IconShareContainerBrush" Color="{StaticResource IconShareContainerColor}" />
+  <SolidColorBrush x:Key="IconCopyContainerBrush" Color="{StaticResource IconCopyContainerColor}" />
 </ResourceDictionary>

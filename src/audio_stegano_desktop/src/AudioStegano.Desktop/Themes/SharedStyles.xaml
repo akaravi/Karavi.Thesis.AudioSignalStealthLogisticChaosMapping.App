@@ -106,14 +106,17 @@
     <Setter Property="MinWidth" Value="44" />
     <Setter Property="MinHeight" Value="44" />
     <Setter Property="Padding" Value="0" />
-    <Setter Property="Background" Value="{DynamicResource PrimaryContainerBrush}" />
-    <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+    <Setter Property="Background" Value="{DynamicResource IconCreateContainerBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource IconCreateBrush}" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="22"
                   Width="44" Height="44">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="10" ShadowDepth="3" Opacity="0.32" Color="#FF047857" />
+            </Border.Effect>
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Border>
           <ControlTemplate.Triggers>
@@ -130,8 +133,29 @@
   </Style>
 
   <Style x:Key="CircleFabSecondary" TargetType="Button" BasedOn="{StaticResource CircleFabPrimary}">
-    <Setter Property="Background" Value="{DynamicResource SecondaryContainerBrush}" />
-    <Setter Property="Foreground" Value="{DynamicResource OnPrimaryContainerBrush}" />
+    <Setter Property="Background" Value="{DynamicResource IconHelpContainerBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource IconHelpBrush}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="22"
+                  Width="44" Height="44">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="10" ShadowDepth="3" Opacity="0.32" Color="#FF0369A1" />
+            </Border.Effect>
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Bd" Property="Opacity" Value="0.92" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Bd" Property="Opacity" Value="0.45" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style x:Key="NavTabButton" TargetType="RadioButton">

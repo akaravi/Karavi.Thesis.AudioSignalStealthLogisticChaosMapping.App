@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 
 import '../../app/app_strings.dart';
 import '../../app/app_config_provider.dart';
+import '../../app/app_icon_accents.dart';
 import '../../app/busy_overlay_provider.dart';
 import '../../app/opened_audio_file.dart';
 import '../../app/pending_open_audio_provider.dart';
@@ -19,6 +20,7 @@ import '../../core/audio/audio_load_errors.dart';
 import '../../core/audio/playback_hub.dart';
 import '../../core/audio/wav_io.dart';
 import '../../core/stego/stego.dart';
+import '../shared/accent_icon.dart';
 import '../shared/audio_file_drop_surface.dart';
 import '../shared/app_section_card.dart';
 import '../shared/directional_selectable_text.dart';
@@ -514,47 +516,31 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
   Widget _buildPlaybackControls(AppStrings s) {
     if (!_hasLoadedAudio) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
-    return Theme(
-      data: Theme.of(context).copyWith(
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            foregroundColor: scheme.onPrimary,
-            backgroundColor: scheme.primary,
-            minimumSize: const Size(48, 48),
-            padding: EdgeInsets.zero,
-            shape: const CircleBorder(),
-          ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AccentActionIconButton(
+          tooltip: s.play,
+          icon: Icons.play_arrow_rounded,
+          accent: AppIconAccent.play,
+          filled: true,
+          onPressed: _processing || _coverPlaying ? null : _playLoaded,
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Tooltip(
-            message: s.play,
-            child: IconButton.filled(
-              onPressed: _processing || _coverPlaying ? null : _playLoaded,
-              icon: const Icon(Icons.play_arrow_rounded),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Tooltip(
-            message: s.pause,
-            child: IconButton.filledTonal(
-              onPressed: _processing || !_coverPlaying ? null : _pauseLoaded,
-              icon: const Icon(Icons.pause_rounded),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Tooltip(
-            message: s.stopPlayback,
-            child: IconButton.filledTonal(
-              onPressed: _processing || !_coverLoaded ? null : _stopLoaded,
-              icon: const Icon(Icons.stop_rounded),
-            ),
-          ),
-        ],
-      ),
+        const SizedBox(width: 8),
+        AccentActionIconButton(
+          tooltip: s.pause,
+          icon: Icons.pause_rounded,
+          accent: AppIconAccent.pause,
+          onPressed: _processing || !_coverPlaying ? null : _pauseLoaded,
+        ),
+        const SizedBox(width: 8),
+        AccentActionIconButton(
+          tooltip: s.stopPlayback,
+          icon: Icons.stop_rounded,
+          accent: AppIconAccent.stop,
+          onPressed: _processing || !_coverLoaded ? null : _stopLoaded,
+        ),
+      ],
     );
   }
 
@@ -615,10 +601,11 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(
+                        AccentGlowIcon(
                           Icons.audio_file_outlined,
-                          size: 56,
-                          color: scheme.primary,
+                          accent: AppIconAccent.audio,
+                          size: 30,
+                          tileSize: 56,
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -646,7 +633,10 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                               labelText: s.msgBitLengthHint,
                               helperText: s.msgBitLengthHelper,
                               errorText: _bitLengthError,
-                              prefixIcon: const Icon(Icons.format_list_numbered),
+                              prefixIcon: AccentIcon(
+                                Icons.format_list_numbered,
+                                accent: AppIconAccent.list,
+                              ),
                             ),
                           ),
                         ],
@@ -660,6 +650,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                               onPressed: _processing || _loadingFile
                                   ? null
                                   : _pickAudio,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppIconAccents.foreground(
+                                  AppIconAccent.folder,
+                                  Theme.of(context).brightness,
+                                ),
+                                foregroundColor: AppIconAccents.onFill(
+                                  Theme.of(context).brightness,
+                                ),
+                              ),
                               icon: const Icon(Icons.folder_open),
                               label: Text(s.pickFile),
                             ),
@@ -673,6 +672,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                                   !_hasLoadedAudio
                               ? null
                               : _extract,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppIconAccents.foreground(
+                              AppIconAccent.unlock,
+                              Theme.of(context).brightness,
+                            ),
+                            foregroundColor: AppIconAccents.onFill(
+                              Theme.of(context).brightness,
+                            ),
+                          ),
                           icon: const Icon(Icons.lock_open_outlined),
                           label: Text(s.extractTab),
                         ),
@@ -759,13 +767,20 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-          color: ok
-              ? scheme.primary.withValues(alpha: 0.92)
-              : scheme.onErrorContainer,
-          size: AppUiTokens.resultHeroIconSize,
-        ),
+        if (ok)
+          AccentGlowIcon(
+            Icons.check_circle_rounded,
+            accent: AppIconAccent.verify,
+            size: 30,
+            tileSize: AppUiTokens.resultHeroIconSize + 24,
+          )
+        else
+          AccentGlowIcon(
+            Icons.error_outline_rounded,
+            accent: AppIconAccent.stop,
+            size: 30,
+            tileSize: AppUiTokens.resultHeroIconSize + 24,
+          ),
         const SizedBox(height: 8),
         Text(
           ok ? s.operationSuccess : payloadTitle,
@@ -795,71 +810,74 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     required bool isAudio,
     required bool isImage,
   }) {
-    final scheme = Theme.of(context).colorScheme;
-    return Theme(
-      data: Theme.of(context).copyWith(
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            foregroundColor: scheme.onPrimary,
-            backgroundColor: scheme.primary,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      alignment: WrapAlignment.center,
+      children: [
+        if (isImage)
+          AccentActionIconButton(
+            tooltip: s.saveExtractedImage,
+            icon: Icons.save_outlined,
+            accent: AppIconAccent.save,
+            filled: true,
+            onPressed: _saveExtractedImage,
+          )
+        else if (isAudio) ...[
+          AccentActionIconButton(
+            tooltip: s.saveExtractedAudio,
+            icon: Icons.save_outlined,
+            accent: AppIconAccent.save,
+            filled: true,
+            onPressed: _saveExtractedAudio,
           ),
-        ),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        alignment: WrapAlignment.center,
-        children: [
-          if (isImage)
-            Tooltip(
-              message: s.saveExtractedImage,
-              child: IconButton.filled(
-                onPressed: _saveExtractedImage,
-                icon: const Icon(Icons.save_outlined),
-              ),
-            )
-          else if (isAudio) ...[
-            Tooltip(
-              message: s.saveExtractedAudio,
-              child: IconButton.filled(
-                onPressed: _saveExtractedAudio,
-                icon: const Icon(Icons.save_outlined),
-              ),
-            ),
-            FilledButton.tonalIcon(
-              onPressed: _playExtractedAudio,
-              icon: Icon(
+          FilledButton.tonalIcon(
+            onPressed: _playExtractedAudio,
+            style: FilledButton.styleFrom(
+              foregroundColor: AppIconAccents.foreground(
                 _extractedPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
+                    ? AppIconAccent.pause
+                    : AppIconAccent.play,
+                Theme.of(context).brightness,
               ),
-              label: Text(
-                _extractedPlaying ? s.pause : s.playExtractedAudio,
+              backgroundColor: AppIconAccents.container(
+                _extractedPlaying
+                    ? AppIconAccent.pause
+                    : AppIconAccent.play,
+                Theme.of(context).brightness,
               ),
             ),
-          ] else
-            Builder(
-              builder: (innerCtx) {
-                return Tooltip(
-                  message: s.copy,
-                  child: IconButton.filled(
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(innerCtx);
-                      await Clipboard.setData(
-                        ClipboardData(text: _result!),
-                      );
-                      messenger.showSnackBar(
-                        SnackBar(content: Text(s.copied)),
-                      );
-                    },
-                    icon: const Icon(Icons.copy_outlined),
-                  ),
-                );
-              },
+            icon: Icon(
+              _extractedPlaying
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded,
             ),
-        ],
-      ),
+            label: Text(
+              _extractedPlaying ? s.pause : s.playExtractedAudio,
+            ),
+          ),
+        ] else
+          Builder(
+            builder: (innerCtx) {
+              return AccentActionIconButton(
+                tooltip: s.copy,
+                icon: Icons.copy_outlined,
+                accent: AppIconAccent.copy,
+                filled: true,
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(innerCtx);
+                  await Clipboard.setData(
+                    ClipboardData(text: _result!),
+                  );
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(s.copied)),
+                  );
+                },
+              );
+            },
+          ),
+      ],
     );
   }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_icon_accents.dart';
 import '../../app/app_ui_tokens.dart';
 
-/// Circular toolbar FAB — primary (new) or secondary (help), shared by Embed/Extract.
+/// Circular toolbar FAB — semantic accent colors + soft glow.
 class PageToolbarFab extends StatelessWidget {
   const PageToolbarFab({
     super.key,
@@ -10,6 +11,7 @@ class PageToolbarFab extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.primary = true,
+    this.accent,
   });
 
   final String tooltip;
@@ -17,21 +19,43 @@ class PageToolbarFab extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool primary;
 
+  /// Overrides default create/help mapping when set.
+  final AppIconAccent? accent;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final bg = primary ? scheme.primaryContainer : scheme.secondaryContainer;
-    final fg =
-        primary ? scheme.onPrimaryContainer : scheme.onSecondaryContainer;
+    final brightness = Theme.of(context).brightness;
+    final resolved = accent ??
+        (primary ? AppIconAccent.create : AppIconAccent.help);
+    final fg = AppIconAccents.foreground(resolved, brightness);
+    final bg = AppIconAccents.container(resolved, brightness);
+    final disabled = onPressed == null;
     return Material(
-      elevation: 4,
-      shadowColor: scheme.shadow.withValues(alpha: 0.4),
-      color: bg,
+      elevation: disabled ? 0 : 4,
+      shadowColor: fg.withValues(alpha: 0.45),
+      color: disabled ? bg.withValues(alpha: 0.45) : bg,
       shape: const CircleBorder(),
-      child: IconButton(
-        tooltip: tooltip,
-        onPressed: onPressed,
-        icon: Icon(icon, color: fg),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: disabled
+              ? null
+              : [
+                  BoxShadow(
+                    color: fg.withValues(alpha: 0.32),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+        ),
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          icon: Icon(
+            icon,
+            color: disabled ? fg.withValues(alpha: 0.38) : fg,
+          ),
+        ),
       ),
     );
   }
@@ -69,6 +93,7 @@ class PageToolbarFabRow extends StatelessWidget {
               icon: primaryIcon!,
               onPressed: primaryEnabled ? onPrimary : null,
               primary: true,
+              accent: AppIconAccent.create,
             ),
             const SizedBox(width: AppUiTokens.toolbarFabGap),
           ],
@@ -77,6 +102,7 @@ class PageToolbarFabRow extends StatelessWidget {
             icon: Icons.help_outline_rounded,
             onPressed: onHelp,
             primary: false,
+            accent: AppIconAccent.help,
           ),
         ],
       ),

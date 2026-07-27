@@ -61,36 +61,45 @@ public partial class MainWindow : Window
         RailButtons.Children.Clear();
 
         var icons = new[] { "\uE9D8", "\uE721", "\uE713", "\uE77B" };
+        var brushKeys = new[]
+        {
+            "IconEmbedBrush",
+            "IconExtractBrush",
+            "IconSettingsBrush",
+            "IconAboutBrush",
+        };
         for (var i = 0; i < TabCount; i++)
         {
             var idx = i;
-            var btn = CreateNavButton(icons[i], i, "BottomNav");
+            var btn = CreateNavButton(icons[i], i, "BottomNav", brushKeys[i]);
             btn.Checked += (_, _) => { if (btn.IsChecked == true) SelectTab(idx); };
             _navButtons[i] = btn;
             BottomNavGrid.Children.Add(btn);
 
-            var railBtn = CreateNavButton(icons[i], i, "RailNav");
+            var railBtn = CreateNavButton(icons[i], i, "RailNav", brushKeys[i]);
             railBtn.Checked += (_, _) => { if (railBtn.IsChecked == true) SelectTab(idx); };
             RailButtons.Children.Add(railBtn);
         }
     }
 
-    private RadioButton CreateNavButton(string icon, int index, string groupName)
+    private RadioButton CreateNavButton(string icon, int index, string groupName, string brushKey)
     {
         var s = ThemeManager.Strings;
         var labels = new[] { s.EmbedTab, s.ExtractTab, s.SettingsTab, s.AboutUsTab };
+        var iconBlock = new TextBlock
+        {
+            FontFamily = new FontFamily("Segoe MDL2 Assets"),
+            FontSize = 22,
+            Text = icon,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        iconBlock.SetResourceReference(TextBlock.ForegroundProperty, brushKey);
         return new RadioButton
         {
             Style = (Style)FindResource("NavTabButton"),
             Tag = labels[index],
             GroupName = groupName,
-            Content = new TextBlock
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                FontSize = 22,
-                Text = icon,
-                HorizontalAlignment = HorizontalAlignment.Center,
-            },
+            Content = iconBlock,
         };
     }
 

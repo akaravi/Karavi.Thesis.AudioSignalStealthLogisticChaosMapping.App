@@ -11,6 +11,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_config_provider.dart';
+import '../../app/app_icon_accents.dart';
 import '../../app/app_strings.dart';
 import '../../app/busy_overlay_provider.dart';
 import '../../app/metric_help_strings.dart';
@@ -28,6 +29,7 @@ import '../../core/audio/spectrum_analyzer.dart';
 import '../../core/audio/waveform_display.dart';
 import '../../core/stego/cover_record_budget.dart';
 import '../../core/stego/stego.dart';
+import '../shared/accent_icon.dart';
 import '../shared/audio_file_drop_surface.dart';
 import '../shared/audio_equalizer_view.dart';
 import '../shared/app_section_card.dart';
@@ -1941,10 +1943,11 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
+        AccentGlowIcon(
           Icons.check_circle_rounded,
-          color: scheme.primary.withValues(alpha: 0.92),
-          size: AppUiTokens.resultHeroIconSize,
+          accent: AppIconAccent.verify,
+          size: 30,
+          tileSize: AppUiTokens.resultHeroIconSize + 24,
         ),
         const SizedBox(height: 8),
         Text(
@@ -1977,50 +1980,54 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Tooltip(
-          message: s.saveStego,
-          child: IconButton.filled(
-            onPressed: _verifying ? null : _saveStego,
-            icon: const Icon(Icons.save_outlined),
-          ),
+        AccentActionIconButton(
+          tooltip: s.saveStego,
+          icon: Icons.save_outlined,
+          accent: AppIconAccent.save,
+          filled: true,
+          onPressed: _verifying ? null : _saveStego,
         ),
-        Tooltip(
-          message: s.shareStego,
-          child: IconButton.filledTonal(
-            onPressed: _verifying ? null : _shareStego,
-            icon: const Icon(Icons.share_outlined),
-          ),
+        AccentActionIconButton(
+          tooltip: s.shareStego,
+          icon: Icons.share_outlined,
+          accent: AppIconAccent.share,
+          onPressed: _verifying ? null : _shareStego,
         ),
-        Tooltip(
-          message: s.verify,
-          child: IconButton.filledTonal(
-            onPressed: _verifying ? null : _verifyRoundtrip,
-            icon: _verifying
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.verified_outlined),
-          ),
+        AccentActionIconButton(
+          tooltip: s.verify,
+          icon: Icons.verified_outlined,
+          accent: AppIconAccent.verify,
+          onPressed: _verifying ? null : _verifyRoundtrip,
+          busyChild: _verifying
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppIconAccents.foreground(
+                      AppIconAccent.verify,
+                      Theme.of(context).brightness,
+                    ),
+                  ),
+                )
+              : null,
         ),
         if (showCopy)
           Builder(
             builder: (innerCtx) {
-              return Tooltip(
-                message: s.copy,
-                child: IconButton.filledTonal(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(innerCtx);
-                    await Clipboard.setData(
-                      ClipboardData(text: _textCtrl.text),
-                    );
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(s.copied)),
-                    );
-                  },
-                  icon: const Icon(Icons.copy_outlined),
-                ),
+              return AccentActionIconButton(
+                tooltip: s.copy,
+                icon: Icons.copy_outlined,
+                accent: AppIconAccent.copy,
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(innerCtx);
+                  await Clipboard.setData(
+                    ClipboardData(text: _textCtrl.text),
+                  );
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(s.copied)),
+                  );
+                },
               );
             },
           ),

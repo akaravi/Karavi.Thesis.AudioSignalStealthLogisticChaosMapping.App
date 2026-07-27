@@ -1686,3 +1686,86 @@
 }
 ```
 
+## Part 104 — Fix 140MB debug web Network bloat
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 104,
+  "title": "Local web must serve release build/web not debug flutter run",
+  "request": "140MB خیلی زیاده یک جا مشکل داری",
+  "rootCause": "flutter run debug JIT (~1400 dart.lib.js); product build/web ~13MB",
+  "scope": [
+    "Start-KaraviFlutterWebStaticReleaseServer",
+    "_run-all-local / _launch-dev-services",
+    "flutter-web-release-default.mdc"
+  ]
+}
+```
+
+## Result 104
+
+```json
+{
+  "part": 104,
+  "status": "done",
+  "verification": "static serve build/web HTTP 200; FULL_build_web_MB=13.03; dart_lib_js_count=0; MaterialIcons~16KB",
+  "files": [
+    "_flutter-web-no-cdn.ps1 / _run-all-local.ps1 / _launch-dev-services.ps1",
+    ".cursor/rules/flutter-web-release-default.mdc / readmehistory.md"
+  ]
+}
+```
+
+
+## Part 104 - Colorful semantic icons (design-auditor)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 104,
+  "title": "Colorful semantic icons with soft glow",
+  "request": "/design-auditor — make project icons colorful and give the app a special look",
+  "designAuditor": {
+    "design": "B+",
+    "aiSlop": "A-",
+    "accessibility": "B+",
+    "notes": [
+      "Finding: monochrome purple icons reduced scan hierarchy across nav/toolbar/About/actions",
+      "Remediation: meaning-driven AppIconAccent palette (not rainbow decoration)",
+      "Special effect: soft glow on FAB/hero/action fills; light+dark pairs",
+      "Avoided AI-slop rainbow / purple-on-white gradient spam"
+    ]
+  },
+  "touchedFiles": [
+    "src/audio_stegano_app/lib/app/app_icon_accents.dart",
+    "src/audio_stegano_app/lib/features/shared/accent_icon.dart",
+    "src/audio_stegano_app/lib/features/shared/page_toolbar_fab.dart",
+    "src/audio_stegano_app/lib/app/home_shell.dart",
+    "src/audio_stegano_app/lib/features/about/about_screen.dart",
+    "src/audio_stegano_app/lib/features/embed/embed_screen.dart",
+    "src/audio_stegano_app/lib/features/extract/extract_screen.dart",
+    "src/audio_stegano_app/lib/features/settings/settings_screen.dart",
+    "src/audio_stegano_desktop/.../Themes/LightTheme.xaml",
+    "src/audio_stegano_desktop/.../Themes/DarkTheme.xaml",
+    "src/audio_stegano_desktop/.../Themes/SharedStyles.xaml",
+    "src/audio_stegano_desktop/.../MainWindow.xaml.cs",
+    "src/audio_stegano_desktop/.../Views/AboutView.xaml.cs",
+    "src/audio_stegano_desktop/.../Views/EmbedView.xaml",
+    "src/audio_stegano_desktop/.../Views/ExtractView.xaml"
+  ]
+}
+```
+
+## Result 104
+
+```json
+{
+  "part": 104,
+  "status": "done",
+  "verification": "flutter analyze (touched files) clean; dotnet build AudioStegano.Desktop Debug 0 warnings/errors; semantic accents light/dark; Flutter+WPF parity for nav/About/actions/FABs",
+  "remaining": "none"
+}
+```

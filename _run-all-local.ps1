@@ -249,17 +249,23 @@ try {
         -Notes ('DevTools: ' + $devtoolsUrl + '، pid ' + $flutterWinProc.Id)
 
     $flutterWebLog = Join-Path $logDir 'flutter_web_run.log'
-    $flutterWebArgs = New-KaraviFlutterWebRunArgumentList -Device 'web-server' -WebPort $webPort
-    $flutterWebProc = Start-Process -FilePath $flutterCommand `
-        -ArgumentList $flutterWebArgs `
-        -WorkingDirectory $flutterAppPath `
-        -RedirectStandardOutput $flutterWebLog `
-        -RedirectStandardError (Join-Path $logDir 'flutter_web_run.err') `
-        -PassThru -WindowStyle Hidden
+    $flutterWebBuildDir = Join-Path $flutterAppPath 'build\web'
+    if (-not (Test-Path (Join-Path $flutterWebBuildDir 'index.html'))) {
+        Write-Host 'Building Flutter web release (required for size-correct local serve)...' -ForegroundColor DarkCyan
+        $buildArgs = New-KaraviFlutterWebBuildArgumentList -BaseHref '/'
+        & $flutterCommand @buildArgs
+        if ($LASTEXITCODE -ne 0) { throw "flutter build web failed with exit $LASTEXITCODE" }
+        Invoke-KaraviFlutterWebNoCdnPostProcess -WebOutputDirectory $flutterWebBuildDir
+    }
+    $flutterWebProc = Start-KaraviFlutterWebStaticReleaseServer `
+        -WebOutputDirectory $flutterWebBuildDir `
+        -WebPort $webPort `
+        -StdoutLogPath $flutterWebLog `
+        -StderrLogPath (Join-Path $logDir 'flutter_web_run.err')
     $flutterWebProc.Id | Out-File -Encoding ascii (Join-Path $logDir 'flutter_web.pid')
-    Add-RunResult -Step 'Flutter Web (web-server)' -Status 'Started' -Detail "pid=$($flutterWebProc.Id); port $webPort"
+    Add-RunResult -Step 'Flutter Web (release static)' -Status 'Started' -Detail "pid=$($flutterWebProc.Id); port $webPort; build/web"
 
-    Add-ServiceAddress -Service 'Flutter Web' -Address $webUrl -Notes ("chrome/edge port " + $chromePort)
+    Add-ServiceAddress -Service 'Flutter Web' -Address $webUrl -Notes ('release static build/web; chrome port ' + $chromePort)
     Add-ServiceAddress -Service 'Dart DevTools' -Address $devtoolsUrl -Notes 'with Flutter Windows'
 
     Write-Host 'Waiting for Flutter web dev server...' -ForegroundColor DarkGray

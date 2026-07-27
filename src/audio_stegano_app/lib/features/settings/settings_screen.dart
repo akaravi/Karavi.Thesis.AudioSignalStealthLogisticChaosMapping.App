@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/app_config_provider.dart';
+import '../../app/app_icon_accents.dart';
 import '../../app/app_strings.dart';
 import '../../app/app_ui_tokens.dart';
 import '../../app/logistic_param_bounds.dart';
 import '../../app/settings_controller.dart';
+import '../shared/accent_icon.dart';
 import '../shared/app_section_card.dart';
 import '../shared/logistic_map_preview_chart.dart';
 import '../shared/logistic_param_field.dart';
@@ -44,12 +46,20 @@ class SettingsScreen extends ConsumerWidget {
             segments: [
               ButtonSegment(
                 value: ThemeMode.light,
-                icon: const Icon(Icons.light_mode_outlined, size: 18),
+                icon: AccentIcon(
+                  Icons.light_mode_outlined,
+                  accent: AppIconAccent.settings,
+                  size: 18,
+                ),
                 label: Text(s.themeLight),
               ),
               ButtonSegment(
                 value: ThemeMode.dark,
-                icon: const Icon(Icons.dark_mode_outlined, size: 18),
+                icon: AccentIcon(
+                  Icons.dark_mode_outlined,
+                  accent: AppIconAccent.list,
+                  size: 18,
+                ),
                 label: Text(s.themeDark),
               ),
             ],
