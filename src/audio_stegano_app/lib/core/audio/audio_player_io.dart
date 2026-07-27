@@ -25,6 +25,11 @@ class AudioPlayerService {
   Stream<Duration> get positionStream => _player.positionStream;
   bool get isPlaying => _player.playing;
   bool get hasSource => _sourceLoaded;
+  /// Mid-session pause (source loaded, not playing, not completed).
+  bool get isPaused =>
+      _sourceLoaded &&
+      !_player.playing &&
+      _player.processingState != ProcessingState.completed;
 
   bool _sourceLoaded = false;
 
@@ -103,6 +108,8 @@ class AudioPlayerService {
         if (!_spectrumController.isClosed) {
           _spectrumController.add(List<double>.filled(kSpectrumBandCount, 0));
         }
+        // Clear session so A/B transport controls hide after natural end.
+        unawaited(stop());
       }
     });
   }

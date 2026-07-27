@@ -19,7 +19,12 @@ abstract final class AppUiTokens {
   static const EdgeInsets cardPaddingCompact = EdgeInsets.all(10);
 
   static const double sectionGap = 16;
+  static const double sectionGapResult = 16;
   static const double toolbarFabGap = 8;
+  static const double resultHeroIconSize = 32;
+  static const double resultBlockRadius = 14;
+  static const double resultBlockPadding = 12;
+  static const double resultContentBreakpoint = 560;
 
   static BorderRadius get cardBorderRadius => BorderRadius.circular(radiusCard);
   static BorderRadius get inputBorderRadius =>

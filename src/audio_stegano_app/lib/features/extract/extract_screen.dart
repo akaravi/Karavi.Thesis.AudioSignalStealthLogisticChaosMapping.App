@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 
 import '../../app/app_strings.dart';
 import '../../app/app_config_provider.dart';
+import '../../app/busy_overlay_provider.dart';
 import '../../app/opened_audio_file.dart';
 import '../../app/pending_open_audio_provider.dart';
 import '../../app/settings_controller.dart';
@@ -73,7 +74,33 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   }
 
   @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _publishAppBusyOverlay();
+  }
+
+  void _publishAppBusyOverlay() {
+    if (!mounted) return;
+    final s = AppStrings.of(context);
+    final String? message;
+    if (_processing || _loadingFile) {
+      message = s.processing;
+    } else {
+      message = null;
+    }
+    final controller = ref.read(appBusyMessageProvider.notifier);
+    if (ref.read(appBusyMessageProvider) != message) {
+      if (message == null) {
+        controller.clear();
+      } else {
+        controller.show(message);
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    ref.read(appBusyMessageProvider.notifier).clear();
     for (final s in _playSubs) {
       unawaited(s.cancel());
     }
@@ -633,15 +660,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                               onPressed: _processing || _loadingFile
                                   ? null
                                   : _pickAudio,
-                              icon: _loadingFile
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.folder_open),
+                              icon: const Icon(Icons.folder_open),
                               label: Text(s.pickFile),
                             ),
                             _buildPlaybackControls(s),
@@ -654,26 +673,12 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                                   !_hasLoadedAudio
                               ? null
                               : _extract,
-                          icon: _processing
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.lock_open_outlined),
+                          icon: const Icon(Icons.lock_open_outlined),
                           label: Text(s.extractTab),
                         ),
-                        if (_processing || _loadingFile) ...[
-                          const SizedBox(height: 12),
-                          const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.5),
-                          ),
-                        ],
-                        if (_statusMessage != null) ...[
+                        if (_statusMessage != null &&
+                            !_processing &&
+                            !_loadingFile) ...[
                           const SizedBox(height: 12),
                           Text(
                             _statusMessage!,
@@ -702,127 +707,210 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     }
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final gap = AppUiTokens.sectionGapResult;
     final isAudio = _extractedAudio != null;
     final isImage = _extractedImageBytes != null;
-    final title = isImage
+    final ok = _extractSucceeded;
+    final payloadTitle = isImage
         ? s.extractedImage
         : (isAudio ? s.extractedAudio : s.extractedText);
+
     return AppSectionCard(
-      outlined: _extractSucceeded,
-      color: _extractSucceeded
-          ? scheme.surfaceContainerLow
-          : scheme.errorContainer,
+      outlined: ok,
+      color: ok ? null : scheme.errorContainer,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(
-                _extractSucceeded
-                    ? Icons.check_circle_outline
-                    : Icons.error_outline,
-                color: _extractSucceeded
-                    ? scheme.primary
-                    : scheme.onErrorContainer,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: _extractSucceeded
-                      ? scheme.onSurface
-                      : scheme.onErrorContainer,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (isImage) ...[
-            ClipRRect(
-              borderRadius: AppUiTokens.imageBorderRadius,
-              child: Image.memory(
-                _extractedImageBytes!,
-                height: 180,
-                fit: BoxFit.contain,
-              ),
+          _buildExtractHero(s, theme, scheme, ok, payloadTitle),
+          if (ok) ...[
+            SizedBox(height: gap),
+            _buildExtractActions(s, isAudio: isAudio, isImage: isImage),
+            SizedBox(height: gap),
+            _buildExtractPayloadBlock(
+              s,
+              theme,
+              scheme,
+              isAudio: isAudio,
+              isImage: isImage,
+              payloadTitle: payloadTitle,
             ),
-          ] else if (!isAudio)
-            DirectionalSelectableText(
-              _resultBody(s),
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: _extractSucceeded
-                    ? scheme.onSurface
-                    : scheme.onErrorContainer,
-              ),
-            )
-          else
+          ] else ...[
+            SizedBox(height: gap),
             Text(
               _resultBody(s),
+              textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: _extractSucceeded
-                    ? scheme.onSurface
-                    : scheme.onErrorContainer,
+                color: scheme.onErrorContainer,
               ),
             ),
-          if (_extractSucceeded) ...[
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExtractHero(
+    AppStrings s,
+    ThemeData theme,
+    ColorScheme scheme,
+    bool ok,
+    String payloadTitle,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Icon(
+          ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+          color: ok
+              ? scheme.primary.withValues(alpha: 0.92)
+              : scheme.onErrorContainer,
+          size: AppUiTokens.resultHeroIconSize,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          ok ? s.operationSuccess : payloadTitle,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: ok ? scheme.onSurface : scheme.onErrorContainer,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (ok) ...[
+          const SizedBox(height: 4),
+          Text(
+            s.extractSuccessSubtitle,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildExtractActions(
+    AppStrings s, {
+    required bool isAudio,
+    required bool isImage,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Theme(
+      data: Theme.of(context).copyWith(
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            foregroundColor: scheme.onPrimary,
+            backgroundColor: scheme.primary,
+          ),
+        ),
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        alignment: WrapAlignment.center,
+        children: [
+          if (isImage)
+            Tooltip(
+              message: s.saveExtractedImage,
+              child: IconButton.filled(
+                onPressed: _saveExtractedImage,
+                icon: const Icon(Icons.save_outlined),
+              ),
+            )
+          else if (isAudio) ...[
+            Tooltip(
+              message: s.saveExtractedAudio,
+              child: IconButton.filled(
+                onPressed: _saveExtractedAudio,
+                icon: const Icon(Icons.save_outlined),
+              ),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: _playExtractedAudio,
+              icon: Icon(
+                _extractedPlaying
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+              ),
+              label: Text(
+                _extractedPlaying ? s.pause : s.playExtractedAudio,
+              ),
+            ),
+          ] else
+            Builder(
+              builder: (innerCtx) {
+                return Tooltip(
+                  message: s.copy,
+                  child: IconButton.filled(
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(innerCtx);
+                      await Clipboard.setData(
+                        ClipboardData(text: _result!),
+                      );
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(s.copied)),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_outlined),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExtractPayloadBlock(
+    AppStrings s,
+    ThemeData theme,
+    ColorScheme scheme, {
+    required bool isAudio,
+    required bool isImage,
+    required String payloadTitle,
+  }) {
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(AppUiTokens.resultBlockRadius),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              payloadTitle,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
             if (isImage)
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: FilledButton.tonalIcon(
-                  onPressed: _saveExtractedImage,
-                  icon: const Icon(Icons.save_outlined),
-                  label: Text(s.saveExtractedImage),
+              ClipRRect(
+                borderRadius: AppUiTokens.imageBorderRadius,
+                child: Image.memory(
+                  _extractedImageBytes!,
+                  height: 180,
+                  fit: BoxFit.contain,
                 ),
               )
             else if (isAudio)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.end,
-                children: [
-                  FilledButton.tonalIcon(
-                    onPressed: _playExtractedAudio,
-                    icon: Icon(
-                      _extractedPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                    ),
-                    label: Text(
-                      _extractedPlaying ? s.pause : s.playExtractedAudio,
-                    ),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: _saveExtractedAudio,
-                    icon: const Icon(Icons.save_outlined),
-                    label: Text(s.saveExtractedAudio),
-                  ),
-                ],
+              Text(
+                _resultBody(s),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: scheme.onSurface,
+                ),
               )
             else
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Builder(
-                  builder: (innerCtx) {
-                    return TextButton.icon(
-                      onPressed: () async {
-                        final messenger = ScaffoldMessenger.of(innerCtx);
-                        await Clipboard.setData(
-                          ClipboardData(text: _result!),
-                        );
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(s.copied)),
-                        );
-                      },
-                      icon: const Icon(Icons.copy),
-                      label: Text(s.copy),
-                    );
-                  },
+              DirectionalSelectableText(
+                _resultBody(s),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: scheme.onSurface,
                 ),
               ),
           ],
-        ],
+        ),
       ),
     );
   }

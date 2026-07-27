@@ -1347,3 +1347,342 @@
   ]
 }
 ```
+
+## Part 92 — Embed results redesign (Hero + Bento)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 92,
+  "title": "Embed results UI redesign — Before-After + Bento",
+  "request": "بازطراحی قالب صفحه نتایج نهان‌نگاری (Flutter + WPF) با الگوی Before-After و بلوک‌های Bento، بدون تغییر بنفش برند",
+  "scope": [
+    "Hero + primary Save/Share CTAs + icon Verify/Copy",
+    "A/B listen owns playback controls; no header Play/Pause/Stop",
+    "Content compare responsive <560; analysis block separate",
+    "Parity Flutter embed_screen + WPF EmbedView; tokens/i18n"
+  ]
+}
+```
+
+## Result 92
+
+```json
+{
+  "part": 92,
+  "status": "done",
+  "verification": "flutter analyze embed_screen/app_ui_tokens/app_strings: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "embed_screen.dart / app_ui_tokens.dart / app_strings.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs / AppStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 95 — Extract results redesign (Hero + Bento parity)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 95,
+  "title": "Extract results UI — Hero + Bento parity with Embed",
+  "request": "ادامه بده — هم‌ترازی قالب نتایج رمزگشایی با بازطراحی نتایج نهان‌نگاری",
+  "scope": [
+    "Hero success/error + extractSuccessSubtitle",
+    "Primary CTAs Save/Play/Copy then payload content block",
+    "Flutter extract_screen + WPF ExtractView parity"
+  ]
+}
+```
+
+## Result 95
+
+```json
+{
+  "part": 95,
+  "status": "done",
+  "verification": "flutter analyze extract_screen/app_strings: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "extract_screen.dart / app_strings.dart",
+    "ExtractView.xaml / ExtractView.xaml.cs / AppStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 96 — A/B listen design-auditor beautify
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 96,
+  "title": "A/B listen panel — design-auditor beautify",
+  "request": "/design-auditor بخش را زیباتر کن — مقایسه شنیداری",
+  "scope": [
+    "Dual A/B cards + transport bar (Pause/Stop labeled)",
+    "Playing emphasis border; responsive <560",
+    "Flutter embed_screen + WPF EmbedView; brand purple kept"
+  ],
+  "designAuditor": {
+    "before": { "design": "C", "aiSlop": "B", "accessibility": "B" },
+    "after": { "design": "B+", "aiSlop": "A-", "accessibility": "A-" }
+  }
+}
+```
+
+## Result 96
+
+```json
+{
+  "part": 96,
+  "status": "done",
+  "verification": "flutter analyze embed_screen/app_strings: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "embed_screen.dart / app_strings.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs / AppStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 97 — Full-page busy overlay (block UI until process ends)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 97,
+  "title": "Full-viewport loading overlay during embed/extract",
+  "request": "/ui-ux-pro-max باید لودینک روی کل صفحه باشد که تا پایان پروسس کاربر کاری انجام ندهد",
+  "scope": [
+    "Flutter HomeShell Stack + appBusyMessageProvider + AppBusyOverlay",
+    "WPF MainWindow GlobalBusyOverlay + SetGlobalBusy from Embed/Extract",
+    "Block tab/nav interaction while busy; Soft UI + brand purple spinner"
+  ],
+  "ux": {
+    "antiPatternAvoided": "inline-only spinner while rest of UI remains interactive",
+    "pattern": "modal scrim + centered status card; AbsorbPointer / IsHitTestVisible"
+  }
+}
+```
+
+## Result 97
+
+```json
+{
+  "part": 97,
+  "status": "done",
+  "verification": "flutter analyze home_shell/busy_overlay/embed/extract: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "busy_overlay_provider.dart / app_busy_overlay.dart / home_shell.dart",
+    "embed_screen.dart / extract_screen.dart",
+    "MainWindow.xaml / MainWindow.xaml.cs",
+    "EmbedView.xaml.cs / ExtractView.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 98 — Save extracted: icon-only
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 98,
+  "title": "Save extracted audio/image — icon only",
+  "request": "آیکن ذخیره کفایت می کند",
+  "scope": [
+    "Extract primary Save CTA → IconButton/IconFilledButton + tooltip",
+    "Embed recovered Save parity",
+    "Keep Play with label; i18n strings remain for tooltip/dialogTitle"
+  ]
+}
+```
+
+## Result 98
+
+```json
+{
+  "part": 98,
+  "status": "done",
+  "verification": "flutter analyze extract/embed: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "extract_screen.dart / embed_screen.dart",
+    "ExtractView.xaml / ExtractView.xaml.cs",
+    "EmbedView.xaml / EmbedView.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 99 — Equalizer badges physical order
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 99,
+  "title": "Equalizer header badges: intensity left, time right",
+  "request": "زمان در سمت راست باشد و شدت صدا در سمت چپ",
+  "scope": [
+    "Force LTR badge row: volume% then duration",
+    "Flutter audio_equalizer_view + WPF EqualizerControl"
+  ]
+}
+```
+
+## Result 99
+
+```json
+{
+  "part": 99,
+  "status": "done",
+  "verification": "flutter analyze audio_equalizer_view: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "audio_equalizer_view.dart",
+    "EqualizerControl.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 100 — Embed results Soft UI delicate refine
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 100,
+  "title": "Embed/Extract result panel — Soft UI delicate",
+  "request": "/ui-ux-pro-max این بخش کمی ظریف تر شود",
+  "scope": [
+    "Icon toolbar CTAs; quiet section titles; softer banners/blocks",
+    "Compact A/B listen + icon transport; icon content-compare actions",
+    "Tokens: sectionGapResult/hero/block; Flutter + WPF parity; brand purple kept"
+  ],
+  "designSystem": "Soft UI Evolution (ui-ux-pro-max) — brand colors override pink suggestion"
+}
+```
+
+## Result 100
+
+```json
+{
+  "part": 100,
+  "status": "done",
+  "verification": "flutter analyze embed/extract/tokens: No issues found; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    "app_ui_tokens.dart / embed_screen.dart / extract_screen.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 101 — Optimize web/app payload size
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 101,
+  "title": "Reduce Flutter web and app asset size",
+  "request": "حجم سایت و حجم اپلیکیشن زیاد است آن را بهینه کن",
+  "scope": [
+    "Font subset + icon compress + remove web/fonts",
+    "tree-shake-icons; strip maps/symbols/skwasm/wimp from web output",
+    "optimize_flutter_assets.py"
+  ],
+  "measured": {
+    "buildWebBeforeMbApprox": 31,
+    "buildWebAfterMb": 13.03,
+    "bundledTtfAfterKb": 346
+  }
+}
+```
+
+## Result 101
+
+```json
+{
+  "part": 101,
+  "status": "done",
+  "verification": "flutter build web --release --no-web-resources-cdn --tree-shake-icons OK; post-process WEB_TOTAL_MB=13.03; canvaskit-only retained",
+  "files": [
+    "assets/fonts/*.ttf / assets/branding/app_icon.png / web/icons",
+    "pubspec.yaml / _flutter-web-no-cdn.ps1 / .gitignore",
+    "scripts/optimize_flutter_assets.py / readmehistory.md"
+  ]
+}
+```
+
+## Part 102 — Equalizer badges + payload capacity progress
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 102,
+  "title": "Equalizer volume/timer sides + secret-record capacity bar",
+  "request": "شمارنده زمان راست · سطح صدا چپ · نوار ظرفیت هنگام ضبط صوت مخفی با تیک ظرفیت؛ بدون تیک حداقل زمان نسبت به نیاز نهان‌نگاری",
+  "scope": [
+    ".cursor/rules/equalizer-recording-capacity-ui.mdc",
+    "Equalizer physical LTR badge layout",
+    "Payload capacity progress + cover min dynamic bits"
+  ]
+}
+```
+
+## Result 102
+
+```json
+{
+  "part": 102,
+  "status": "done",
+  "verification": "flutter analyze equalizer/embed/strings: No issues; WPF Desktop build succeeded",
+  "files": [
+    ".cursor/rules/equalizer-recording-capacity-ui.mdc",
+    "audio_equalizer_view.dart / EqualizerControl.xaml.cs",
+    "embed_screen.dart / EmbedView.xaml.cs",
+    "app_strings.dart / AppStrings.cs / readmehistory.md"
+  ]
+}
+```
+
+## Part 103 — A/B Pause/Stop inside Play cards
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 103,
+  "title": "A/B listen transport inside each Play card",
+  "request": "دکمه های pause و stop در همان کادر هر play؛ تا play نشده مخفی؛ بعد از اتمام پخش مخفی",
+  "scope": [
+    ".cursor/rules/ab-listen-play-transport.mdc",
+    "Flutter embed A/B panel",
+    "WPF EmbedView AbListen cards"
+  ]
+}
+```
+
+## Result 103
+
+```json
+{
+  "part": 103,
+  "status": "done",
+  "verification": "flutter analyze embed/playback: No issues; WPF Desktop build 0 errors 0 warnings",
+  "files": [
+    ".cursor/rules/ab-listen-play-transport.mdc",
+    "embed_screen.dart / audio_player_io.dart / audio_player_web.dart / playback_hub.dart",
+    "EmbedView.xaml / EmbedView.xaml.cs / readmehistory.md"
+  ]
+}
+```
+

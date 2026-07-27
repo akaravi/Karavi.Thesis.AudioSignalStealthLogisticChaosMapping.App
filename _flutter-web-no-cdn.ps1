@@ -33,6 +33,7 @@ function New-KaraviFlutterWebBuildArgumentList {
     $args = @('build', 'web')
     if (-not $DebugBuild) { $args += '--release' }
     $args += Get-KaraviFlutterWebNoCdnSwitch
+    $args += '--tree-shake-icons'
     $args += "--base-href=$normalized"
     return $args
 }
@@ -187,34 +188,74 @@ function Assert-KaraviFlutterWebOutputNoExternalCdn {
     }
 }
 
+function Remove-KaraviFlutterWebDebugArtifacts {
+    param(
+        [Parameter(Mandatory = $true)][string]$WebOutputDirectory
+    )
+
+    if (-not (Test-Path -LiteralPath $WebOutputDirectory)) { return }
+
+    $removedBytes = [int64]0
+    $removedCount = 0
+
+    function Remove-TrackedItem {
+        param([string]$Path)
+        if (-not (Test-Path -LiteralPath $Path)) { return }
+        $item = Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue
+        if ($null -eq $item) { return }
+        if ($item.PSIsContainer) {
+            Get-ChildItem -LiteralPath $Path -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+                $script:removedBytes += $_.Length
+                $script:removedCount++
+            }
+            Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        else {
+            $script:removedBytes += $item.Length
+            $script:removedCount++
+            Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Source maps / DWARF-like symbol dumps (not needed at runtime).
+    Get-ChildItem -Path $WebOutputDirectory -Recurse -File -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.Extension -eq '.map' -or
+            $_.Name -like '*.js.map' -or
+            $_.Name -like '*.symbols'
+        } |
+        ForEach-Object { Remove-TrackedItem -Path $_.FullName }
+
+    # Default build is dart2js + CanvasKit. skwasm/wimp are for --wasm and are unused here.
+    $ck = Join-Path $WebOutputDirectory 'canvaskit'
+    if (Test-Path -LiteralPath $ck) {
+        Get-ChildItem -Path $ck -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '^(skwasm|wimp)' } |
+            ForEach-Object { Remove-TrackedItem -Path $_.FullName }
+
+        $chromium = Join-Path $ck 'chromium'
+        if (Test-Path -LiteralPath $chromium) {
+            Remove-TrackedItem -Path $chromium
+        }
+    }
+
+    if ($removedCount -gt 0) {
+        $mb = [math]::Round($removedBytes / 1MB, 2)
+        Write-Host "Removed $removedCount web debug/extra artifact(s) (~$mb MB)." -ForegroundColor DarkCyan
+    }
+}
+
 function Copy-KaraviFlutterWebBundledNotoFonts {
     param(
         [Parameter(Mandatory = $true)][string]$WebOutputDirectory
     )
 
+    # App text fonts ship via pubspec AssetManifest (subsetted TTF under assets/fonts).
+    # Boot splash uses system-ui in web/index.html — no duplicate web/fonts/ tree.
     $projectRoot = Split-Path (Split-Path $WebOutputDirectory -Parent) -Parent
     $sourceRoot = Join-Path $projectRoot 'web\fonts'
-    $destRoot = Join-Path $WebOutputDirectory 'assets\fonts'
-
-    if (-not (Test-Path -LiteralPath $sourceRoot)) {
-        Write-Warning "Bundled web fonts folder not found: $sourceRoot (CanvasKit fallback text may be invisible)."
-        return
-    }
-
-    $copied = 0
-    Get-ChildItem -Path $sourceRoot -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
-        $relative = $_.FullName.Substring($sourceRoot.Length).TrimStart('\', '/')
-        $destination = Join-Path $destRoot $relative
-        $destinationDir = Split-Path -Parent $destination
-        if (-not (Test-Path -LiteralPath $destinationDir)) {
-            New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
-        }
-        Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
-        $copied++
-    }
-
-    if ($copied -gt 0) {
-        Write-Host "Copied $copied bundled font file(s) to assets/fonts/ for offline CanvasKit text." -ForegroundColor DarkCyan
+    if (Test-Path -LiteralPath $sourceRoot) {
+        Write-Host "Skipping obsolete web/fonts copy (use pubspec fonts only)." -ForegroundColor DarkGray
     }
 }
 
@@ -225,5 +266,6 @@ function Invoke-KaraviFlutterWebNoCdnPostProcess {
 
     Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals -WebOutputDirectory $WebOutputDirectory
     Copy-KaraviFlutterWebBundledNotoFonts -WebOutputDirectory $WebOutputDirectory
+    Remove-KaraviFlutterWebDebugArtifacts -WebOutputDirectory $WebOutputDirectory
     Assert-KaraviFlutterWebOutputNoExternalCdn -WebOutputDirectory $WebOutputDirectory
 }

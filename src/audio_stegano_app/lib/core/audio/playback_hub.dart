@@ -47,6 +47,8 @@ final class PlaybackHub {
 
   bool hasSource(PlaybackSessionId id) => _engines[id]?.hasSource ?? false;
 
+  bool isPaused(PlaybackSessionId id) => _engines[id]?.isPaused ?? false;
+
   PlaybackSessionId? get activePlaying {
     for (final id in PlaybackSessionId.values) {
       if (isPlaying(id)) return id;

@@ -1,0 +1,29 @@
+---
+description: A/B listen — Pause/Stop live inside each Play card only while that side is playing
+globs: src/audio_stegano_app/**/embed_screen.dart,src/audio_stegano_desktop/**/EmbedView.*
+alwaysApply: false
+---
+
+# A/B listen — Pause/Stop inside each Play card
+
+## Rule (must)
+
+In the Embed **auditory comparison** panel (اصلی A / نهان‌نگاری‌شده B):
+
+1. **Placement:** Pause and Stop controls belong **inside the same card/frame as that side’s Play button** — not in a separate row under both cards.
+2. **Visibility — hidden until play:** Pause and Stop for a side are **not shown** until that side has started playback (or is paused mid-session).
+3. **Visibility — hide when finished:** When playback of that side **ends** (natural complete or Stop), Pause and Stop for that side **hide** again. Idle cards show Play only.
+4. **Scope per side:** Pause/Stop on card A control only the cover/original session; card B only the stego session (not a global row that always affects both).
+5. **While paused:** Keep Pause/Stop visible on that card until Stop or completion; Play may resume the same session.
+
+## Flutter / WPF
+
+- Flutter: transport icons in `_buildAbListenSideCard`; remove bottom Wrap of global pause/stop.
+- WPF: Pause/Stop buttons docked in `AbListenOriginalCard` / `AbListenStegoCard`; remove bottom `WrapPanel`; drive `Visibility` from `UpdatePlaybackButtons`.
+- On natural playback complete, clear/stop the session so controls hide (no stale “loaded” transport).
+
+## Forbidden
+
+- Global Pause/Stop row under A/B cards as the primary controls.
+- Showing Pause/Stop on a card that has never played / already finished.
+- Pause/Stop on A that only control B (or vice versa) when both are in-card.

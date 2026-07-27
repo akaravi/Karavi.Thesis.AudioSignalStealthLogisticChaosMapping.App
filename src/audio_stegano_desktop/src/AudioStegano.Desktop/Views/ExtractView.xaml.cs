@@ -90,9 +90,11 @@ public partial class ExtractView : UserControl
         PickLabel.Text = s.PickFile;
         ExtractLabel.Text = s.ExtractTab;
         ResultTitle.Text = s.ExtractedText;
+        ResultSubtitle.Text = s.ExtractSuccessSubtitle;
+        ResultPayloadTitle.Text = s.ExtractedText;
         CopyLabel.Text = s.Copy;
         PlayExtractedLabel.Text = s.PlayExtractedAudio;
-        SaveExtractedLabel.Text = s.SaveExtractedAudio;
+        ToolTipService.SetToolTip(SaveExtractedButton, s.SaveExtractedAudio);
         ToolTipService.SetToolTip(PlayButton, s.Play);
         ToolTipService.SetToolTip(PauseButton, s.Pause);
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
@@ -104,7 +106,7 @@ public partial class ExtractView : UserControl
 
     private void UpdateFabStates()
     {
-        var busy = BusyBar.Visibility == Visibility.Visible;
+        var busy = Window.GetWindow(this) is MainWindow mw && mw.IsGlobalBusy;
         NewExtractFab.IsEnabled = !busy;
     }
 
@@ -119,7 +121,7 @@ public partial class ExtractView : UserControl
 
     private void NewExtractFab_Click(object sender, RoutedEventArgs e)
     {
-        if (BusyBar.Visibility == Visibility.Visible) return;
+        if (Window.GetWindow(this) is MainWindow mw && mw.IsGlobalBusy) return;
         _hub.StopSessions(PlaybackHub.ExtractSessions);
         _loadedWav = null;
         _extractedAudio = null;
@@ -206,9 +208,11 @@ public partial class ExtractView : UserControl
 
     private void SetBusy(bool busy)
     {
-        BusyBar.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        BusyBar.Visibility = Visibility.Collapsed;
         PickButton.IsEnabled = !busy;
         ExtractButton.IsEnabled = !busy && _loadedWav is not null;
+        if (Window.GetWindow(this) is MainWindow main)
+            main.SetGlobalBusy(busy, busy ? ThemeManager.Strings.Processing : null);
         UpdateFabStates();
     }
 
@@ -285,14 +289,13 @@ public partial class ExtractView : UserControl
             ResultText.Visibility = Visibility.Collapsed;
             ResultText.Text = string.Empty;
             ShowExtractedImage(payload.ImageBytes);
-            ResultTitle.Text = s.ExtractedImage;
-            ResultHeaderIcon.Text = "\uE73E";
-            ResultPanel.Style = (Style)FindResource("ResultCard");
-            ResultTitle.Foreground = (Brush)FindResource("TextBrush");
+            ApplyExtractSuccessChrome(s.ExtractedImage);
             CopyButton.Visibility = Visibility.Collapsed;
             PlayExtractedButton.Visibility = Visibility.Collapsed;
             SaveExtractedButton.Visibility = Visibility.Visible;
-            SaveExtractedLabel.Text = s.SaveExtractedImage;
+            ToolTipService.SetToolTip(SaveExtractedButton, s.SaveExtractedImage);
+            ResultActionsPanel.Visibility = Visibility.Visible;
+            ResultPayloadBlock.Visibility = Visibility.Visible;
             ResultPanel.Visibility = Visibility.Visible;
             OnExtractSucceeded();
             SessionLog.Write($"Extract: image bytes={payload.ImageBytes.Length}");
@@ -306,16 +309,15 @@ public partial class ExtractView : UserControl
             StatusText.Text = string.Empty;
             ResultText.Visibility = Visibility.Visible;
             ResultText.Text = s.ExtractedAudio;
-            ResultTitle.Text = s.ExtractedAudio;
             ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text, forceLatinLtr: true);
-            ResultHeaderIcon.Text = "\uE73E";
-            ResultPanel.Style = (Style)FindResource("ResultCard");
-            ResultTitle.Foreground = (Brush)FindResource("TextBrush");
+            ApplyExtractSuccessChrome(s.ExtractedAudio);
             ResultText.Foreground = (Brush)FindResource("TextBrush");
             CopyButton.Visibility = Visibility.Collapsed;
             PlayExtractedButton.Visibility = Visibility.Visible;
             SaveExtractedButton.Visibility = Visibility.Visible;
-            SaveExtractedLabel.Text = s.SaveExtractedAudio;
+            ToolTipService.SetToolTip(SaveExtractedButton, s.SaveExtractedAudio);
+            ResultActionsPanel.Visibility = Visibility.Visible;
+            ResultPayloadBlock.Visibility = Visibility.Visible;
             ResultPanel.Visibility = Visibility.Visible;
             OnExtractSucceeded();
             SessionLog.Write($"Extract: audio samples={payload.Audio.Samples.Length}");
@@ -342,18 +344,33 @@ public partial class ExtractView : UserControl
         StatusText.Text = string.Empty;
         ResultText.Visibility = Visibility.Visible;
         ResultText.Text = payload.Text;
-        ResultTitle.Text = s.ExtractedText;
         ContentTextDirectionHelper.ApplyTo(ResultText, payload.Text);
-        ResultHeaderIcon.Text = "\uE73E";
-        ResultPanel.Style = (Style)FindResource("ResultCard");
-        ResultTitle.Foreground = (Brush)FindResource("TextBrush");
+        ApplyExtractSuccessChrome(s.ExtractedText);
         ResultText.Foreground = (Brush)FindResource("TextBrush");
         CopyButton.Visibility = Visibility.Visible;
         PlayExtractedButton.Visibility = Visibility.Collapsed;
         SaveExtractedButton.Visibility = Visibility.Collapsed;
+        ResultActionsPanel.Visibility = Visibility.Visible;
+        ResultPayloadBlock.Visibility = Visibility.Visible;
         ResultPanel.Visibility = Visibility.Visible;
         OnExtractSucceeded();
         SessionLog.Write($"Extract: success length={payload.Text.Length}");
+    }
+
+    private void ApplyExtractSuccessChrome(string payloadTitle)
+    {
+        var s = ThemeManager.Strings;
+        ResultTitle.Text = s.OperationSuccess;
+        ResultSubtitle.Text = s.ExtractSuccessSubtitle;
+        ResultSubtitle.Visibility = Visibility.Visible;
+        ResultPayloadTitle.Text = payloadTitle;
+        ResultHeaderIcon.Text = "\uE73E";
+        ResultHeaderIcon.Foreground = (Brush)FindResource("PrimaryBrush");
+        ResultPanel.Style = (Style)FindResource("ResultCard");
+        ResultPanel.ClearValue(BackgroundProperty);
+        ResultTitle.Foreground = (Brush)FindResource("TextBrush");
+        ResultPayloadTitle.Foreground = (Brush)FindResource("TextBrush");
+        ResultPayloadBlock.Background = (Brush)FindResource("SurfaceVariantBrush");
     }
 
     private void OnExtractSucceeded()
@@ -405,16 +422,25 @@ public partial class ExtractView : UserControl
 
     private void ShowExtractFailure(string body)
     {
+        var s = ThemeManager.Strings;
         _extractedAudio = null;
         ClearExtractedImage();
         ResultText.Visibility = Visibility.Visible;
         ResultText.Text = body;
         ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text);
         ResultHeaderIcon.Text = "\uE783";
+        ResultHeaderIcon.Foreground = (Brush)FindResource("OnErrorContainerBrush");
         ResultPanel.Style = (Style)FindResource("MaterialCard");
         ResultPanel.Background = (Brush)FindResource("ErrorContainerBrush");
+        ResultTitle.Text = s.ExtractedText;
         ResultTitle.Foreground = (Brush)FindResource("OnErrorContainerBrush");
+        ResultSubtitle.Visibility = Visibility.Collapsed;
         ResultText.Foreground = (Brush)FindResource("OnErrorContainerBrush");
+        ResultPayloadTitle.Text = s.ExtractedText;
+        ResultPayloadTitle.Foreground = (Brush)FindResource("OnErrorContainerBrush");
+        ResultActionsPanel.Visibility = Visibility.Collapsed;
+        ResultPayloadBlock.Visibility = Visibility.Visible;
+        ResultPayloadBlock.ClearValue(BackgroundProperty);
         CopyButton.Visibility = Visibility.Collapsed;
         PlayExtractedButton.Visibility = Visibility.Collapsed;
         SaveExtractedButton.Visibility = Visibility.Collapsed;

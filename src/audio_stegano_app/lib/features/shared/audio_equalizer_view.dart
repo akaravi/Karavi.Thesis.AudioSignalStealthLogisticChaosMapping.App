@@ -28,6 +28,7 @@ class AudioEqualizerView extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final uiTextDirection = Directionality.of(context);
     final normalized = _normalizeBands(bands);
     final hasSignal = active && normalized.any((v) => v > 0.05);
     final displayBands = hasSignal
@@ -72,37 +73,60 @@ class AudioEqualizerView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.graphic_eq_rounded,
-                  size: 16,
-                  color: active ? scheme.primary : scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  AppStrings.of(context).audioLevel,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+            // Physical LTR: volume % left · label center · timer right (locale-independent).
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(
+                children: [
+                  if (active)
+                    _MetricBadge(
+                      icon: Icons.volume_up_rounded,
+                      label: '$levelPercent%',
+                      color: _levelBadgeColor(scheme, peak),
+                    )
+                  else
+                    const SizedBox(width: 48),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.graphic_eq_rounded,
+                          size: 16,
+                          color: active
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Directionality(
+                            textDirection: uiTextDirection,
+                            child: Text(
+                              AppStrings.of(context).audioLevel,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Spacer(),
-                if (recordingElapsed != null) ...[
-                  _MetricBadge(
-                    icon: Icons.timer_outlined,
-                    label: _formatDuration(recordingElapsed!),
-                    color: scheme.primary,
-                  ),
-                  const SizedBox(width: 8),
+                  if (recordingElapsed != null)
+                    _MetricBadge(
+                      icon: Icons.timer_outlined,
+                      label: _formatDuration(recordingElapsed!),
+                      color: scheme.primary,
+                    )
+                  else
+                    const SizedBox(width: 48),
                 ],
-                if (active)
-                  _MetricBadge(
-                    icon: Icons.volume_up_rounded,
-                    label: '$levelPercent%',
-                    color: _levelBadgeColor(scheme, peak),
-                  ),
-              ],
+              ),
             ),
             const SizedBox(height: 6),
             Expanded(

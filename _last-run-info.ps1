@@ -104,7 +104,13 @@ function Write-KaraviLastRunInfoHtml {
                         default { '' }
                     }
                 }
-                [void]$sb.AppendLine(("            <td{0}>{1}</td>" -f $class, (ConvertTo-KaraviHtmlEncoded ([string]$val)))
+                $raw = [string]$val
+                $cellHtml = ConvertTo-KaraviHtmlEncoded $raw
+                if ($key -eq 'Address' -and $raw -match '^https?://') {
+                    $href = ConvertTo-KaraviHtmlEncoded $raw
+                    $cellHtml = "<a href=""$href"" target=""_blank"" rel=""noopener noreferrer"">$cellHtml</a>"
+                }
+                [void]$sb.AppendLine(("            <td{0}>{1}</td>" -f $class, $cellHtml)
                 )
             }
             [void]$sb.AppendLine('          </tr>')

@@ -11,6 +11,7 @@ public partial class MainWindow : Window
     private const int TabCount = 4;
     private readonly RadioButton[] _navButtons = new RadioButton[TabCount];
     private int _selectedIndex;
+    private bool _globalBusy;
 
     public MainWindow()
     {
@@ -106,6 +107,7 @@ public partial class MainWindow : Window
 
     private void SelectTab(int index)
     {
+        if (_globalBusy) return;
         if (index != _selectedIndex)
         {
             if (_selectedIndex == 0)
@@ -129,6 +131,19 @@ public partial class MainWindow : Window
             if (child is RadioButton rb)
                 rb.IsChecked = railIndex++ == index;
         }
+    }
+
+    public bool IsGlobalBusy => _globalBusy;
+
+    public void SetGlobalBusy(bool busy, string? message = null)
+    {
+        _globalBusy = busy;
+        GlobalBusyOverlay.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        GlobalBusyMessage.Text = string.IsNullOrWhiteSpace(message)
+            ? ThemeManager.Strings.Processing
+            : message;
+        BottomNav.IsHitTestVisible = !busy;
+        NavRail.IsHitTestVisible = !busy;
     }
 
     private void UpdateWideLayout()

@@ -49,5 +49,23 @@
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8,4">
       <UniformGrid x:Name="BottomNavGrid" Rows="1" Columns="4" />
     </Border>
+
+    <!-- Full-window blocking busy overlay -->
+    <Border x:Name="GlobalBusyOverlay" Grid.RowSpan="3" Visibility="Collapsed"
+            Background="#7A000000" Panel.ZIndex="200" IsHitTestVisible="True">
+      <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+              Background="{DynamicResource SurfaceBrush}" CornerRadius="20"
+              Padding="28,24" MinWidth="220" MaxWidth="320"
+              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <StackPanel>
+          <ProgressBar Width="40" Height="40" IsIndeterminate="True"
+                       HorizontalAlignment="Center" />
+          <TextBlock x:Name="GlobalBusyMessage" Margin="0,16,0,0"
+                     TextAlignment="Center" TextWrapping="Wrap"
+                     FontSize="15" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextBrush}" />
+        </StackPanel>
+      </Border>
+    </Border>
   </Grid>
 </Window>

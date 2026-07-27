@@ -78,24 +78,29 @@ public partial class EmbedView : UserControl
         RefreshRecordButtonLabels();
         LoadFileBtn.Label = s.LoadAudioFile;
         LoadFileBtn.RefreshVisual();
-        ToolTipService.SetToolTip(PlayButton, s.Play);
-        ToolTipService.SetToolTip(PauseButton, s.Pause);
-        ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
+        ToolTipService.SetToolTip(PauseCoverButton, s.Pause);
+        ToolTipService.SetToolTip(StopCoverButton, s.StopPlayback);
+        ToolTipService.SetToolTip(PauseStegoButton, s.Pause);
+        ToolTipService.SetToolTip(StopStegoButton, s.StopPlayback);
         ToolTipService.SetToolTip(CopyMessageButton, s.Copy);
-        SaveLabel.Text = s.SaveStego;
-        ShareLabel.Text = s.ShareStego;
-        VerifyLabel.Text = s.Verify;
+        ToolTipService.SetToolTip(VerifyButton, s.Verify);
+        ToolTipService.SetToolTip(SaveButton, s.SaveStego);
+        ToolTipService.SetToolTip(ShareButton, s.ShareStego);
+        ToolTipService.SetToolTip(PlayCoverButton, s.PlayOriginalCover);
+        ToolTipService.SetToolTip(PlayStegoButton, s.PlayStegoAudio);
+        ToolTipService.SetToolTip(PlayOriginalPayloadButton, s.PlayOriginalPayloadAudio);
+        ToolTipService.SetToolTip(PlayRecoveredButton, s.PlayExtractedAudio);
+        ToolTipService.SetToolTip(CopyOriginalButton, s.Copy);
+        ToolTipService.SetToolTip(CopyRecoveredButton, s.Copy);
+        ToolTipService.SetToolTip(SaveRecoveredButton, s.SaveExtractedAudio);
+        ResultSubtitle.Text = s.OperationSuccessSubtitle;
+        AnalysisSectionTitle.Text = s.AnalysisSectionTitle;
         AbListenTitle.Text = s.VerifyAbListenTitle;
-        PlayCoverLabel.Text = s.PlayOriginalCover;
-        PlayStegoLabel.Text = s.PlayStegoAudio;
+        AbListenOriginalSideTitle.Text = s.AbListenOriginalShort;
+        AbListenStegoSideTitle.Text = s.AbListenStegoShort;
         RecoveredPayloadTitle.Text = s.VerifyRecoveredTitle;
         OriginalPayloadHeading.Text = s.OriginalHiddenPayload;
         RecoveredPayloadHeading.Text = s.RecoveredPayloadLabel;
-        PlayOriginalPayloadLabel.Text = s.PlayOriginalPayloadAudio;
-        PlayRecoveredLabel.Text = s.PlayExtractedAudio;
-        SaveRecoveredLabel.Text = s.SaveExtractedAudio;
-        CopyOriginalLabel.Text = s.Copy;
-        CopyRecoveredLabel.Text = s.Copy;
         MetricsTapHint.Text = s.MetricHelpTapHint;
         ToolTipService.SetToolTip(NewEmbedFab, s.EmbedNew);
         ToolTipService.SetToolTip(HelpFab, s.HelpTooltip);
@@ -289,17 +294,74 @@ public partial class EmbedView : UserControl
         SaveButton.IsEnabled = enabled;
         ShareButton.IsEnabled = enabled;
         VerifyButton.IsEnabled = enabled;
-        CopyMessageButton.IsEnabled = enabled && !string.IsNullOrWhiteSpace(MessageTextBox.Text);
+        CopyMessageButton.IsEnabled = enabled && !_audioPayloadMode && !_imagePayloadMode &&
+                                      !string.IsNullOrWhiteSpace(MessageTextBox.Text);
+        CopyMessageButton.Visibility = (!_audioPayloadMode && !_imagePayloadMode)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         if (!enabled || _verifying)
         {
-            PlayButton.IsEnabled = false;
-            PauseButton.IsEnabled = false;
-            StopPlaybackButton.IsEnabled = false;
+            PauseCoverButton.Visibility = Visibility.Collapsed;
+            StopCoverButton.Visibility = Visibility.Collapsed;
+            PauseStegoButton.Visibility = Visibility.Collapsed;
+            StopStegoButton.Visibility = Visibility.Collapsed;
             PlayCoverButton.IsEnabled = false;
             PlayStegoButton.IsEnabled = false;
         }
         else
             UpdatePlaybackButtons();
+    }
+
+    private void RecoveredCompareGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        const double breakpoint = 560;
+        var narrow = e.NewSize.Width > 0 && e.NewSize.Width < breakpoint;
+        if (narrow)
+        {
+            RecoveredCompareColGap.Width = new GridLength(0);
+            RecoveredCompareCol1.Width = new GridLength(0);
+            RecoveredCompareRowGap.Height = new GridLength(16);
+            Grid.SetColumn(OriginalPayloadColumn, 0);
+            Grid.SetRow(OriginalPayloadColumn, 0);
+            Grid.SetColumn(RecoveredPayloadColumn, 0);
+            Grid.SetRow(RecoveredPayloadColumn, 2);
+        }
+        else
+        {
+            RecoveredCompareColGap.Width = new GridLength(16);
+            RecoveredCompareCol1.Width = new GridLength(1, GridUnitType.Star);
+            RecoveredCompareRowGap.Height = new GridLength(0);
+            Grid.SetColumn(OriginalPayloadColumn, 0);
+            Grid.SetRow(OriginalPayloadColumn, 0);
+            Grid.SetColumn(RecoveredPayloadColumn, 2);
+            Grid.SetRow(RecoveredPayloadColumn, 0);
+        }
+    }
+
+    private void AbListenCompareGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        const double breakpoint = 560;
+        var narrow = e.NewSize.Width > 0 && e.NewSize.Width < breakpoint;
+        if (narrow)
+        {
+            AbListenColGap.Width = new GridLength(0);
+            AbListenCol1.Width = new GridLength(0);
+            AbListenRowGap.Height = new GridLength(10);
+            Grid.SetColumn(AbListenOriginalCard, 0);
+            Grid.SetRow(AbListenOriginalCard, 0);
+            Grid.SetColumn(AbListenStegoCard, 0);
+            Grid.SetRow(AbListenStegoCard, 2);
+        }
+        else
+        {
+            AbListenColGap.Width = new GridLength(10);
+            AbListenCol1.Width = new GridLength(1, GridUnitType.Star);
+            AbListenRowGap.Height = new GridLength(0);
+            Grid.SetColumn(AbListenOriginalCard, 0);
+            Grid.SetRow(AbListenOriginalCard, 0);
+            Grid.SetColumn(AbListenStegoCard, 2);
+            Grid.SetRow(AbListenStegoCard, 0);
+        }
     }
 
     private void CopyMessageButton_Click(object sender, RoutedEventArgs e)
@@ -419,7 +481,7 @@ public partial class EmbedView : UserControl
 
     private void ReleaseEmbedInteractionLocks()
     {
-        BusyBar.Visibility = Visibility.Collapsed;
+        SetProcessBusy(false);
         RecordBtn.IsEnabled = true;
         LoadFileBtn.IsEnabled = true;
         RecordBtn.IsRecording = false;
@@ -428,6 +490,13 @@ public partial class EmbedView : UserControl
         _busy = false;
         StatusText.Text = string.Empty;
         UpdateFabStates();
+    }
+
+    private void SetProcessBusy(bool busy, string? message = null)
+    {
+        BusyBar.Visibility = Visibility.Collapsed;
+        if (Window.GetWindow(this) is MainWindow main)
+            main.SetGlobalBusy(busy, message);
     }
 
     private void MessageTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -511,16 +580,27 @@ public partial class EmbedView : UserControl
         }
         var coverPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedCover);
         var stegoPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedStego);
-        var abPlaying = coverPlaying || stegoPlaying;
-        var abLoaded = _hub.HasSource(PlaybackSessionId.EmbedCover) || _hub.HasSource(PlaybackSessionId.EmbedStego);
         var coverPaused = _hub.IsPaused(PlaybackSessionId.EmbedCover);
         var stegoPaused = _hub.IsPaused(PlaybackSessionId.EmbedStego);
+        var coverTransport = coverPlaying || coverPaused;
+        var stegoTransport = stegoPlaying || stegoPaused;
         var canInteract = !_verifying && _stego is not null;
-        PlayButton.IsEnabled = canInteract && !stegoPlaying;
-        PauseButton.IsEnabled = canInteract && abPlaying;
-        StopPlaybackButton.IsEnabled = canInteract && abLoaded && (abPlaying || coverPaused || stegoPaused);
+        PauseCoverButton.Visibility = canInteract && coverTransport ? Visibility.Visible : Visibility.Collapsed;
+        StopCoverButton.Visibility = canInteract && coverTransport ? Visibility.Visible : Visibility.Collapsed;
+        PauseStegoButton.Visibility = canInteract && stegoTransport ? Visibility.Visible : Visibility.Collapsed;
+        StopStegoButton.Visibility = canInteract && stegoTransport ? Visibility.Visible : Visibility.Collapsed;
+        PauseCoverButton.IsEnabled = canInteract && coverPlaying;
+        PauseStegoButton.IsEnabled = canInteract && stegoPlaying;
+        StopCoverButton.IsEnabled = canInteract && coverTransport;
+        StopStegoButton.IsEnabled = canInteract && stegoTransport;
         PlayCoverButton.IsEnabled = canInteract && _cover is not null && (!coverPlaying || coverPaused);
         PlayStegoButton.IsEnabled = canInteract && (!stegoPlaying || stegoPaused);
+        AbListenOriginalCard.BorderThickness = new Thickness(coverPlaying ? 2 : 1);
+        AbListenStegoCard.BorderThickness = new Thickness(stegoPlaying ? 2 : 1);
+        AbListenOriginalCard.BorderBrush = coverPlaying
+            ? (Brush)FindResource("PrimaryBrush")
+            : (Brush)FindResource("BorderBrush");
+        AbListenStegoCard.BorderBrush = (Brush)FindResource("PrimaryBrush");
     }
 
     private async void RecordBtn_Click(object sender, RoutedEventArgs e)
@@ -539,8 +619,8 @@ public partial class EmbedView : UserControl
             }
 
             _busy = true;
-            BusyBar.Visibility = Visibility.Visible;
             StatusText.Text = s.Processing;
+            SetProcessBusy(true, s.Processing);
             RecordBtn.IsEnabled = false;
 
             var messageText = MessageTextBox.Text.Trim();
@@ -674,6 +754,19 @@ public partial class EmbedView : UserControl
         _recordTimer.Tick += (_, _) =>
         {
             Equalizer.RecordingElapsed = DateTime.UtcNow - _recordStartUtc;
+            if (_recordingPayload &&
+                AppState.Settings.DefaultFixedMessageBitLimit &&
+                IsPayloadCapacityFull())
+            {
+                _recordTimer?.Stop();
+                // Auto-stop when fixed capacity is filled (mirrors Flutter).
+                _ = Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (_capture.IsRecording && _recordingPayload)
+                        RecordBtn_Click(RecordBtn, new RoutedEventArgs());
+                }));
+                return;
+            }
             UpdateCoverMinProgressUi();
         };
         _recordTimer.Start();
@@ -688,6 +781,22 @@ public partial class EmbedView : UserControl
         CoverMinProgressPanel.Visibility = Visibility.Collapsed;
         CoverMinProgressBar.Value = 0;
         CoverMinProgressText.Text = string.Empty;
+    }
+
+    private int? PayloadCapacityBudgetBits()
+    {
+        if (!_recordingPayload) return null;
+        if (!AppState.Settings.DefaultFixedMessageBitLimit) return null;
+        var bits = AppConfig.Current.DefaultFixedMessageBitLength;
+        return bits > 0 ? bits : null;
+    }
+
+    private bool IsPayloadCapacityFull()
+    {
+        var budget = PayloadCapacityBudgetBits();
+        if (budget is null) return false;
+        var maxSamples = PayloadAudioDefaults.MaxPcmSamplesForBitBudget(budget.Value);
+        return maxSamples > 0 && _capture.BufferedMonoSampleCount >= maxSamples;
     }
 
     private int? CoverRequiredBits()
@@ -739,11 +848,50 @@ public partial class EmbedView : UserControl
                 _capture.BufferedMonoSampleCount, bits.Value, rate).TotalSeconds));
     }
 
+    private int PayloadCapacityRemainingSeconds()
+    {
+        var budget = PayloadCapacityBudgetBits();
+        if (budget is null) return 0;
+        var maxSamples = PayloadAudioDefaults.MaxPcmSamplesForBitBudget(budget.Value);
+        var need = maxSamples - _capture.BufferedMonoSampleCount;
+        if (need <= 0) return 0;
+        var rate = _capture.SampleRate > 0 ? _capture.SampleRate : PayloadAudioDefaults.SampleRate;
+        return Math.Max(1, (int)Math.Ceiling(need / (double)rate));
+    }
+
     private void UpdateCoverMinProgressUi()
     {
         if (!Dispatcher.CheckAccess())
         {
             Dispatcher.BeginInvoke(UpdateCoverMinProgressUi);
+            return;
+        }
+
+        var s = ThemeManager.Strings;
+        var buffered = _capture.BufferedMonoSampleCount;
+
+        // Payload (secret) voice: capacity fill bar when fixed budget is on.
+        var payloadBudget = PayloadCapacityBudgetBits();
+        if (_capture.IsRecording && _recordingPayload && payloadBudget is not null)
+        {
+            var maxSamples = PayloadAudioDefaults.MaxPcmSamplesForBitBudget(payloadBudget.Value);
+            var progress = maxSamples <= 0
+                ? 1.0
+                : Math.Clamp(buffered / (double)maxSamples, 0, 1);
+            CoverMinProgressPanel.Visibility = Visibility.Visible;
+            CoverMinProgressBar.Value = progress;
+            if (IsPayloadCapacityFull())
+            {
+                CoverMinProgressText.Text = s.PayloadRecordCapacityFull;
+                StatusText.Text = s.PayloadRecordCapacityFull;
+            }
+            else
+            {
+                var remain = PayloadCapacityRemainingSeconds();
+                CoverMinProgressText.Text =
+                    $"{s.PayloadRecordCapacityProgress} {s.PayloadRecordCapacityRemaining(remain)}";
+                StatusText.Text = CoverMinProgressText.Text;
+            }
             return;
         }
 
@@ -754,11 +902,9 @@ public partial class EmbedView : UserControl
             return;
         }
 
-        var s = ThemeManager.Strings;
-        var buffered = _capture.BufferedMonoSampleCount;
-        var progress = CoverRecordBudget.ProgressFromSamples(buffered, bits.Value);
+        var coverProgress = CoverRecordBudget.ProgressFromSamples(buffered, bits.Value);
         CoverMinProgressPanel.Visibility = Visibility.Visible;
-        CoverMinProgressBar.Value = progress;
+        CoverMinProgressBar.Value = coverProgress;
         if (CoverRecordBudget.SamplesSatisfied(buffered, bits.Value))
         {
             CoverMinProgressText.Text = s.RecordingMinReached;
@@ -812,8 +958,8 @@ public partial class EmbedView : UserControl
         }
 
         _busy = true;
-        BusyBar.Visibility = Visibility.Visible;
         StatusText.Text = s.Processing;
+        SetProcessBusy(true, s.Processing);
         LoadFileBtn.IsEnabled = false;
         RecordBtn.IsEnabled = false;
         UpdateFabStates();
@@ -1034,6 +1180,8 @@ public partial class EmbedView : UserControl
 
         ResultPanel.Visibility = Visibility.Visible;
         ResultTitle.Text = s.OperationSuccess;
+        ResultSubtitle.Text = s.OperationSuccessSubtitle;
+        AnalysisSectionTitle.Text = s.AnalysisSectionTitle;
         CompareChartTitle.Text = s.CompareWaveformTitle;
         CompareChart.SetLegends(s.CoverWaveLegend, s.StegoWaveLegend);
         if (cover is not null)
@@ -1112,9 +1260,6 @@ public partial class EmbedView : UserControl
             MessageBoxImage.Information);
     }
 
-    private void PlayButton_Click(object sender, RoutedEventArgs e) =>
-        PlayStegoButton_Click(sender, e);
-
     private void PlayCoverButton_Click(object sender, RoutedEventArgs e)
     {
         if (_cover is null) return;
@@ -1129,15 +1274,27 @@ public partial class EmbedView : UserControl
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 
-    private void PauseButton_Click(object sender, RoutedEventArgs e)
+    private void PauseCoverButton_Click(object sender, RoutedEventArgs e)
     {
-        try { _hub.PauseAbSessions(); }
+        try { _hub.Pause(PlaybackSessionId.EmbedCover); }
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 
-    private void StopPlaybackButton_Click(object sender, RoutedEventArgs e)
+    private void PauseStegoButton_Click(object sender, RoutedEventArgs e)
     {
-        try { _hub.StopAbSessions(); }
+        try { _hub.Pause(PlaybackSessionId.EmbedStego); }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void StopCoverButton_Click(object sender, RoutedEventArgs e)
+    {
+        try { _hub.Stop(PlaybackSessionId.EmbedCover); }
+        catch (Exception ex) { StatusText.Text = ex.Message; }
+    }
+
+    private void StopStegoButton_Click(object sender, RoutedEventArgs e)
+    {
+        try { _hub.Stop(PlaybackSessionId.EmbedStego); }
         catch (Exception ex) { StatusText.Text = ex.Message; }
     }
 
@@ -1166,6 +1323,8 @@ public partial class EmbedView : UserControl
         _verifying = true;
         UpdateFabStates();
         UpdateResultActionButtons();
+        if (!autoAfterEmbed)
+            SetProcessBusy(true, s.Verifying);
         try { _hub.Stop(PlaybackSessionId.EmbedPayloadOriginal); _hub.Stop(PlaybackSessionId.EmbedPayloadRecovered); }
         catch { /* ignore */ }
         ClearRecoveredPayloadUi();
@@ -1192,6 +1351,7 @@ public partial class EmbedView : UserControl
         finally
         {
             _verifying = false;
+            SetProcessBusy(false);
             VerifyProgress.Visibility = Visibility.Collapsed;
             VerifyIcon.Visibility = Visibility.Visible;
             UpdateFabStates();
@@ -1315,7 +1475,7 @@ public partial class EmbedView : UserControl
             CopyOriginalButton.Visibility = Visibility.Collapsed;
             CopyRecoveredButton.Visibility = Visibility.Collapsed;
             SaveRecoveredButton.Visibility = Visibility.Visible;
-            SaveRecoveredLabel.Text = s.SaveExtractedImage;
+            ToolTipService.SetToolTip(SaveRecoveredButton, s.SaveExtractedImage);
 
             OriginalImage.Source = _payloadImageBytes is not null
                 ? LoadBitmap(_payloadImageBytes)
@@ -1345,9 +1505,9 @@ public partial class EmbedView : UserControl
                 _payloadAudio is not null ? Visibility.Visible : Visibility.Collapsed;
             PlayRecoveredButton.Visibility = Visibility.Visible;
             SaveRecoveredButton.Visibility = Visibility.Visible;
-            SaveRecoveredLabel.Text = s.SaveExtractedAudio;
-            PlayOriginalPayloadLabel.Text = s.PlayOriginalPayloadAudio;
-            PlayRecoveredLabel.Text = s.PlayExtractedAudio;
+            ToolTipService.SetToolTip(SaveRecoveredButton, s.SaveExtractedAudio);
+            ToolTipService.SetToolTip(PlayOriginalPayloadButton, s.PlayOriginalPayloadAudio);
+            ToolTipService.SetToolTip(PlayRecoveredButton, s.PlayExtractedAudio);
             UpdateRecoveredPlayButton();
             return;
         }
@@ -1366,13 +1526,13 @@ public partial class EmbedView : UserControl
         OriginalTextBox.Text = originalText;
         ContentTextDirectionHelper.ApplyTo(OriginalTextBox, originalText);
         CopyOriginalButton.Visibility = Visibility.Visible;
-        CopyOriginalLabel.Text = s.Copy;
+        ToolTipService.SetToolTip(CopyOriginalButton, s.Copy);
 
         RecoveredTextBox.Visibility = Visibility.Visible;
         RecoveredTextBox.Text = _recoveredText;
         ContentTextDirectionHelper.ApplyTo(RecoveredTextBox, _recoveredText);
         CopyRecoveredButton.Visibility = Visibility.Visible;
-        CopyRecoveredLabel.Text = s.Copy;
+        ToolTipService.SetToolTip(CopyRecoveredButton, s.Copy);
     }
 
     private void UpdateRecoveredPlayButton()
@@ -1388,15 +1548,17 @@ public partial class EmbedView : UserControl
         var recoveredPlaying = _hub.IsPlaying(PlaybackSessionId.EmbedPayloadRecovered);
         if (PlayOriginalPayloadButton.Visibility == Visibility.Visible)
         {
-            PlayOriginalPayloadLabel.Text =
-                originalPlaying ? s.Pause : s.PlayOriginalPayloadAudio;
+            ToolTipService.SetToolTip(
+                PlayOriginalPayloadButton,
+                originalPlaying ? s.Pause : s.PlayOriginalPayloadAudio);
             PlayOriginalPayloadButton.IsEnabled = _payloadAudio is not null && !_verifying;
         }
 
         if (PlayRecoveredButton.Visibility == Visibility.Visible)
         {
-            PlayRecoveredLabel.Text =
-                recoveredPlaying ? s.Pause : s.PlayExtractedAudio;
+            ToolTipService.SetToolTip(
+                PlayRecoveredButton,
+                recoveredPlaying ? s.Pause : s.PlayExtractedAudio);
             PlayRecoveredButton.IsEnabled = _recoveredAudio is not null && !_verifying;
         }
     }

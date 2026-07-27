@@ -1,0 +1,49 @@
+---
+description: Equalizer badge layout (volume left, timer right) and recording capacity progress bars for Embed
+globs: src/audio_stegano_app/**/*equalizer*,src/audio_stegano_app/**/embed_screen.dart,src/audio_stegano_desktop/**/EqualizerControl.*,src/audio_stegano_desktop/**/EmbedView.*
+alwaysApply: false
+---
+
+# Equalizer badges + recording capacity bars (Embed)
+
+## Equalizer header badges (must)
+
+Physical screen positions — **independent of UI locale RTL/LTR**:
+
+| Side | Badge |
+|------|--------|
+| **Left** | Volume / level % (شدت / سطح صدا) |
+| **Right** | Recording timer (`mm:ss`) |
+
+- Do **not** cluster both badges in one LTR group that lands on the same edge in RTL.
+- Title/label («سطح صدا») may sit in the center (or beside the graphic-eq icon); never push the timer off the right edge.
+- Flutter: force header row `Directionality(textDirection: ltr)` with `[volume] · Expanded(label) · [timer]`.
+- WPF: `Grid` three columns — left volume, center label, right timer (`FlowDirection=LeftToRight` on the badge row).
+
+## Cover (host) recording minimum bar (must)
+
+While recording the **cover / host** audio for steganography, show a bottom progress bar toward the **minimum** samples/bits needed:
+
+| Settings `defaultFixedMessageBitLimit` | Required bits source |
+|----------------------------------------|----------------------|
+| **Checked (on)** | Fixed deploy budget (`defaultFixedMessageBitLength`) |
+| **Unchecked (off)** | Live payload size (text / image / payload-audio bits via `PayloadEnvelope`) |
+
+Bar + remaining-seconds copy must **recompute** when the checkbox state or payload size changes. Gate stop until minimum satisfied (`CoverRecordBudget`).
+
+## Payload (secret) voice recording capacity bar (must)
+
+While recording the **payload audio that will be hidden** (`_recordingPayload` / secret voice):
+
+| Settings `defaultFixedMessageBitLimit` | UI |
+|----------------------------------------|-----|
+| **Checked (on)** and budget > 0 | Show a bottom progress bar filling toward **max capacity** for that bit budget (`PayloadAudioDefaults.maxPcmSamplesForBitBudget` / max duration). User sees remaining capacity visually — same visual pattern as the cover min bar. Auto-stop (or hard-cap) when budget is reached. |
+| **Unchecked (off)** | No fixed capacity bar on payload recording; cover min bar later uses **actual** payload bit length. |
+
+Reuse the same progress panel styling as the cover min bar (height ~10, caption under bar). i18n: fa first, then en/ar/fr.
+
+## Completion check
+
+- FA locale: volume badge physical left, timer physical right while recording.
+- Fixed-capacity ON → payload record shows filling capacity bar.
+- Fixed-capacity OFF → cover min bar target tracks live payload bits; no false fixed payload capacity bar.

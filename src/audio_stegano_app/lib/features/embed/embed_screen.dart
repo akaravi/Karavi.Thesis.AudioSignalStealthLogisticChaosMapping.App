@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../app/app_config_provider.dart';
 import '../../app/app_strings.dart';
+import '../../app/busy_overlay_provider.dart';
 import '../../app/metric_help_strings.dart';
 import '../../core/io/native_file.dart';
 import '../../app/session_log.dart';
@@ -140,7 +141,35 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   }
 
   @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _publishAppBusyOverlay();
+  }
+
+  void _publishAppBusyOverlay() {
+    if (!mounted) return;
+    final s = AppStrings.of(context);
+    final String? message;
+    if (_verifying) {
+      message = s.verifying;
+    } else if (_processing) {
+      message = s.processing;
+    } else {
+      message = null;
+    }
+    final controller = ref.read(appBusyMessageProvider.notifier);
+    if (ref.read(appBusyMessageProvider) != message) {
+      if (message == null) {
+        controller.clear();
+      } else {
+        controller.show(message);
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    ref.read(appBusyMessageProvider.notifier).clear();
     _recordTickTimer?.cancel();
     _stateSub?.cancel();
     _recordSpectrumSub?.cancel();
@@ -217,19 +246,31 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     _recordSpectrumSub = sub;
     _recordStartedAt = DateTime.now();
     _recordTickTimer?.cancel();
-    _recordTickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _recordTickTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
       if (!mounted || !_recorder.isRecording) return;
       final settings = ref.read(settingsProvider);
       if (settings.defaultFixedMessageBitLimit) {
         final budget = _settingsBitBudget();
-        final maxDur = PayloadAudioDefaults.maxDurationForBitBudget(budget);
-        final elapsed = _recordingElapsed;
-        if (elapsed != null && elapsed >= maxDur) {
+        final maxSamples =
+            PayloadAudioDefaults.maxPcmSamplesForBitBudget(budget);
+        if (maxSamples > 0 &&
+            _recorder.bufferedMonoSampleCount >= maxSamples) {
           unawaited(_stopPayloadRecording());
           return;
         }
       }
-      setState(() {});
+      setState(() {
+        if (_payloadCapacityBudgetBits != null) {
+          final s = AppStrings.of(context);
+          if (_payloadRecordCapacitySatisfied) {
+            _statusMessage = s.payloadRecordCapacityFull;
+          } else {
+            final remain = _payloadRecordCapacityRemainingSeconds;
+            _statusMessage =
+                '${s.payloadRecordCapacityProgress} ${s.payloadRecordCapacityRemaining(remain)}';
+          }
+        }
+      });
     });
     setState(() {
       _recordingPayload = true;
@@ -239,7 +280,14 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _result = null;
       _verifyStatus = null;
       _verifyOk = null;
-      _statusMessage = s.recording;
+      final budgetBits = _payloadCapacityBudgetBits;
+      if (budgetBits != null) {
+        final remain = _payloadNeedSecondsForBudget(budgetBits);
+        _statusMessage =
+            '${s.payloadRecordCapacityProgress} ${s.payloadRecordCapacityRemaining(remain)}';
+      } else {
+        _statusMessage = s.recording;
+      }
     });
   }
 
@@ -450,6 +498,58 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
           ? _recorder.currentSampleRate
           : CoverRecordBudget.coverSampleRate,
     ).inSeconds.clamp(1, 3600);
+  }
+
+  /// Fixed bit budget while recording secret payload voice (settings checkbox on).
+  int? get _payloadCapacityBudgetBits {
+    if (!_recordingPayload) return null;
+    final settings = ref.read(settingsProvider);
+    if (!settings.defaultFixedMessageBitLimit) return null;
+    final bits = _settingsBitBudget();
+    return bits > 0 ? bits : null;
+  }
+
+  int _payloadNeedSecondsForBudget(int bitBudget) {
+    final maxSamples =
+        PayloadAudioDefaults.maxPcmSamplesForBitBudget(bitBudget);
+    if (maxSamples <= 0) return 1;
+    final rate = _recorder.currentSampleRate > 0
+        ? _recorder.currentSampleRate
+        : PayloadAudioDefaults.sampleRate;
+    return (maxSamples / rate).ceil().clamp(1, 3600);
+  }
+
+  bool get _payloadRecordCapacitySatisfied {
+    final budget = _payloadCapacityBudgetBits;
+    if (budget == null) return false;
+    final maxSamples =
+        PayloadAudioDefaults.maxPcmSamplesForBitBudget(budget);
+    return maxSamples > 0 &&
+        _recorder.bufferedMonoSampleCount >= maxSamples;
+  }
+
+  double get _payloadRecordCapacityProgress {
+    final budget = _payloadCapacityBudgetBits;
+    if (budget == null) return 0;
+    final maxSamples =
+        PayloadAudioDefaults.maxPcmSamplesForBitBudget(budget);
+    if (maxSamples <= 0) return 1;
+    final p = _recorder.bufferedMonoSampleCount / maxSamples;
+    if (p.isNaN || p.isInfinite) return 0;
+    return p.clamp(0.0, 1.0);
+  }
+
+  int get _payloadRecordCapacityRemainingSeconds {
+    final budget = _payloadCapacityBudgetBits;
+    if (budget == null) return 0;
+    final maxSamples =
+        PayloadAudioDefaults.maxPcmSamplesForBitBudget(budget);
+    final need = maxSamples - _recorder.bufferedMonoSampleCount;
+    if (need <= 0) return 0;
+    final rate = _recorder.currentSampleRate > 0
+        ? _recorder.currentSampleRate
+        : PayloadAudioDefaults.sampleRate;
+    return (need / rate).ceil().clamp(1, 3600);
   }
 
   Future<void> _stopAndProcess() async {
@@ -1394,21 +1494,47 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     }
   }
 
-  Future<void> _pauseStego() async {
+  Future<void> _pauseCover() async {
     try {
-      await _hub.pauseSessions(PlaybackHub.abSessions);
+      await _hub.pause(PlaybackSessionId.embedCover);
     } catch (e) {
       if (!mounted) return;
       _showStatus(e.toString());
     }
   }
 
-  Future<void> _stopStego() async {
+  Future<void> _pauseStegoSide() async {
     try {
-      await _hub.stopSessions(PlaybackHub.abSessions);
+      await _hub.pause(PlaybackSessionId.embedStego);
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _stopCover() async {
+    try {
+      await _hub.stop(PlaybackSessionId.embedCover);
       if (!mounted) return;
       setState(() {
-        _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+        if (!_abPlaying) {
+          _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      _showStatus(e.toString());
+    }
+  }
+
+  Future<void> _stopStegoSide() async {
+    try {
+      await _hub.stop(PlaybackSessionId.embedStego);
+      if (!mounted) return;
+      setState(() {
+        if (!_abPlaying) {
+          _eqBands = List<double>.filled(kSpectrumBandCount, 0);
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -1676,6 +1802,26 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                               : null,
                         ),
                         if (isRecording &&
+                            _recordingPayload &&
+                            _payloadCapacityBudgetBits != null) ...[
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: _payloadRecordCapacityProgress,
+                              minHeight: 10,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _payloadRecordCapacitySatisfied
+                                ? s.payloadRecordCapacityFull
+                                : s.payloadRecordCapacityProgress,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                        if (isRecording &&
                             !_recordingPayload &&
                             _coverRequiredBits != null) ...[
                           const SizedBox(height: 12),
@@ -1721,15 +1867,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                                 : s.stopRecording,
                           ),
                         ),
-                        if (_processing) ...[
-                          const SizedBox(height: 12),
-                          const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.5),
-                          ),
-                        ],
-                        if (_statusMessage != null) ...[
+                        if (_statusMessage != null && !_processing) ...[
                           const SizedBox(height: 12),
                           Text(
                             _statusMessage!,
@@ -1758,123 +1896,207 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final result = _result;
     final durationSec = stego.samples.length / stego.sampleRate;
     final scheme = theme.colorScheme;
-    final onCard = scheme.onSurface;
+    final gap = AppUiTokens.sectionGapResult;
+
     return AppSectionCard(
       outlined: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: scheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  s.operationSuccess,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: onCard,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildResultActions(s),
-            if (_verifyStatus != null) ...[
-              const SizedBox(height: 12),
-              _buildVerifyBanner(theme),
-            ],
-            if (_cover != null && _stego != null) ...[
-              const SizedBox(height: 12),
-              _buildAbListenPanel(s, theme),
-            ],
-            if (_recoveredPayload != null) ...[
-              const SizedBox(height: 12),
-              _buildRecoveredPayloadPanel(s, theme),
-            ],
-            const SizedBox(height: 12),
-            Material(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: AppUiTokens.inputBorderRadius,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_cover != null) _buildCompareChart(s, theme),
-                    if (result != null) ...[
-                      if (_cover != null) const SizedBox(height: 12),
-                      _buildMetricsBlock(s, theme, result, durationSec),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+          _buildResultHero(s, theme, scheme),
+          SizedBox(height: gap),
+          _buildResultActions(s),
+          if (_verifyStatus != null) ...[
+            SizedBox(height: gap),
+            _buildVerifyBanner(theme),
           ],
+          if (_cover != null && _stego != null) ...[
+            SizedBox(height: gap),
+            _buildAbListenPanel(s, theme),
+          ],
+          if (_recoveredPayload != null) ...[
+            SizedBox(height: gap),
+            _buildRecoveredPayloadPanel(s, theme),
+          ],
+          SizedBox(height: gap),
+          _buildAnalysisPanel(s, theme, result, durationSec),
+        ],
       ),
     );
   }
 
-  Widget _buildResultActions(AppStrings s) {
+  Widget _resultBlock({required Widget child}) {
     final scheme = Theme.of(context).colorScheme;
-    return Theme(
-      data: Theme.of(context).copyWith(
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            foregroundColor: scheme.onPrimary,
-            backgroundColor: scheme.primary,
+    return Material(
+      color: scheme.surfaceContainerHighest.withValues(alpha: 0.72),
+      borderRadius: BorderRadius.circular(AppUiTokens.resultBlockRadius),
+      child: Padding(
+        padding: const EdgeInsets.all(AppUiTokens.resultBlockPadding),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildResultHero(AppStrings s, ThemeData theme, ColorScheme scheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Icon(
+          Icons.check_circle_rounded,
+          color: scheme.primary.withValues(alpha: 0.92),
+          size: AppUiTokens.resultHeroIconSize,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          s.operationSuccess,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.w600,
           ),
         ),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          Tooltip(
-            message: s.pause,
-            child: IconButton.filledTonal(
-              onPressed: _verifying || !_abPlaying ? null : _pauseStego,
-              icon: const Icon(Icons.pause_rounded),
-            ),
+        const SizedBox(height: 4),
+        Text(
+          s.operationSuccessSubtitle,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            height: 1.35,
           ),
-          Tooltip(
-            message: s.stopPlayback,
-            child: IconButton.filledTonal(
-              onPressed: _verifying || !_abLoaded ? null : _stopStego,
-              icon: const Icon(Icons.stop_rounded),
-            ),
-          ),
-          FilledButton.tonalIcon(
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultActions(AppStrings s) {
+    final showCopy = _payloadKind == _EmbedPayloadKind.text &&
+        _textCtrl.text.trim().isNotEmpty;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Tooltip(
+          message: s.saveStego,
+          child: IconButton.filled(
             onPressed: _verifying ? null : _saveStego,
             icon: const Icon(Icons.save_outlined),
-            label: Text(s.saveStego),
           ),
-          Tooltip(
-            message: s.shareStego,
-            child: IconButton.filledTonal(
-              onPressed: _verifying ? null : _shareStego,
-              icon: const Icon(Icons.share_outlined),
-            ),
+        ),
+        Tooltip(
+          message: s.shareStego,
+          child: IconButton.filledTonal(
+            onPressed: _verifying ? null : _shareStego,
+            icon: const Icon(Icons.share_outlined),
           ),
-          FilledButton.tonalIcon(
+        ),
+        Tooltip(
+          message: s.verify,
+          child: IconButton.filledTonal(
             onPressed: _verifying ? null : _verifyRoundtrip,
             icon: _verifying
                 ? const SizedBox(
-                    width: 16,
-                    height: 16,
+                    width: 18,
+                    height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.verified_outlined),
-            label: Text(s.verify),
           ),
+        ),
+        if (showCopy)
           Builder(
             builder: (innerCtx) {
-              return IconButton.filledTonal(
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(innerCtx);
-                  await Clipboard.setData(ClipboardData(text: _textCtrl.text));
-                  messenger.showSnackBar(SnackBar(content: Text(s.copied)));
-                },
-                icon: const Icon(Icons.copy_outlined),
+              return Tooltip(
+                message: s.copy,
+                child: IconButton.filledTonal(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(innerCtx);
+                    await Clipboard.setData(
+                      ClipboardData(text: _textCtrl.text),
+                    );
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(s.copied)),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_outlined),
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAbListenPanel(AppStrings s, ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final coverPlaying = _coverPlaying;
+    final stegoPlaying = _stegoPlaying;
+    final coverTransport =
+        coverPlaying || _hub.isPaused(PlaybackSessionId.embedCover);
+    final stegoTransport =
+        stegoPlaying || _hub.isPaused(PlaybackSessionId.embedStego);
+    return _resultBlock(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            s.verifyAbListenTitle,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final wide =
+                  constraints.maxWidth >= AppUiTokens.resultContentBreakpoint;
+              final originalCard = _buildAbListenSideCard(
+                theme: theme,
+                scheme: scheme,
+                s: s,
+                badge: 'A',
+                title: s.abListenOriginalShort,
+                playLabel: s.playOriginalCover,
+                playing: coverPlaying,
+                showTransport: coverTransport && !_verifying,
+                emphasized: false,
+                onPlay: _verifying || _cover == null ? null : _playCover,
+                onPause: coverTransport && !_verifying ? _pauseCover : null,
+                onStop: coverTransport && !_verifying ? _stopCover : null,
+              );
+              final stegoCard = _buildAbListenSideCard(
+                theme: theme,
+                scheme: scheme,
+                s: s,
+                badge: 'B',
+                title: s.abListenStegoShort,
+                playLabel: s.playStegoAudio,
+                playing: stegoPlaying,
+                showTransport: stegoTransport && !_verifying,
+                emphasized: true,
+                onPlay: _verifying || _stego == null ? null : _playStego,
+                onPause: stegoTransport && !_verifying ? _pauseStegoSide : null,
+                onStop: stegoTransport && !_verifying ? _stopStegoSide : null,
+              );
+              if (wide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: originalCard),
+                    const SizedBox(width: 8),
+                    Expanded(child: stegoCard),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  originalCard,
+                  const SizedBox(height: 8),
+                  stegoCard,
+                ],
               );
             },
           ),
@@ -1883,51 +2105,149 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     );
   }
 
-  Widget _buildAbListenPanel(AppStrings s, ThemeData theme) {
-    final scheme = theme.colorScheme;
-    final coverPlaying = _coverPlaying;
-    final stegoPlaying = _stegoPlaying;
-    return Material(
-      color: scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              s.verifyAbListenTitle,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: _verifying || _cover == null ? null : _playCover,
-                  icon: Icon(
-                    coverPlaying
-                        ? Icons.graphic_eq_rounded
-                        : Icons.play_arrow_rounded,
-                  ),
-                  label: Text(s.playOriginalCover),
+  Widget _buildAbListenSideCard({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required AppStrings s,
+    required String badge,
+    required String title,
+    required String playLabel,
+    required bool playing,
+    required bool showTransport,
+    required bool emphasized,
+    required VoidCallback? onPlay,
+    required VoidCallback? onPause,
+    required VoidCallback? onStop,
+  }) {
+    final borderColor = playing
+        ? scheme.primary
+        : scheme.outlineVariant.withValues(alpha: emphasized ? 0.55 : 0.4);
+    final fill = emphasized
+        ? Color.alphaBlend(
+            scheme.primary.withValues(alpha: 0.06),
+            scheme.surface,
+          )
+        : scheme.surface.withValues(alpha: 0.88);
+    final badgeBg = emphasized
+        ? scheme.primary.withValues(alpha: 0.9)
+        : scheme.secondaryContainer.withValues(alpha: 0.85);
+    final badgeFg =
+        emphasized ? scheme.onPrimary : scheme.onSecondaryContainer;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor, width: playing ? 1.5 : 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  shape: BoxShape.circle,
                 ),
-                FilledButton.icon(
-                  onPressed: _verifying || _stego == null ? null : _playStego,
-                  icon: Icon(
-                    stegoPlaying
-                        ? Icons.graphic_eq_rounded
-                        : Icons.play_arrow_rounded,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    badge,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: badgeFg,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  label: Text(s.playStegoAudio),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+              if (showTransport) ...[
+                Tooltip(
+                  message: s.pause,
+                  child: IconButton.filledTonal(
+                    onPressed: onPause,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.pause_rounded),
+                  ),
+                ),
+                Tooltip(
+                  message: s.stopPlayback,
+                  child: IconButton.filledTonal(
+                    onPressed: onStop,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.stop_rounded),
+                  ),
                 ),
               ],
+              Tooltip(
+                message: playLabel,
+                child: emphasized
+                    ? IconButton.filled(
+                        onPressed: onPlay,
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(
+                          playing
+                              ? Icons.graphic_eq_rounded
+                              : Icons.play_arrow_rounded,
+                        ),
+                      )
+                    : IconButton.filledTonal(
+                        onPressed: onPlay,
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(
+                          playing
+                              ? Icons.graphic_eq_rounded
+                              : Icons.play_arrow_rounded,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalysisPanel(
+    AppStrings s,
+    ThemeData theme,
+    EmbedRunResult? result,
+    double durationSec,
+  ) {
+    return _resultBlock(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            s.analysisSectionTitle,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: 10),
+          if (_cover != null) _buildCompareChart(s, theme),
+          if (result != null) ...[
+            if (_cover != null) const SizedBox(height: 14),
+            _buildMetricsBlock(s, theme, result, durationSec),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -2133,35 +2453,46 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final scheme = theme.colorScheme;
     final ok = _verifyOk;
     final color = ok == null
-        ? scheme.surfaceContainerHighest
+        ? scheme.surfaceContainerHighest.withValues(alpha: 0.85)
         : ok
-        ? scheme.tertiaryContainer
-        : scheme.errorContainer;
+        ? scheme.tertiaryContainer.withValues(alpha: 0.82)
+        : scheme.errorContainer.withValues(alpha: 0.88);
     final icon = ok == null
         ? Icons.hourglass_empty
         : ok
-        ? Icons.check_circle
+        ? Icons.check_circle_outline_rounded
         : Icons.error_outline;
     final fg = ok == null
-        ? scheme.onSurface
+        ? scheme.onSurfaceVariant
         : ok
         ? scheme.onTertiaryContainer
         : scheme.onErrorContainer;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: (ok == true
+                  ? scheme.tertiary
+                  : ok == false
+                  ? scheme.error
+                  : scheme.outlineVariant)
+              .withValues(alpha: 0.28),
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: fg),
+          Icon(icon, color: fg, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               _verifyStatus ?? '',
-              style: theme.textTheme.bodyMedium?.copyWith(color: fg),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: fg,
+                height: 1.35,
+              ),
             ),
           ),
         ],
@@ -2178,44 +2509,37 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final originalPlaying = _payloadOriginalPlaying;
     final recoveredPlaying = _payloadRecoveredPlaying;
 
-    return Material(
-      color: scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              s.verifyRecoveredTitle,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+    Widget originalColumn() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            s.originalHiddenPayload,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 12),
-            Text(
-              s.originalHiddenPayload,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (isImage) ...[
-              if (_payloadImageBytes != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(
-                    _payloadImageBytes!,
-                    height: 140,
-                    fit: BoxFit.contain,
-                  ),
-                )
-              else
-                Text('—', style: theme.textTheme.bodyMedium),
-            ] else if (isAudio) ...[
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: FilledButton.tonalIcon(
+          ),
+          const SizedBox(height: 8),
+          if (isImage) ...[
+            if (_payloadImageBytes != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  _payloadImageBytes!,
+                  height: 140,
+                  fit: BoxFit.contain,
+                ),
+              )
+            else
+              Text('—', style: theme.textTheme.bodyMedium),
+          ] else if (isAudio) ...[
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Tooltip(
+                message: originalPlaying
+                    ? s.pause
+                    : s.playOriginalPayloadAudio,
+                child: IconButton.filledTonal(
                   onPressed: _verifying || _payloadAudio == null
                       ? null
                       : _playOriginalPayloadAudio,
@@ -2224,19 +2548,19 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
                   ),
-                  label: Text(
-                    originalPlaying ? s.pause : s.playOriginalPayloadAudio,
-                  ),
                 ),
               ),
-            ] else ...[
-              DirectionalSelectableText(
-                _textCtrl.text.trim(),
-                style: theme.textTheme.bodyLarge,
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: TextButton.icon(
+            ),
+          ] else ...[
+            DirectionalSelectableText(
+              _textCtrl.text.trim(),
+              style: theme.textTheme.bodyMedium,
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Tooltip(
+                message: s.copy,
+                child: IconButton.filledTonal(
                   onPressed: () async {
                     final text = _textCtrl.text.trim();
                     if (text.isEmpty) return;
@@ -2246,72 +2570,83 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       SnackBar(content: Text(s.copied)),
                     );
                   },
-                  icon: const Icon(Icons.copy),
-                  label: Text(s.copy),
+                  icon: const Icon(Icons.copy_outlined),
                 ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            Divider(color: scheme.outlineVariant.withValues(alpha: 0.6)),
-            const SizedBox(height: 8),
-            Text(
-              s.recoveredPayloadLabel,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
-            if (isImage) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.memory(
-                  payload.imageBytes!,
-                  height: 140,
-                  fit: BoxFit.contain,
-                ),
+          ],
+        ],
+      );
+    }
+
+    Widget recoveredColumn() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            s.recoveredPayloadLabel,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (isImage) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(
+                payload.imageBytes!,
+                height: 140,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: FilledButton.tonalIcon(
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Tooltip(
+                message: s.saveExtractedImage,
+                child: IconButton.filledTonal(
                   onPressed: _verifying ? null : _saveRecoveredImage,
                   icon: const Icon(Icons.save_outlined),
-                  label: Text(s.saveExtractedImage),
                 ),
               ),
-            ] else if (isAudio)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.start,
-                children: [
-                  FilledButton.tonalIcon(
+            ),
+          ] else if (isAudio)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.start,
+              children: [
+                Tooltip(
+                  message: recoveredPlaying ? s.pause : s.playExtractedAudio,
+                  child: IconButton.filledTonal(
                     onPressed: _verifying ? null : _playRecoveredAudio,
                     icon: Icon(
                       recoveredPlaying
                           ? Icons.pause_rounded
                           : Icons.play_arrow_rounded,
                     ),
-                    label: Text(
-                      recoveredPlaying ? s.pause : s.playExtractedAudio,
-                    ),
                   ),
-                  FilledButton.tonalIcon(
+                ),
+                Tooltip(
+                  message: s.saveExtractedAudio,
+                  child: IconButton.filledTonal(
                     onPressed: _verifying ? null : _saveRecoveredAudio,
                     icon: const Icon(Icons.save_outlined),
-                    label: Text(s.saveExtractedAudio),
                   ),
-                ],
-              )
-            else ...[
-              DirectionalSelectableText(
-                payload.text ?? '',
-                style: theme.textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: TextButton.icon(
+                ),
+              ],
+            )
+          else ...[
+            DirectionalSelectableText(
+              payload.text ?? '',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Tooltip(
+                message: s.copy,
+                child: IconButton.filledTonal(
                   onPressed: () async {
                     final text = payload.text;
                     if (text == null || text.isEmpty) return;
@@ -2321,13 +2656,56 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                       SnackBar(content: Text(s.copied)),
                     );
                   },
-                  icon: const Icon(Icons.copy),
-                  label: Text(s.copy),
+                  icon: const Icon(Icons.copy_outlined),
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
+      );
+    }
+
+    return _resultBlock(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            s.verifyRecoveredTitle,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final wide =
+                  constraints.maxWidth >= AppUiTokens.resultContentBreakpoint;
+              if (wide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: originalColumn()),
+                    const SizedBox(width: 16),
+                    Expanded(child: recoveredColumn()),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  originalColumn(),
+                  const SizedBox(height: 16),
+                  Divider(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(height: 12),
+                  recoveredColumn(),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }

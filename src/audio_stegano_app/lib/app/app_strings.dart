@@ -665,6 +665,22 @@ class AppStrings {
       'Opération terminée avec succès',
     ),
   );
+  String get operationSuccessSubtitle => _t(
+    const _S(
+      'فایل نهان‌نگاری‌شده آماده ذخیره، اشتراک و مقایسه است.',
+      'Your stego file is ready to save, share, and compare.',
+      'ملف الإخفاء جاهز للحفظ والمشاركة والمقارنة.',
+      'Le fichier stégo est prêt à être enregistré, partagé et comparé.',
+    ),
+  );
+  String get analysisSectionTitle => _t(
+    const _S(
+      'تحلیل موج و کیفیت',
+      'Waveform & quality analysis',
+      'تحليل الموجة والجودة',
+      'Analyse forme d’onde et qualité',
+    ),
+  );
   String get embedCompleteTitle => _t(
     const _S(
       'نهان‌نگاری انجام شد',
@@ -679,6 +695,14 @@ class AppStrings {
       'Extraction complete',
       'اكتمل الاستخراج',
       'Extraction terminée',
+    ),
+  );
+  String get extractSuccessSubtitle => _t(
+    const _S(
+      'پیام بازیابی‌شده آماده کپی یا ذخیره است.',
+      'Your recovered payload is ready to copy or save.',
+      'الحمولة المستعادة جاهزة للنسخ أو الحفظ.',
+      'La charge utile récupérée est prête à être copiée ou enregistrée.',
     ),
   );
   String get embedRecoveryMessage => _t(
@@ -807,6 +831,28 @@ class AppStrings {
       'Minimum duration reached — you can stop recording',
       'اكتملت المدة الدنيا — يمكنك إيقاف التسجيل',
       'Durée minimale atteinte — vous pouvez arrêter',
+    ),
+  );
+  String get payloadRecordCapacityProgress => _t(
+    const _S(
+      'در حال پر شدن ظرفیت فضای نهان‌نگاری برای صوت مخفی…',
+      'Filling steganography capacity for the hidden voice…',
+      'جارٍ ملء سعة الإخفاء للصوت المخفي…',
+      'Remplissage de la capacité pour la voix cachée…',
+    ),
+  );
+  String payloadRecordCapacityRemaining(int seconds) => switch (locale) {
+    AppLocale.fa => 'حدود $seconds ثانیه تا پر شدن ظرفیت',
+    AppLocale.en => 'About $seconds s until capacity is full',
+    AppLocale.ar => 'حوالي $seconds ثانية حتى امتلاء السعة',
+    AppLocale.fr => 'Environ $seconds s avant capacité pleine',
+  };
+  String get payloadRecordCapacityFull => _t(
+    const _S(
+      'ظرفیت پر شد — ضبط متوقف می‌شود',
+      'Capacity full — recording will stop',
+      'امتلأت السعة — سيتوقف التسجيل',
+      'Capacité pleine — arrêt de l’enregistrement',
     ),
   );
   String recordingTooShort(int seconds) => switch (locale) {
@@ -957,6 +1003,17 @@ class AppStrings {
       'A/B listen — can you hear a difference?',
       'مقارنة سمعية — هل تلاحظ فرقاً؟',
       'Écoute A/B — entendez-vous une différence ?',
+    ),
+  );
+  String get abListenOriginalShort => _t(
+    const _S('اصلی', 'Original', 'أصلي', 'Original'),
+  );
+  String get abListenStegoShort => _t(
+    const _S(
+      'نهان‌نگاری‌شده',
+      'Watermarked',
+      'مُخفى',
+      'Watermarké',
     ),
   );
   String get playOriginalCover => _t(

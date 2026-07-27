@@ -168,10 +168,23 @@ public sealed partial class AppStrings
     public string OperationSuccess => T(
         "عملیات با موفقیت انجام شد", "Operation completed successfully",
         "تمت العملية بنجاح", "Opération terminée avec succès");
+    public string OperationSuccessSubtitle => T(
+        "فایل نهان‌نگاری‌شده آماده ذخیره، اشتراک و مقایسه است.",
+        "Your stego file is ready to save, share, and compare.",
+        "ملف الإخفاء جاهز للحفظ والمشاركة والمقارنة.",
+        "Le fichier stégo est prêt à être enregistré, partagé et comparé.");
+    public string AnalysisSectionTitle => T(
+        "تحلیل موج و کیفیت", "Waveform & quality analysis",
+        "تحليل الموجة والجودة", "Analyse forme d’onde et qualité");
     public string EmbedCompleteTitle => T(
         "نهان‌نگاری انجام شد", "Embedding complete", "اكتمل الإخفاء", "Intégration terminée");
     public string ExtractCompleteTitle => T(
         "رمزگشایی انجام شد", "Extraction complete", "اكتمل الاستخراج", "Extraction terminée");
+    public string ExtractSuccessSubtitle => T(
+        "پیام بازیابی‌شده آماده کپی یا ذخیره است.",
+        "Your recovered payload is ready to copy or save.",
+        "الحمولة المستعادة جاهزة للنسخ أو الحفظ.",
+        "La charge utile récupérée est prête à être copiée ou enregistrée.");
     public string EmbedRecoveryMessage => T(
         "برای بازیابی عبارت نهانگاری‌شده عدد طول پیام را یادداشت فرمایید",
         "To recover the hidden phrase, please note the message length number",
@@ -306,6 +319,23 @@ public sealed partial class AppStrings
         "Minimum duration reached — you can stop recording",
         "اكتملت المدة الدنيا — يمكنك إيقاف التسجيل",
         "Durée minimale atteinte — vous pouvez arrêter");
+    public string PayloadRecordCapacityProgress => T(
+        "در حال پر شدن ظرفیت فضای نهان‌نگاری برای صوت مخفی…",
+        "Filling steganography capacity for the hidden voice…",
+        "جارٍ ملء سعة الإخفاء للصوت المخفي…",
+        "Remplissage de la capacité pour la voix cachée…");
+    public string PayloadRecordCapacityRemaining(int seconds) => _lang switch
+    {
+        AppLanguage.Fa => $"حدود {seconds} ثانیه تا پر شدن ظرفیت",
+        AppLanguage.Ar => $"حوالي {seconds} ثانية حتى امتلاء السعة",
+        AppLanguage.Fr => $"Environ {seconds} s avant capacité pleine",
+        _ => $"About {seconds} s until capacity is full",
+    };
+    public string PayloadRecordCapacityFull => T(
+        "ظرفیت پر شد — ضبط متوقف می‌شود",
+        "Capacity full — recording will stop",
+        "امتلأت السعة — سيتوقف التسجيل",
+        "Capacité pleine — arrêt de l’enregistrement");
     public string RecordingTooShort(int seconds) => _lang switch
     {
         AppLanguage.Fa =>
@@ -430,6 +460,9 @@ public sealed partial class AppStrings
         "A/B listen — can you hear a difference?",
         "مقارنة سمعية — هل تلاحظ فرقاً؟",
         "Écoute A/B — entendez-vous une différence ?");
+    public string AbListenOriginalShort => T("اصلی", "Original", "أصلي", "Original");
+    public string AbListenStegoShort => T(
+        "نهان‌نگاری‌شده", "Watermarked", "مُخفى", "Watermarké");
     public string PlayOriginalCover => T(
         "پخش صدای اصلی", "Play original",
         "تشغيل الأصلي", "Lire l’original");

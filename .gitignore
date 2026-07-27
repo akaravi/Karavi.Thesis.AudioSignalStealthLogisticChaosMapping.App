@@ -33,6 +33,10 @@ publish/
 **/[Ll]ogs/
 LastRunInfo.html
 
+# Asset optimization backups (full fonts / icons before subset)
+**/assets/fonts/_full_backup/
+**/assets/branding/*.full.png
+
 # NuGet
 **/packages/
 *.nupkg

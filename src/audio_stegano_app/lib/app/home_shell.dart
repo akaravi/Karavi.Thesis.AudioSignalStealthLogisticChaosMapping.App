@@ -13,8 +13,10 @@ import '../features/embed/embed_screen.dart';
 import '../features/extract/extract_screen.dart';
 import '../features/settings/settings_screen.dart';
 import 'app_strings.dart';
+import 'busy_overlay_provider.dart';
 import 'opened_audio_file.dart';
 import 'pending_open_audio_provider.dart';
+import '../features/shared/app_busy_overlay.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -32,6 +34,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   void _selectTab(int i) {
     if (i == _index) return;
+    if (ref.read(appBusyMessageProvider) != null) return;
     final leaving = _index;
     if (leaving == 0) {
       unawaited(PlaybackHub.instance.stopSessions(PlaybackHub.embedSessions));
@@ -126,6 +129,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       ],
     );
     final scheme = Theme.of(context).colorScheme;
+    final busyMessage = ref.watch(appBusyMessageProvider);
     final scaffold = Scaffold(
       appBar: AppBar(
         title: Text(s.appTitle),
@@ -142,7 +146,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   labelType: NavigationRailLabelType.all,
                   backgroundColor: scheme.surfaceContainer,
                   indicatorColor: scheme.primaryContainer,
-                  onDestinationSelected: _selectTab,
+                  onDestinationSelected:
+                      busyMessage != null ? (_) {} : _selectTab,
                   destinations: [
                     for (final d in destinations)
                       NavigationRailDestination(
@@ -164,7 +169,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           ? null
           : NavigationBar(
               selectedIndex: _index,
-              onDestinationSelected: _selectTab,
+              onDestinationSelected:
+                  busyMessage != null ? (_) {} : _selectTab,
               destinations: [
                 for (final d in destinations)
                   NavigationDestination(
@@ -175,7 +181,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               ],
             ),
     );
-    return scaffold;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        scaffold,
+        if (busyMessage != null) AppBusyOverlay(message: busyMessage),
+      ],
+    );
   }
 }
 

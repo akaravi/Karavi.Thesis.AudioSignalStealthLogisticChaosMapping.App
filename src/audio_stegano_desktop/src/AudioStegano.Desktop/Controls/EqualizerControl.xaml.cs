@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using AudioStegano.Core.Audio;
+using AudioStegano.Desktop.Localization;
 
 namespace AudioStegano.Desktop.Controls;
 
@@ -65,46 +66,67 @@ public partial class EqualizerControl : UserControl
         var hasSignal = IsActive && peak > 0.05;
         var levelPct = (int)Math.Clamp(peak * 100, 0, 100);
 
-        var header = new Grid { Margin = new Thickness(0, 0, 0, 6) };
-        header.Children.Add(new TextBlock
+        // Physical LTR: volume % left · label center · timer right (locale-independent).
+        var header = new Grid { Margin = new Thickness(0, 0, 0, 6), FlowDirection = FlowDirection.LeftToRight };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        UIElement leftBadge;
+        if (IsActive)
+        {
+            leftBadge = CreateHeaderBadge($"\uE767 {levelPct}%", LevelBrush(peak, 1));
+        }
+        else
+        {
+            leftBadge = new Border { Width = 48, Height = 1, Opacity = 0 };
+        }
+        Grid.SetColumn(leftBadge, 0);
+        header.Children.Add(leftBadge);
+
+        var centerLabel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        centerLabel.Children.Add(new TextBlock
         {
             Text = "\uE9D9",
             FontFamily = new FontFamily("Segoe MDL2 Assets"),
             FontSize = 14,
             VerticalAlignment = VerticalAlignment.Center,
             Foreground = TryBrush("PrimaryBrush") ?? Brushes.Gray,
+            Margin = new Thickness(0, 0, 6, 0),
         });
-        header.Children.Add(new TextBlock
+        centerLabel.Children.Add(new TextBlock
         {
             Text = ThemeManager.Strings.AudioLevel,
-            Margin = new Thickness(22, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
             Foreground = TryBrush("MutedBrush") ?? Brushes.Gray,
+            FlowDirection = AppState.Settings.Language is AppLanguage.Fa or AppLanguage.Ar
+                ? FlowDirection.RightToLeft
+                : FlowDirection.LeftToRight,
         });
-        var badges = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-        };
+        Grid.SetColumn(centerLabel, 1);
+        header.Children.Add(centerLabel);
+
+        UIElement rightBadge;
         if (RecordingElapsed is { } elapsed)
         {
-            badges.Children.Add(CreateHeaderBadge(
+            rightBadge = CreateHeaderBadge(
                 $"\uE823 {FormatDuration(elapsed)}",
-                TryBrush("PrimaryBrush") ?? Brushes.Teal));
+                TryBrush("PrimaryBrush") ?? Brushes.Teal);
         }
-        if (IsActive)
+        else
         {
-            badges.Children.Add(CreateHeaderBadge(
-                $"\uE767 {levelPct}%",
-                LevelBrush(peak, 1),
-                badges.Children.Count > 0 ? new Thickness(8, 0, 0, 0) : default));
+            rightBadge = new Border { Width = 48, Height = 1, Opacity = 0 };
         }
-        if (badges.Children.Count > 0)
-        {
-            header.Children.Add(badges);
-        }
+        Grid.SetColumn(rightBadge, 2);
+        header.Children.Add(rightBadge);
+
         Grid.SetRow(header, 0);
         root.Children.Add(header);
 

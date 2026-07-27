@@ -1,5 +1,69 @@
 # Change History
 
+## 2026-07-27 — A/B listen: Pause/Stop inside each Play card
+
+- Rule: `.cursor/rules/ab-listen-play-transport.mdc`.
+- Pause/Stop per side (A cover / B stego); hidden until play; hide after complete/stop.
+- Flutter embed A/B panel; WPF EmbedView cards; auto-clear player on natural complete.
+
+## 2026-07-27 — Equalizer layout + payload capacity bar
+
+- Rule: `.cursor/rules/equalizer-recording-capacity-ui.mdc` — volume left · timer right; capacity bars.
+- Equalizer header: physical LTR `[volume%] · label · [timer]` (Flutter + WPF).
+- Payload (secret) record + fixed capacity ON → bottom fill bar + auto-stop at budget.
+- Cover min bar: fixed budget when checkbox ON; live payload bits when OFF (unchanged logic, rule documented).
+
+## 2026-07-27 — Optimize site/app payload size
+
+- Subset bundled TTFs (Noto ~825→205 KB; Roboto Regular+Bold ~328→141 KB); drop Medium + zip.
+- Compress `app_icon` / web icons; remove obsolete `web/fonts` (pubspec fonts only).
+- Web build: `--tree-shake-icons`; post-process strips `.map`/`.symbols` and unused `skwasm`/`wimp` (~31→13 MB `build/web`).
+- Script: `src/audio_stegano_app/scripts/optimize_flutter_assets.py`; gitignore font/icon backups.
+
+## 2026-07-27 — Embed results Soft UI refine (delicate)
+
+- Soft UI Evolution: quieter type hierarchy, softer surfaces/alpha, tighter gaps (tokens).
+- Primary toolbar icon-only (Save/Share/Verify/Copy); A/B cards compact with play icon; Pause/Stop icon-only.
+- Verify banner lighter; content-compare plays/copy as icons + tooltips; Extract hero aligned.
+- Flutter + WPF; brand purple `#7A68A8` preserved (no CDN pink palette).
+
+## 2026-07-27 — Equalizer badges: intensity left, time right
+
+- Physical order fixed (LTR badge row): volume % left · duration right — independent of UI RTL.
+- Flutter `audio_equalizer_view.dart`; WPF `EqualizerControl.xaml.cs`.
+
+## 2026-07-27 — Save extracted: icon-only CTA
+
+- Extract (and Embed recovered) save actions: icon-only with tooltip; removed long label «ذخیره صوت استخراج‌شده».
+- Flutter `IconButton.filled` / `filledTonal`; WPF `IconFilledButton` / `IconTonalButton`.
+
+## 2026-07-27 — Full-page busy overlay during process (Flutter + WPF)
+
+- Processing/verifying no longer shows only an in-card spinner; full-viewport blocking overlay until done.
+- Flutter: `appBusyMessageProvider` + `AppBusyOverlay` on `HomeShell` (blocks tabs/nav); Embed/Extract publish busy via setState hook.
+- WPF: `MainWindow.GlobalBusyOverlay` + `SetGlobalBusy`; Embed/Extract call it; bottom/rail nav hit-test disabled while busy.
+- Inline card BusyBar kept collapsed; Soft UI card + brand primary spinner on scrim.
+
+## 2026-07-27 — A/B listen panel: design-auditor beautify (Flutter + WPF)
+
+- Auditory compare: dual A/B side cards (badge + short label + play) instead of flat button row.
+- Transport bar groups Pause/Stop with visible labels; playing side gets primary border emphasis.
+- Responsive stack under 560px; i18n `abListenOriginalShort` / `abListenStegoShort`.
+- Brand purple `#7A68A8` preserved (no CDN, Soft UI Evolution).
+
+## 2026-07-27 — Extract results UI: Hero + Bento parity with Embed
+
+- Extract result panel aligned with Embed redesign: Hero success/error → primary CTAs (Save / Play / Copy) → payload content block.
+- i18n: `extractSuccessSubtitle` / `ExtractSuccessSubtitle` (fa/en/ar/fr).
+- Flutter `extract_screen.dart` + WPF `ExtractView.xaml` / `.cs`.
+
+## 2026-07-27 — Embed results UI: Hero + Bento blocks (Flutter + WPF)
+
+- Result panel hierarchy: Hero success → Save/Share CTAs (+ icon Verify/Copy) → verify banner → A/B listen (only playback controls) → content compare → analysis (waveform + metrics).
+- Removed duplicate Play/Pause/Stop from result header; Pause/Stop live inside A/B listen.
+- Narrow content compare stacks vertically (`< 560`); tokens `sectionGapResult`, `resultHeroIconSize`, `resultBlockRadius`, `resultContentBreakpoint`.
+- i18n: `operationSuccessSubtitle`, `analysisSectionTitle` (fa/en/ar/fr).
+
 ## 2026-07-27 — Embed/Extract: loading, success dialog, scroll, hide inputs
 
 - During embed/extract processing: visible indeterminate loading (Flutter + WPF).
