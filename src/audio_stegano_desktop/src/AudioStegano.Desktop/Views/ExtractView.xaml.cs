@@ -39,6 +39,7 @@ public partial class ExtractView : UserControl
         var s = ThemeManager.Strings;
         SetBusy(true);
         StatusText.Text = s.Processing;
+        ExtractCard.Visibility = Visibility.Visible;
         ResultPanel.Visibility = Visibility.Collapsed;
 
         WavFile? wav = null;
@@ -124,12 +125,14 @@ public partial class ExtractView : UserControl
         _extractedAudio = null;
         ClearExtractedImage();
         BitLengthBox.Clear();
+        ExtractCard.Visibility = Visibility.Visible;
         ResultPanel.Visibility = Visibility.Collapsed;
         PlaybackPanel.Visibility = Visibility.Collapsed;
         StatusText.Text = string.Empty;
         ExtractButton.IsEnabled = false;
         UpdatePlaybackButtons();
         UpdateFabStates();
+        MainScroll.ScrollToHome();
     }
 
     public void LoadAudioFromPath(string filePath) =>
@@ -236,6 +239,7 @@ public partial class ExtractView : UserControl
 
         SetBusy(true);
         StatusText.Text = s.Processing;
+        ExtractCard.Visibility = Visibility.Visible;
         ResultPanel.Visibility = Visibility.Collapsed;
         _hub.Stop(PlaybackSessionId.ExtractPayload);
         _extractedAudio = null;
@@ -290,6 +294,7 @@ public partial class ExtractView : UserControl
             SaveExtractedButton.Visibility = Visibility.Visible;
             SaveExtractedLabel.Text = s.SaveExtractedImage;
             ResultPanel.Visibility = Visibility.Visible;
+            OnExtractSucceeded();
             SessionLog.Write($"Extract: image bytes={payload.ImageBytes.Length}");
             return;
         }
@@ -312,6 +317,7 @@ public partial class ExtractView : UserControl
             SaveExtractedButton.Visibility = Visibility.Visible;
             SaveExtractedLabel.Text = s.SaveExtractedAudio;
             ResultPanel.Visibility = Visibility.Visible;
+            OnExtractSucceeded();
             SessionLog.Write($"Extract: audio samples={payload.Audio.Samples.Length}");
             return;
         }
@@ -346,7 +352,35 @@ public partial class ExtractView : UserControl
         PlayExtractedButton.Visibility = Visibility.Collapsed;
         SaveExtractedButton.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Visible;
+        OnExtractSucceeded();
         SessionLog.Write($"Extract: success length={payload.Text.Length}");
+    }
+
+    private void OnExtractSucceeded()
+    {
+        ExtractCard.Visibility = Visibility.Collapsed;
+        ShowExtractCompleteDialog();
+        ScrollResultIntoView();
+    }
+
+    private void ShowExtractCompleteDialog()
+    {
+        var owner = Window.GetWindow(this);
+        var s = ThemeManager.Strings;
+        MessageBox.Show(
+            owner,
+            s.OperationSuccess,
+            s.ExtractCompleteTitle,
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    private void ScrollResultIntoView()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            ResultPanel.BringIntoView();
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private void ClearExtractedImage()

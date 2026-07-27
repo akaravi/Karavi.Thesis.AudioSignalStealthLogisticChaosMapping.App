@@ -1,5 +1,12 @@
 # Change History
 
+## 2026-07-27 — Embed/Extract: loading, success dialog, scroll, hide inputs
+
+- During embed/extract processing: visible indeterminate loading (Flutter + WPF).
+- After successful embed/extract: success dialog (`operationSuccess`), then scroll to results.
+- Record/upload (embed) and pick/load (extract) panels stay hidden until «نهان‌نگاری جدید» / «رمزگشایی جدید».
+- i18n: `operationSuccess`, `extractCompleteTitle` (fa/en/ar/fr).
+
 ## 2026-07-26 — About: remove person icon overlay on profile photo
 
 - Flutter `CircleAvatar` had `Icons.person_outline` as `child`, which paints on top of `backgroundImage` — removed so only the photo shows.

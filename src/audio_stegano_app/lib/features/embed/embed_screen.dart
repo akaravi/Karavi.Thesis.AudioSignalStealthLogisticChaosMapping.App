@@ -772,23 +772,24 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     if (success) {
       // Immediate verify: extract from stego now so the user can test recovered content.
       await _verifyRoundtrip();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final ctx = _resultCardKey.currentContext;
-        if (ctx != null) {
-          Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutCubic,
-            alignment: 0.05,
-          );
-        }
-      });
       final showRecovery =
           !useFixedLen && ref.read(appConfigProvider).showEmbedRecoveryDialog;
       await _showEmbedCompleteDialog(
         produced,
         showRecoveryReminder: showRecovery,
       );
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _resultCardKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOutCubic,
+            alignment: 0.05,
+          );
+        }
+      });
     }
   }
 
@@ -812,7 +813,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             children: [
               if (!showRecoveryReminder)
                 Text(
-                  s.successSaved,
+                  s.operationSuccess,
                   style: theme.textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 )
@@ -1768,7 +1769,7 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                 Icon(Icons.check_circle_outline, color: scheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  s.successSaved,
+                  s.operationSuccess,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: onCard,
                     fontWeight: FontWeight.w600,

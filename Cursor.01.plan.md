@@ -1315,3 +1315,35 @@
   ]
 }
 ```
+
+## Part 91 — Embed/Extract loading, success, scroll, hide inputs
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 91,
+  "title": "Loading + success dialog + scroll results + hide source panels",
+  "request": "در زمان فعالیت‌هایی مانند نهان‌نگاری و یا رمزگشایی باید لودینگ نمایش بدهی. و در پایان رمزنگاری اعلام پیام موفقیت‌آمیز را اعلام کنی و سپس کمی اسکرول کنی روی بخش اعلام نتایج و بخش‌های رکورد و بارگزاری را تا فشردن دکمه درخواست جدید مخفی کنی",
+  "scope": [
+    "Show loading during embed and extract (Flutter + WPF)",
+    "Success dialog then scroll to results after success",
+    "Hide record/upload (embed) and pick/load (extract) until New FAB"
+  ]
+}
+```
+
+## Result 91
+
+```json
+{
+  "part": 91,
+  "status": "done",
+  "verification": "WPF Desktop build 0 errors 0 warnings; flutter analyze embed/extract/app_strings: No issues found",
+  "files": [
+    "embed_screen.dart / extract_screen.dart / app_strings.dart",
+    "EmbedView.xaml.cs / ExtractView.xaml / ExtractView.xaml.cs / AppStrings.cs",
+    "readmehistory.md"
+  ]
+}
+```

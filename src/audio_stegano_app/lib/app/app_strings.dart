@@ -657,12 +657,28 @@ class AppStrings {
       'Fichier enregistré',
     ),
   );
+  String get operationSuccess => _t(
+    const _S(
+      'عملیات با موفقیت انجام شد',
+      'Operation completed successfully',
+      'تمت العملية بنجاح',
+      'Opération terminée avec succès',
+    ),
+  );
   String get embedCompleteTitle => _t(
     const _S(
       'نهان‌نگاری انجام شد',
       'Embedding complete',
       'اكتمل الإخفاء',
       'Intégration terminée',
+    ),
+  );
+  String get extractCompleteTitle => _t(
+    const _S(
+      'رمزگشایی انجام شد',
+      'Extraction complete',
+      'اكتمل الاستخراج',
+      'Extraction terminée',
     ),
   );
   String get embedRecoveryMessage => _t(

@@ -37,10 +37,15 @@ class ExtractScreen extends ConsumerStatefulWidget {
 class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   final _bitLenCtrl = TextEditingController();
   final _hub = PlaybackHub.instance;
+  final GlobalKey _resultCardKey = GlobalKey();
+  final ScrollController _scrollCtrl = ScrollController();
 
   bool _processing = false;
   bool _loadingFile = false;
   bool _extractionAttempted = false;
+
+  /// After a successful extract, pick/load card stays hidden until new extract.
+  bool _extractInputHidden = false;
   String? _result;
   WavFile? _extractedAudio;
   Uint8List? _extractedImageBytes;
@@ -74,6 +79,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     }
     unawaited(_hub.stopSessions(PlaybackHub.extractSessions));
     _bitLenCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -89,6 +95,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _loadingFile = true;
       _statusMessage = s.processing;
       _extractionAttempted = false;
+      _extractInputHidden = false;
       _result = null;
       _extractedAudio = null;
       _extractedImageBytes = null;
@@ -241,6 +248,10 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       status = null;
     }
 
+    final succeeded = (text != null && text.isNotEmpty) ||
+        audio != null ||
+        imageBytes != null;
+
     setState(() {
       _processing = false;
       _extractionAttempted = true;
@@ -248,7 +259,48 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _extractedAudio = audio;
       _extractedImageBytes = imageBytes;
       _statusMessage = status;
+      _extractInputHidden = succeeded;
     });
+
+    if (succeeded) {
+      await _showExtractCompleteDialog();
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _resultCardKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOutCubic,
+            alignment: 0.05,
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _showExtractCompleteDialog() async {
+    if (!mounted) return;
+    final s = AppStrings.of(context);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: Text(s.extractCompleteTitle),
+          content: Text(
+            s.operationSuccess,
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(s.embedRecoveryOk),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _playLoaded() async {
@@ -296,6 +348,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   bool get _hasLoadedAudio => _loadedWav != null;
 
   bool get _canStartNewExtract =>
+      _extractInputHidden ||
       _loadedWav != null ||
       _bitLenCtrl.text.trim().isNotEmpty ||
       _extractionAttempted ||
@@ -309,7 +362,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
 
   bool get _newExtractFabEnabled {
     if (_processing || _loadingFile) return false;
-    return _canStartNewExtract;
+    return _extractInputHidden || _canStartNewExtract;
   }
 
   Future<void> _startNewExtract() async {
@@ -328,6 +381,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _processing = false;
       _loadingFile = false;
       _extractionAttempted = false;
+      _extractInputHidden = false;
       _loadedWav = null;
       _result = null;
       _extractedAudio = null;
@@ -338,6 +392,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _coverLoaded = false;
       _extractedPlaying = false;
     });
+    if (_scrollCtrl.hasClients) {
+      unawaited(
+        _scrollCtrl.animateTo(
+          0,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    }
   }
 
   Future<void> _playExtractedAudio() async {
@@ -511,100 +574,121 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
         ),
         Expanded(
           child: TabScrollBody(
+            scrollController: _scrollCtrl,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
-              AudioFileDropSurface(
-                enabled: !_processing && !_loadingFile,
-                onFilePath: (path) => unawaited(
-                  _loadAudioFile(fileName: p.basename(path), path: path),
-                ),
-                child: AppSectionCard(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Icon(
-                        Icons.audio_file_outlined,
-                        size: 56,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        s.pickFile,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      if (!useFixedLen) ...[
-                        const SizedBox(height: 16),
-                        DirectionalTextField(
-                          forceLatinLtr: true,
-                          controller: _bitLenCtrl,
-                          keyboardType: TextInputType.number,
-                          scrollPhysics: const NeverScrollableScrollPhysics(),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          enabled: !_processing,
-                          onChanged: (_) {
-                            if (_bitLengthError != null) {
-                              setState(() => _bitLengthError = null);
-                            }
-                          },
-                          decoration: InputDecoration(
-                            labelText: s.msgBitLengthHint,
-                            helperText: s.msgBitLengthHelper,
-                            errorText: _bitLengthError,
-                            prefixIcon: const Icon(Icons.format_list_numbered),
-                          ),
+              if (!_extractInputHidden) ...[
+                AudioFileDropSurface(
+                  enabled: !_processing && !_loadingFile,
+                  onFilePath: (path) => unawaited(
+                    _loadAudioFile(fileName: p.basename(path), path: path),
+                  ),
+                  child: AppSectionCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Icon(
+                          Icons.audio_file_outlined,
+                          size: 56,
+                          color: scheme.primary,
                         ),
-                      ],
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: _processing || _loadingFile
-                                ? null
-                                : _pickAudio,
-                            icon: _loadingFile
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.folder_open),
-                            label: Text(s.pickFile),
-                          ),
-                          _buildPlaybackControls(s),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton.icon(
-                        onPressed: _processing || !_hasLoadedAudio
-                            ? null
-                            : _extract,
-                        icon: const Icon(Icons.lock_open_outlined),
-                        label: Text(s.extractTab),
-                      ),
-                      if (_statusMessage != null) ...[
                         const SizedBox(height: 12),
                         Text(
-                          _statusMessage!,
+                          s.pickFile,
+                          style: Theme.of(context).textTheme.titleMedium,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
+                        if (!useFixedLen) ...[
+                          const SizedBox(height: 16),
+                          DirectionalTextField(
+                            forceLatinLtr: true,
+                            controller: _bitLenCtrl,
+                            keyboardType: TextInputType.number,
+                            scrollPhysics: const NeverScrollableScrollPhysics(),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            enabled: !_processing && !_loadingFile,
+                            onChanged: (_) {
+                              if (_bitLengthError != null) {
+                                setState(() => _bitLengthError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              labelText: s.msgBitLengthHint,
+                              helperText: s.msgBitLengthHelper,
+                              errorText: _bitLengthError,
+                              prefixIcon: const Icon(Icons.format_list_numbered),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _processing || _loadingFile
+                                  ? null
+                                  : _pickAudio,
+                              icon: _loadingFile
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.folder_open),
+                              label: Text(s.pickFile),
+                            ),
+                            _buildPlaybackControls(s),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: _processing ||
+                                  _loadingFile ||
+                                  !_hasLoadedAudio
+                              ? null
+                              : _extract,
+                          icon: _processing
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.lock_open_outlined),
+                          label: Text(s.extractTab),
+                        ),
+                        if (_processing || _loadingFile) ...[
+                          const SizedBox(height: 12),
+                          const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                        ],
+                        if (_statusMessage != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _statusMessage!,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppUiTokens.sectionGap),
-              _resultCard(s),
+                const SizedBox(height: AppUiTokens.sectionGap),
+              ],
+              KeyedSubtree(key: _resultCardKey, child: _resultCard(s)),
             ],
           ),
         ),

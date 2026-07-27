@@ -1033,7 +1033,7 @@ public partial class EmbedView : UserControl
         EmbedInputPanel.Visibility = Visibility.Collapsed;
 
         ResultPanel.Visibility = Visibility.Visible;
-        ResultTitle.Text = s.SuccessSaved;
+        ResultTitle.Text = s.OperationSuccess;
         CompareChartTitle.Text = s.CompareWaveformTitle;
         CompareChart.SetLegends(s.CoverWaveLegend, s.StegoWaveLegend);
         if (cover is not null)
@@ -1106,7 +1106,7 @@ public partial class EmbedView : UserControl
         var s = ThemeManager.Strings;
         MessageBox.Show(
             owner,
-            s.SuccessSaved,
+            s.OperationSuccess,
             s.EmbedCompleteTitle,
             MessageBoxButton.OK,
             MessageBoxImage.Information);

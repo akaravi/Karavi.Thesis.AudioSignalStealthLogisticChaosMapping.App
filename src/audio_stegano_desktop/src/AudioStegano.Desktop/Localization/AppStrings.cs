@@ -165,8 +165,13 @@ public sealed partial class AppStrings
         "ذخیره فایل نهان‌نگاری شده", "Save stego file",
         "حفظ ملف الإخفاء", "Enregistrer le fichier stégo");
     public string SuccessSaved => T("فایل ذخیره شد", "File saved", "تم حفظ الملف", "Fichier enregistré");
+    public string OperationSuccess => T(
+        "عملیات با موفقیت انجام شد", "Operation completed successfully",
+        "تمت العملية بنجاح", "Opération terminée avec succès");
     public string EmbedCompleteTitle => T(
         "نهان‌نگاری انجام شد", "Embedding complete", "اكتمل الإخفاء", "Intégration terminée");
+    public string ExtractCompleteTitle => T(
+        "رمزگشایی انجام شد", "Extraction complete", "اكتمل الاستخراج", "Extraction terminée");
     public string EmbedRecoveryMessage => T(
         "برای بازیابی عبارت نهانگاری‌شده عدد طول پیام را یادداشت فرمایید",
         "To recover the hidden phrase, please note the message length number",
