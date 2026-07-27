@@ -1,5 +1,17 @@
 # Change History
 
+## 2026-07-27 — Embed/Extract: hide input after success (SSOT)
+
+- Flutter: input visibility derived from result (`_stego != null` / extracted payloads) — no separate mutable hide flag that could desync.
+- After success: payload tabs + record/load hidden; New clears result and restores input.
+- WPF: `AudioSourceCard` collapsed with `EmbedInputPanel` on success; restored on New.
+
+## 2026-07-27 — Fix stuck Loading (chromium CanvasKit 404)
+
+- Root cause: post-process deleted `canvaskit/chromium/`; Chrome loads that path first → 404 → boot spinner forever.
+- Keep chromium kit; assert `canvaskit/chromium/canvaskit.js` + `.wasm` after post-process.
+- Rebuild release + static serve `http://127.0.0.1:5320/` verified (UI past splash).
+
 ## 2026-07-27 — Fix 140MB web Network (debug vs release)
 
 - Root cause: local `flutter run` **debug** (~1400 `*.dart.lib.js`) — not product size.
@@ -429,3 +441,9 @@ Ran `.\_update-ver.ps1` (patch +1). Synced:
 - Flutter: `AccentIcon` · `AccentGlowIcon` · `AccentActionIconButton`; nav · About tiles · result/extract actions · toolbar FAB glow.
 - WPF: theme brushes + colored nav/FABs/About/action buttons; soft DropShadow on FABs/hero.
 - Grades (auditor): Design B+ · AI Slop A- · A11y B+ (semantic color, not rainbow slop).
+
+## 2026-07-27 — Fix Flutter web .woff2 404 spam (font fallback CDN)
+
+- Root cause: post-process mapped `fonts.gstatic.com/s/` → `assets/fonts/` without shipping Noto Color Emoji woff2 → Network red 404 flood.
+- Fix: `_flutter-web-no-cdn.ps1` rewrites fallback base to `about:invalid#karavi-offline-fonts/` (zero CDN, no local requests); idempotent repair of old `assets/fonts/` base.
+- App text still from pubspec Roboto + Noto Sans Arabic TTF.

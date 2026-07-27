@@ -18,8 +18,10 @@ Release output under `src/audio_stegano_app/build/web` (after `--no-web-resource
 2. `New-KaraviFlutterWebRunArgumentList` defaults to `--release --tree-shake-icons` when `flutter run` is still used; pass `-DebugBuild` only for hot-reload.
 3. **Size audits / «حجم سایت زیاد است»:** measure `build/web` after `flutter build web --release --no-web-resources-cdn --tree-shake-icons` + post-process — not DevTools on a debug `flutter run` (~140 MB / 1400 requests).
 4. No third-party CDN for CanvasKit/fonts (existing no-CDN law).
+5. **Keep `canvaskit/chromium/`** after post-process. Chrome/Edge load `chromium/canvaskit.js` first; deleting it → Network 404 on `canvaskit.js`/`.wasm` and a stuck «در حال بارگذاری» boot screen. Strip only unused `skwasm*` / `wimp*` / `.map` / `.symbols`.
 
 ## Forbidden
 
 - Defaulting web-server launch to debug and then “optimizing” assets to chase 140 MB Network numbers.
 - Claiming product web is 140 MB while only debug run was measured.
+- Deleting `build/web/canvaskit/chromium/` to save a few MB.

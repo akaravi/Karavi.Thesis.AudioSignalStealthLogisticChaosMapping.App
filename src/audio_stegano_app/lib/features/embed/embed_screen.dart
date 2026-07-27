@@ -67,8 +67,9 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
   bool _processing = false;
   bool _verifying = false;
 
-  /// After a successful embed, message field and record/load card stay hidden until new embed.
-  bool _embedInputHidden = false;
+  /// After a successful embed, payload tabs + record/load stay hidden until New.
+  /// Derived from `_stego` so UI cannot desync (input visible while result card shows).
+  bool get _embedInputHidden => _stego != null;
   _EmbedPayloadKind _payloadKind = _EmbedPayloadKind.text;
   WavFile? _payloadAudio;
   Uint8List? _payloadImageBytes;
@@ -276,7 +277,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     });
     setState(() {
       _recordingPayload = true;
-      _embedInputHidden = false;
       _cover = null;
       _stego = null;
       _result = null;
@@ -405,7 +405,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     });
     setState(() {
       _recordingPayload = false;
-      _embedInputHidden = false;
       _cover = null;
       _stego = null;
       _result = null;
@@ -829,8 +828,8 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _processing = false;
       _cover = cover;
       _result = produced;
+      // Null on failure → input stays/resumes; non-null → input hidden via getter.
       _stego = produced?.stego;
-      _embedInputHidden = success;
       if (capacityError != null) {
         _statusMessage = null;
       } else if (error != null) {
@@ -1303,7 +1302,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       _payloadImageBytes = compressed;
       _payloadAudio = null;
       _statusMessage = s.payloadImageReady;
-      _embedInputHidden = false;
     });
   }
 
@@ -1349,7 +1347,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
       setState(() {
         _processing = false;
         _verifying = false;
-        _embedInputHidden = false;
         _payloadKind = _EmbedPayloadKind.text;
         _payloadAudio = null;
         _payloadImageBytes = null;
@@ -1594,7 +1591,8 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
             scrollController: _scrollCtrl,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
-              if (!_embedInputHidden) ...[
+              // Input only while no stego result; New FAB clears `_stego`.
+              if (_stego == null) ...[
                 SegmentedButton<_EmbedPayloadKind>(
                   segments: [
                     ButtonSegment(

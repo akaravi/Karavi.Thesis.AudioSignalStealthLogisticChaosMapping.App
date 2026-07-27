@@ -1769,3 +1769,93 @@
   "remaining": "none"
 }
 ```
+
+## Part 105 — Fix stuck Loading (chromium CanvasKit 404)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 105,
+  "title": "Keep canvaskit/chromium for Chrome boot",
+  "request": "صفحه لود نمی شود",
+  "rootCause": "Remove-KaraviFlutterWebDebugArtifacts deleted canvaskit/chromium; flutter_bootstrap prefers chromium/canvaskit.js → 404 → stuck splash",
+  "scope": [
+    "_flutter-web-no-cdn.ps1 (keep chromium + assert)",
+    "flutter-web-release-default.mdc",
+    "rebuild + static serve 5320"
+  ]
+}
+```
+
+## Result 105
+
+```json
+{
+  "part": 105,
+  "status": "done",
+  "verification": "chromium/canvaskit.js+wasm HTTP 200; browser past splash to Embed UI; post-process keeps chromium; Assert fails if chromium missing",
+  "files": [
+    "_flutter-web-no-cdn.ps1",
+    ".cursor/rules/flutter-web-release-default.mdc",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Part 105 - Fix Flutter web woff2 404 spam
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 105,
+  "title": "Neutralize CanvasKit font-fallback CDN without local woff2 404",
+  "request": "Screenshot: Network flooded with .woff2 404 from main.dart.js",
+  "rootCause": "Repair rewrote fonts.gstatic.com/s/ to assets/fonts/ but no Noto Color Emoji woff2 shipped; CanvasKit fallback requested hundreds of fake local paths",
+  "fix": "Rewrite font CDN base to about:invalid#karavi-offline-fonts/ (zero CDN + no local 404); idempotent replace of prior assets/fonts/ base; keep pubspec Roboto+Noto TTF",
+  "touchedFiles": ["_flutter-web-no-cdn.ps1"]
+}
+```
+
+## Result 105
+
+```json
+{
+  "part": 105,
+  "status": "done",
+  "verification": "Post-process patched main.dart.js (about:invalid base); Assert no gstatic; web restarted HTTP 200 on :5320; prior assets/fonts/ fallback base gone",
+  "remaining": "Hard-refresh browser (Ctrl+Shift+R) to clear cached main.dart.js"
+}
+```
+
+## Part 106 — Hide embed input after stego (SSOT)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 106,
+  "title": "Hide payload/record after successful embed until New",
+  "request": "بعد از نهان نگاری بخش بالا مخفی نشد؛ با دکمه جدید ظاهر شود و نتایج قبلی مخفی",
+  "rootCause": "Separate _embedInputHidden flag could desync from _stego (e.g. pick-image reset); UI must key off result presence",
+  "fix": "Getter SSOT: hide input when _stego != null (embed) / extracted payloads (extract); WPF collapse AudioSourceCard with EmbedInputPanel",
+  "touchedFiles": [
+    "src/audio_stegano_app/lib/features/embed/embed_screen.dart",
+    "src/audio_stegano_app/lib/features/extract/extract_screen.dart",
+    "src/audio_stegano_desktop/.../Views/EmbedView.xaml.cs",
+    "readmehistory.md"
+  ]
+}
+```
+
+## Result 106
+
+```json
+{
+  "part": 106,
+  "status": "done",
+  "verification": "flutter analyze embed+extract clean; WPF Debug build 0 warnings/errors; web rebuild+static :5320 HTTP 200; input gated on _stego == null; New clears stego",
+  "remaining": "Hard-refresh browser (Ctrl+Shift+R)"
+}
+```

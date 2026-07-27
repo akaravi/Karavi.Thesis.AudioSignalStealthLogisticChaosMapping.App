@@ -47,8 +47,12 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
   bool _loadingFile = false;
   bool _extractionAttempted = false;
 
-  /// After a successful extract, pick/load card stays hidden until new extract.
-  bool _extractInputHidden = false;
+  /// After a successful extract, pick/load card stays hidden until New.
+  /// Derived from result payloads so UI cannot desync with the result card.
+  bool get _extractInputHidden =>
+      _extractedAudio != null ||
+      _extractedImageBytes != null ||
+      (_result != null && _result!.isNotEmpty);
   String? _result;
   WavFile? _extractedAudio;
   Uint8List? _extractedImageBytes;
@@ -124,7 +128,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _loadingFile = true;
       _statusMessage = s.processing;
       _extractionAttempted = false;
-      _extractInputHidden = false;
       _result = null;
       _extractedAudio = null;
       _extractedImageBytes = null;
@@ -288,7 +291,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _extractedAudio = audio;
       _extractedImageBytes = imageBytes;
       _statusMessage = status;
-      _extractInputHidden = succeeded;
     });
 
     if (succeeded) {
@@ -410,7 +412,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
       _processing = false;
       _loadingFile = false;
       _extractionAttempted = false;
-      _extractInputHidden = false;
       _loadedWav = null;
       _result = null;
       _extractedAudio = null;

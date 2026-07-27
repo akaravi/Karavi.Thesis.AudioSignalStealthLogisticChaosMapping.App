@@ -70,11 +70,18 @@ function Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals {
         throw "Flutter web output not found: $WebOutputDirectory"
     }
 
+    # Font fallback CDN (Noto Color Emoji / CJK woff2) must NOT be rewritten to
+    # assets/fonts/ — that path has no woff2 files and floods Network with 404.
+    # about:invalid keeps zero-CDN (no gstatic host) and stops the browser from
+    # hitting the local static server for hundreds of missing fallback fonts.
+    # App text uses pubspec-bundled Roboto + Noto Sans Arabic TTFs instead.
     $literalReplacements = [ordered]@{
         'https://www.gstatic.com/flutter-canvaskit' = 'canvaskit'
         'http://www.gstatic.com/flutter-canvaskit'  = 'canvaskit'
-        'https://fonts.gstatic.com/s/'              = 'assets/fonts/'
-        'http://fonts.gstatic.com/s/'               = 'assets/fonts/'
+        'https://fonts.gstatic.com/s/'              = 'about:invalid#karavi-offline-fonts/'
+        'http://fonts.gstatic.com/s/'               = 'about:invalid#karavi-offline-fonts/'
+        # Idempotent: previous post-process used a fake local base (404 spam).
+        's==null?"assets/fonts/":s'                 = 's==null?"about:invalid#karavi-offline-fonts/":s'
     }
 
     $extensions = Get-KaraviFlutterWebDeployScanExtensions
@@ -140,6 +147,17 @@ function Assert-KaraviFlutterWebOutputNoExternalCdn {
     $canvaskitWasm = Join-Path $canvaskitDir 'canvaskit.wasm'
     if (-not (Test-Path -LiteralPath $canvaskitJs) -or -not (Test-Path -LiteralPath $canvaskitWasm)) {
         throw "Local canvaskit bundle is incomplete under '$canvaskitDir' (expected canvaskit.js and canvaskit.wasm)."
+    }
+
+    # Chromium loads canvaskit/chromium/canvaskit.js first (flutter_bootstrap.js).
+    # Stripping that folder leaves the boot spinner forever on Chrome/Edge.
+    $chromiumJs = Join-Path $canvaskitDir 'chromium\canvaskit.js'
+    $chromiumWasm = Join-Path $canvaskitDir 'chromium\canvaskit.wasm'
+    if (-not (Test-Path -LiteralPath $chromiumJs) -or -not (Test-Path -LiteralPath $chromiumWasm)) {
+        throw @(
+            "Local canvaskit/chromium/ is missing under '$canvaskitDir'.",
+            "Do not delete chromium/; Chrome requires it. Rebuild with --no-web-resources-cdn."
+        ) -join ' '
     }
 
     $bootstrapPath = Join-Path $WebOutputDirectory 'flutter_bootstrap.js'
@@ -235,16 +253,13 @@ function Remove-KaraviFlutterWebDebugArtifacts {
         ForEach-Object { Remove-TrackedItem -Path $_.FullName }
 
     # Default build is dart2js + CanvasKit. skwasm/wimp are for --wasm and are unused here.
+    # Keep canvaskit/chromium/ — Chromium browsers load chromium/canvaskit.js first
+    # (flutter_bootstrap.js); deleting it causes 404 and a stuck boot spinner.
     $ck = Join-Path $WebOutputDirectory 'canvaskit'
     if (Test-Path -LiteralPath $ck) {
         Get-ChildItem -Path $ck -File -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -match '^(skwasm|wimp)' } |
             ForEach-Object { Remove-TrackedItem -Path $_.FullName }
-
-        $chromium = Join-Path $ck 'chromium'
-        if (Test-Path -LiteralPath $chromium) {
-            Remove-TrackedItem -Path $chromium
-        }
     }
 
     if ($removedCount -gt 0) {
@@ -259,11 +274,12 @@ function Copy-KaraviFlutterWebBundledNotoFonts {
     )
 
     # App text fonts ship via pubspec AssetManifest (subsetted TTF under assets/fonts).
-    # Boot splash uses system-ui in web/index.html — no duplicate web/fonts/ tree.
+    # CanvasKit Noto/Emoji fallback CDN URLs are neutralized to about:invalid in
+    # Repair-KaraviFlutterWebOutputRemoveExternalCdnLiterals (no local woff2 tree).
     $projectRoot = Split-Path (Split-Path $WebOutputDirectory -Parent) -Parent
     $sourceRoot = Join-Path $projectRoot 'web\fonts'
     if (Test-Path -LiteralPath $sourceRoot) {
-        Write-Host "Skipping obsolete web/fonts copy (use pubspec fonts only)." -ForegroundColor DarkGray
+        Write-Host "Skipping obsolete web/fonts copy (use pubspec fonts only; fallback CDN neutralized)." -ForegroundColor DarkGray
     }
 }
 

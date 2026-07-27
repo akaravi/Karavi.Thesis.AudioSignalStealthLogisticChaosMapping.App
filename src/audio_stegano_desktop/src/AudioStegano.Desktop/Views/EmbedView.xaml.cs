@@ -1159,6 +1159,7 @@ public partial class EmbedView : UserControl
         AbListenPanel.Visibility = Visibility.Collapsed;
         
         EmbedInputPanel.Visibility = Visibility.Visible;
+        AudioSourceCard.Visibility = Visibility.Visible;
         MessageTextBox.IsEnabled = true;
         StatusText.Text = string.Empty;
         Equalizer.SetBands(new double[SpectrumAnalyzer.BandCount]);
@@ -1177,6 +1178,7 @@ public partial class EmbedView : UserControl
         _stego = outcome.Stego;
         StatusText.Text = string.Empty;
         EmbedInputPanel.Visibility = Visibility.Collapsed;
+        AudioSourceCard.Visibility = Visibility.Collapsed;
 
         ResultPanel.Visibility = Visibility.Visible;
         ResultTitle.Text = s.OperationSuccess;
