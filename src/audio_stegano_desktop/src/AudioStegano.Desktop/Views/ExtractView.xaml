@@ -92,13 +92,6 @@
                       ToolTipService.ShowOnDisabled="True">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" FontSize="16" />
               </Button>
-              <Button x:Name="PlayExtractedButton" Style="{StaticResource TonalButton}" Margin="0,0,8,8"
-                      Click="PlayExtractedButton_Click" Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal">
-                  <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
-                  <TextBlock x:Name="PlayExtractedLabel" />
-                </StackPanel>
-              </Button>
               <Button x:Name="CopyButton" Style="{StaticResource FilledButton}" Margin="0,0,8,8"
                       Click="CopyButton_Click" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
@@ -114,6 +107,76 @@
               <StackPanel>
                 <TextBlock x:Name="ResultPayloadTitle" Style="{StaticResource SectionTitle}" FontSize="14"
                            Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12" />
+                <StackPanel x:Name="ExtractListenPanel" Visibility="Collapsed">
+                  <Border Margin="0,0,0,8" Padding="10" CornerRadius="12"
+                          Background="{DynamicResource SurfaceBrush}"
+                          BorderBrush="{DynamicResource OutlineVariantBrush}" BorderThickness="1">
+                    <StackPanel>
+                      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Width="22" Height="22" CornerRadius="11"
+                                Background="{DynamicResource SecondaryContainerBrush}"
+                                VerticalAlignment="Center" Margin="0,0,8,0">
+                          <TextBlock Text="A" FontSize="11" FontWeight="Bold"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                     FlowDirection="LeftToRight" />
+                        </Border>
+                        <TextBlock x:Name="CarrierSideTitle" VerticalAlignment="Center"
+                                   FontWeight="SemiBold" />
+                      </StackPanel>
+                      <WrapPanel>
+                        <Button x:Name="PlayCarrierButton" Style="{StaticResource TonalButton}"
+                                Margin="0,0,8,0" Click="PlayCarrierButton_Click">
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                            <TextBlock x:Name="PlayCarrierLabel" />
+                          </StackPanel>
+                        </Button>
+                        <Button x:Name="PauseCarrierButton" Style="{StaticResource IconTonalButton}"
+                                Margin="0,0,8,0" Click="PauseButton_Click" Visibility="Collapsed">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" FontSize="16" />
+                        </Button>
+                        <Button x:Name="StopCarrierButton" Style="{StaticResource IconTonalButton}"
+                                Click="StopPlaybackButton_Click" Visibility="Collapsed">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" FontSize="16" />
+                        </Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                  <Border Padding="10" CornerRadius="12"
+                          Background="{DynamicResource SurfaceBrush}"
+                          BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1">
+                    <StackPanel>
+                      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Width="22" Height="22" CornerRadius="11"
+                                Background="{DynamicResource PrimaryBrush}"
+                                VerticalAlignment="Center" Margin="0,0,8,0">
+                          <TextBlock Text="B" FontSize="11" FontWeight="Bold" Foreground="White"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                     FlowDirection="LeftToRight" />
+                        </Border>
+                        <TextBlock x:Name="ExtractedSideTitle" VerticalAlignment="Center"
+                                   FontWeight="SemiBold" />
+                      </StackPanel>
+                      <WrapPanel>
+                        <Button x:Name="PlayExtractedButton" Style="{StaticResource TonalButton}"
+                                Margin="0,0,8,0" Click="PlayExtractedButton_Click" Visibility="Collapsed">
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE768;" Margin="0,0,8,0" />
+                            <TextBlock x:Name="PlayExtractedLabel" />
+                          </StackPanel>
+                        </Button>
+                        <Button x:Name="PauseExtractedButton" Style="{StaticResource IconTonalButton}"
+                                Margin="0,0,8,0" Click="PauseExtractedButton_Click" Visibility="Collapsed">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE769;" FontSize="16" />
+                        </Button>
+                        <Button x:Name="StopExtractedButton" Style="{StaticResource IconTonalButton}"
+                                Click="StopExtractedButton_Click" Visibility="Collapsed">
+                          <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71A;" FontSize="16" />
+                        </Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
                 <TextBox x:Name="ResultText" IsReadOnly="True" TextWrapping="Wrap" MinHeight="80"
                          Background="Transparent" BorderThickness="0"
                          Foreground="{DynamicResource TextBrush}" FontSize="15" Visibility="Collapsed" />

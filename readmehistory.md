@@ -1,5 +1,11 @@
 # Change History
 
+## 2026-07-28 — Extract audio result: carrier play + no duplicate label
+
+- Duplicate «صوت استخراج‌شده»: title + body both used same string — body replaced with A/B listen (حامل / استخراج‌شده).
+- Carrier (loaded stego) play available on result panel after success (input card is hidden).
+- Flutter + WPF parity; i18n fa/en/ar/fr: `extractCarrierShort`, `playCarrierAudio`, `extractListenTitle`.
+
 ## 2026-07-27 — Embed/Extract: hide input after success (SSOT)
 
 - Flutter: input visibility derived from result (`_stego != null` / extracted payloads) — no separate mutable hide flag that could desync.

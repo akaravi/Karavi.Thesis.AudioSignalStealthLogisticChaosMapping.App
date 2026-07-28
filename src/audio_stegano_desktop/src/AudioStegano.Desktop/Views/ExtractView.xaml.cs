@@ -92,12 +92,20 @@ public partial class ExtractView : UserControl
         ResultTitle.Text = s.ExtractedText;
         ResultSubtitle.Text = s.ExtractSuccessSubtitle;
         ResultPayloadTitle.Text = s.ExtractedText;
+        CarrierSideTitle.Text = s.ExtractCarrierShort;
+        ExtractedSideTitle.Text = s.ExtractedAudio;
         CopyLabel.Text = s.Copy;
         PlayExtractedLabel.Text = s.PlayExtractedAudio;
+        PlayCarrierLabel.Text = s.PlayCarrierAudio;
         ToolTipService.SetToolTip(SaveExtractedButton, s.SaveExtractedAudio);
         ToolTipService.SetToolTip(PlayButton, s.Play);
         ToolTipService.SetToolTip(PauseButton, s.Pause);
         ToolTipService.SetToolTip(StopPlaybackButton, s.StopPlayback);
+        ToolTipService.SetToolTip(PlayCarrierButton, s.PlayCarrierAudio);
+        ToolTipService.SetToolTip(PauseCarrierButton, s.Pause);
+        ToolTipService.SetToolTip(StopCarrierButton, s.StopPlayback);
+        ToolTipService.SetToolTip(PauseExtractedButton, s.Pause);
+        ToolTipService.SetToolTip(StopExtractedButton, s.StopPlayback);
         ToolTipService.SetToolTip(NewExtractFab, s.ExtractNew);
         ToolTipService.SetToolTip(HelpFab, s.HelpTooltip);
         ApplyBitLengthPanelVisibility();
@@ -129,6 +137,8 @@ public partial class ExtractView : UserControl
         BitLengthBox.Clear();
         ExtractCard.Visibility = Visibility.Visible;
         ResultPanel.Visibility = Visibility.Collapsed;
+        ExtractListenPanel.Visibility = Visibility.Collapsed;
+        PlayExtractedButton.Visibility = Visibility.Collapsed;
         PlaybackPanel.Visibility = Visibility.Collapsed;
         StatusText.Text = string.Empty;
         ExtractButton.IsEnabled = false;
@@ -157,9 +167,26 @@ public partial class ExtractView : UserControl
         var playing = _hub.IsPlaying(PlaybackSessionId.ExtractCover);
         var hasSource = _hub.HasSource(PlaybackSessionId.ExtractCover);
         var paused = _hub.IsPaused(PlaybackSessionId.ExtractCover);
+        var transport = playing || paused;
+
         PlayButton.IsEnabled = !playing && _loadedWav is not null;
         PauseButton.IsEnabled = playing;
-        StopPlaybackButton.IsEnabled = hasSource && (playing || paused);
+        StopPlaybackButton.IsEnabled = hasSource && transport;
+
+        var carrierVisible = ExtractListenPanel.Visibility == Visibility.Visible;
+        PlayCarrierButton.IsEnabled = carrierVisible && _loadedWav is not null;
+        PlayCarrierLabel.Text = playing
+            ? ThemeManager.Strings.Pause
+            : ThemeManager.Strings.PlayCarrierAudio;
+        PauseCarrierButton.Visibility = carrierVisible && transport
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        StopCarrierButton.Visibility = carrierVisible && hasSource && transport
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        PauseCarrierButton.IsEnabled = playing;
+        StopCarrierButton.IsEnabled = hasSource && transport;
+
         UpdateExtractedPlayButton();
     }
 
@@ -171,20 +198,27 @@ public partial class ExtractView : UserControl
             return;
         }
 
-        if (PlayExtractedButton.Visibility != Visibility.Visible)
-            return;
-
         var s = ThemeManager.Strings;
-        if (_hub.IsPlaying(PlaybackSessionId.ExtractPayload))
+        var playing = _hub.IsPlaying(PlaybackSessionId.ExtractPayload);
+        var paused = _hub.IsPaused(PlaybackSessionId.ExtractPayload);
+        var hasSource = _hub.HasSource(PlaybackSessionId.ExtractPayload);
+        var transport = playing || paused;
+        var extractedVisible = PlayExtractedButton.Visibility == Visibility.Visible;
+
+        if (extractedVisible)
         {
-            PlayExtractedLabel.Text = s.Pause;
-            PlayExtractedButton.IsEnabled = true;
-        }
-        else
-        {
-            PlayExtractedLabel.Text = s.PlayExtractedAudio;
+            PlayExtractedLabel.Text = playing ? s.Pause : s.PlayExtractedAudio;
             PlayExtractedButton.IsEnabled = _extractedAudio is not null;
         }
+
+        PauseExtractedButton.Visibility = extractedVisible && transport
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        StopExtractedButton.Visibility = extractedVisible && hasSource && transport
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        PauseExtractedButton.IsEnabled = playing;
+        StopExtractedButton.IsEnabled = hasSource && transport;
     }
 
     private int? ParseBitLength()
@@ -288,10 +322,11 @@ public partial class ExtractView : UserControl
             StatusText.Text = string.Empty;
             ResultText.Visibility = Visibility.Collapsed;
             ResultText.Text = string.Empty;
+            ExtractListenPanel.Visibility = Visibility.Collapsed;
+            PlayExtractedButton.Visibility = Visibility.Collapsed;
             ShowExtractedImage(payload.ImageBytes);
             ApplyExtractSuccessChrome(s.ExtractedImage);
             CopyButton.Visibility = Visibility.Collapsed;
-            PlayExtractedButton.Visibility = Visibility.Collapsed;
             SaveExtractedButton.Visibility = Visibility.Visible;
             ToolTipService.SetToolTip(SaveExtractedButton, s.SaveExtractedImage);
             ResultActionsPanel.Visibility = Visibility.Visible;
@@ -307,11 +342,13 @@ public partial class ExtractView : UserControl
             _extractedAudio = payload.Audio;
             ClearExtractedImage();
             StatusText.Text = string.Empty;
-            ResultText.Visibility = Visibility.Visible;
-            ResultText.Text = s.ExtractedAudio;
-            ContentTextDirectionHelper.ApplyTo(ResultText, ResultText.Text, forceLatinLtr: true);
-            ApplyExtractSuccessChrome(s.ExtractedAudio);
-            ResultText.Foreground = (Brush)FindResource("TextBrush");
+            // Title only once — no duplicate body text in ResultText.
+            ResultText.Visibility = Visibility.Collapsed;
+            ResultText.Text = string.Empty;
+            ExtractListenPanel.Visibility = Visibility.Visible;
+            ApplyExtractSuccessChrome(s.ExtractListenTitle);
+            CarrierSideTitle.Text = s.ExtractCarrierShort;
+            ExtractedSideTitle.Text = s.ExtractedAudio;
             CopyButton.Visibility = Visibility.Collapsed;
             PlayExtractedButton.Visibility = Visibility.Visible;
             SaveExtractedButton.Visibility = Visibility.Visible;
@@ -319,6 +356,7 @@ public partial class ExtractView : UserControl
             ResultActionsPanel.Visibility = Visibility.Visible;
             ResultPayloadBlock.Visibility = Visibility.Visible;
             ResultPanel.Visibility = Visibility.Visible;
+            UpdatePlaybackButtons();
             OnExtractSucceeded();
             SessionLog.Write($"Extract: audio samples={payload.Audio.Samples.Length}");
             return;
@@ -342,13 +380,14 @@ public partial class ExtractView : UserControl
         _extractedAudio = null;
         ClearExtractedImage();
         StatusText.Text = string.Empty;
+        ExtractListenPanel.Visibility = Visibility.Collapsed;
+        PlayExtractedButton.Visibility = Visibility.Collapsed;
         ResultText.Visibility = Visibility.Visible;
         ResultText.Text = payload.Text;
         ContentTextDirectionHelper.ApplyTo(ResultText, payload.Text);
         ApplyExtractSuccessChrome(s.ExtractedText);
         ResultText.Foreground = (Brush)FindResource("TextBrush");
         CopyButton.Visibility = Visibility.Visible;
-        PlayExtractedButton.Visibility = Visibility.Collapsed;
         SaveExtractedButton.Visibility = Visibility.Collapsed;
         ResultActionsPanel.Visibility = Visibility.Visible;
         ResultPayloadBlock.Visibility = Visibility.Visible;
@@ -442,10 +481,31 @@ public partial class ExtractView : UserControl
         ResultPayloadBlock.Visibility = Visibility.Visible;
         ResultPayloadBlock.ClearValue(BackgroundProperty);
         CopyButton.Visibility = Visibility.Collapsed;
+        ExtractListenPanel.Visibility = Visibility.Collapsed;
         PlayExtractedButton.Visibility = Visibility.Collapsed;
         SaveExtractedButton.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Visible;
     }
+
+    private void PlayCarrierButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_loadedWav is null) return;
+        try
+        {
+            _hub.PlayOrToggle(PlaybackSessionId.ExtractCover, _loadedWav);
+            UpdatePlaybackButtons();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = ex.Message;
+        }
+    }
+
+    private void PauseExtractedButton_Click(object sender, RoutedEventArgs e) =>
+        _hub.Pause(PlaybackSessionId.ExtractPayload);
+
+    private void StopExtractedButton_Click(object sender, RoutedEventArgs e) =>
+        _hub.Stop(PlaybackSessionId.ExtractPayload);
 
     private void PlayExtractedButton_Click(object sender, RoutedEventArgs e)
     {
@@ -500,8 +560,8 @@ public partial class ExtractView : UserControl
         if (_loadedWav is null) return;
         try
         {
-            _hub.PlayIfNotPlaying(PlaybackSessionId.ExtractCover, _loadedWav);
-            UpdateExtractedPlayButton();
+            _hub.PlayOrToggle(PlaybackSessionId.ExtractCover, _loadedWav);
+            UpdatePlaybackButtons();
         }
         catch (Exception ex)
         {

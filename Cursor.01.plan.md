@@ -1859,3 +1859,29 @@
   "remaining": "Hard-refresh browser (Ctrl+Shift+R)"
 }
 ```
+
+## Part 107 — Extract result: carrier play + dedupe label + publish ZIP
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 107,
+  "title": "Extract audio A/B listen + remove duplicate extracted label",
+  "request": "پخش صوت حامل؛ رفع تکرار صوت استخراج‌شده؛ ZIP پابلیش",
+  "rootCause": "ResultPayloadTitle and ResultText/_resultBody both showed extractedAudio; carrier play lived only on collapsed input card",
+  "fix": "A/B listen panel (carrier A / extracted B) on result; hide duplicate body; publish Flutter web ZIP",
+  "zip": "publish/flutter/web/KaraviThesis_AudioStegano_FlutterWeb_20260728_114938.zip"
+}
+```
+
+## Result 107
+
+```json
+{
+  "part": 107,
+  "status": "done",
+  "verification": "flutter analyze extract+strings clean; WPF Debug 0 warn/err; ZIP 6.86MB created",
+  "remaining": "none"
+}
+```

@@ -290,6 +290,30 @@ class AppStrings {
       'Lire l’audio extrait',
     ),
   );
+  String get extractCarrierShort => _t(
+    const _S(
+      'صوت حامل',
+      'Carrier audio',
+      'صوت الحامل',
+      'Audio porteur',
+    ),
+  );
+  String get playCarrierAudio => _t(
+    const _S(
+      'پخش صوت حامل',
+      'Play carrier audio',
+      'تشغيل صوت الحامل',
+      'Lire l’audio porteur',
+    ),
+  );
+  String get extractListenTitle => _t(
+    const _S(
+      'پخش مقایسه — حامل و استخراج‌شده',
+      'Compare playback — carrier & extracted',
+      'تشغيل للمقارنة — الحامل والمستخرج',
+      'Écoute comparée — porteur et extrait',
+    ),
+  );
   String get extractUnsupportedType => _t(
     const _S(
       'این نوع محتوا در این نسخه پشتیبانی نمی‌شود.',

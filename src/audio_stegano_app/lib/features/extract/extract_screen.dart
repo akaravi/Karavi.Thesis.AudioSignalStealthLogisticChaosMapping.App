@@ -338,7 +338,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     final wav = _loadedWav;
     if (wav == null) return;
     try {
-      await _hub.playIfNotPlaying(PlaybackSessionId.extractCover, wav);
+      await _hub.playOrToggle(PlaybackSessionId.extractCover, wav);
     } catch (e) {
       if (!mounted) return;
       setState(() => _statusMessage = e.toString());
@@ -825,40 +825,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
             filled: true,
             onPressed: _saveExtractedImage,
           )
-        else if (isAudio) ...[
+        else if (isAudio)
           AccentActionIconButton(
             tooltip: s.saveExtractedAudio,
             icon: Icons.save_outlined,
             accent: AppIconAccent.save,
             filled: true,
             onPressed: _saveExtractedAudio,
-          ),
-          FilledButton.tonalIcon(
-            onPressed: _playExtractedAudio,
-            style: FilledButton.styleFrom(
-              foregroundColor: AppIconAccents.foreground(
-                _extractedPlaying
-                    ? AppIconAccent.pause
-                    : AppIconAccent.play,
-                Theme.of(context).brightness,
-              ),
-              backgroundColor: AppIconAccents.container(
-                _extractedPlaying
-                    ? AppIconAccent.pause
-                    : AppIconAccent.play,
-                Theme.of(context).brightness,
-              ),
-            ),
-            icon: Icon(
-              _extractedPlaying
-                  ? Icons.pause_rounded
-                  : Icons.play_arrow_rounded,
-            ),
-            label: Text(
-              _extractedPlaying ? s.pause : s.playExtractedAudio,
-            ),
-          ),
-        ] else
+          )
+        else
           Builder(
             builder: (innerCtx) {
               return AccentActionIconButton(
@@ -899,7 +874,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              payloadTitle,
+              isAudio ? s.extractListenTitle : payloadTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -915,12 +890,7 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
                 ),
               )
             else if (isAudio)
-              Text(
-                _resultBody(s),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: scheme.onSurface,
-                ),
-              )
+              _buildExtractListenSides(s, theme, scheme)
             else
               DirectionalSelectableText(
                 _resultBody(s),
@@ -931,6 +901,172 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildExtractListenSides(
+    AppStrings s,
+    ThemeData theme,
+    ColorScheme scheme,
+  ) {
+    final coverTransport =
+        _coverPlaying || _hub.isPaused(PlaybackSessionId.extractCover);
+    final extractedTransport =
+        _extractedPlaying || _hub.isPaused(PlaybackSessionId.extractPayload);
+
+    Widget sideCard({
+      required String badge,
+      required String title,
+      required String playLabel,
+      required bool playing,
+      required bool showTransport,
+      required bool emphasized,
+      required VoidCallback? onPlay,
+      required VoidCallback? onPause,
+      required VoidCallback? onStop,
+    }) {
+      final borderColor = playing
+          ? scheme.primary
+          : scheme.outlineVariant.withValues(alpha: emphasized ? 0.55 : 0.4);
+      final fill = emphasized
+          ? Color.alphaBlend(
+              scheme.primary.withValues(alpha: 0.06),
+              scheme.surface,
+            )
+          : scheme.surface.withValues(alpha: 0.88);
+      final badgeBg = emphasized
+          ? scheme.primary.withValues(alpha: 0.9)
+          : scheme.secondaryContainer.withValues(alpha: 0.85);
+      final badgeFg =
+          emphasized ? scheme.onPrimary : scheme.onSecondaryContainer;
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: playing ? 1.5 : 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 22,
+                  height: 22,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      badge,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: badgeFg,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: onPlay,
+                  icon: Icon(
+                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    size: 18,
+                  ),
+                  label: Text(playing ? s.pause : playLabel),
+                ),
+                if (showTransport) ...[
+                  IconButton.filledTonal(
+                    tooltip: s.pause,
+                    onPressed: onPause,
+                    icon: const Icon(Icons.pause_rounded, size: 18),
+                  ),
+                  IconButton.filledTonal(
+                    tooltip: s.stopPlayback,
+                    onPressed: onStop,
+                    icon: const Icon(Icons.stop_rounded, size: 18),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    final carrierCard = sideCard(
+      badge: 'A',
+      title: s.extractCarrierShort,
+      playLabel: s.playCarrierAudio,
+      playing: _coverPlaying,
+      showTransport: coverTransport,
+      emphasized: false,
+      onPlay: _hasLoadedAudio ? _playLoaded : null,
+      onPause: coverTransport ? _pauseLoaded : null,
+      onStop: coverTransport || _coverLoaded ? _stopLoaded : null,
+    );
+    final extractedCard = sideCard(
+      badge: 'B',
+      title: s.extractedAudio,
+      playLabel: s.playExtractedAudio,
+      playing: _extractedPlaying,
+      showTransport: extractedTransport,
+      emphasized: true,
+      onPlay: _extractedAudio != null ? _playExtractedAudio : null,
+      onPause: extractedTransport
+          ? () => unawaited(_hub.pause(PlaybackSessionId.extractPayload))
+          : null,
+      onStop: extractedTransport || _extractedPlaying
+          ? () => unawaited(_hub.stop(PlaybackSessionId.extractPayload))
+          : null,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide =
+            constraints.maxWidth >= AppUiTokens.resultContentBreakpoint;
+        if (wide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: carrierCard),
+              const SizedBox(width: 8),
+              Expanded(child: extractedCard),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            carrierCard,
+            const SizedBox(height: 8),
+            extractedCard,
+          ],
+        );
+      },
     );
   }
 }

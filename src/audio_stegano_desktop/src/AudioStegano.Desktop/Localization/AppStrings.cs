@@ -154,6 +154,17 @@ public sealed partial class AppStrings
     public string PlayExtractedAudio => T(
         "پخش صوت استخراج‌شده", "Play extracted audio",
         "تشغيل الصوت المستخرج", "Lire l’audio extrait");
+    public string ExtractCarrierShort => T(
+        "صوت حامل", "Carrier audio",
+        "صوت الحامل", "Audio porteur");
+    public string PlayCarrierAudio => T(
+        "پخش صوت حامل", "Play carrier audio",
+        "تشغيل صوت الحامل", "Lire l’audio porteur");
+    public string ExtractListenTitle => T(
+        "پخش مقایسه — حامل و استخراج‌شده",
+        "Compare playback — carrier & extracted",
+        "تشغيل للمقارنة — الحامل والمستخرج",
+        "Écoute comparée — porteur et extrait");
     public string ExtractUnsupportedType => T(
         "این نوع محتوا در این نسخه پشتیبانی نمی‌شود.",
         "This content type is not supported in this version.",
