@@ -13,13 +13,14 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <!-- AppBar -->
+    <!-- AppBar — page destination title (Material 3 small top app bar) -->
     <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
-            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="8,4">
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,4">
       <Grid Height="56">
         <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold"
                    Foreground="{DynamicResource TextBrush}"
-                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                   HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                   TextAlignment="Left" TextTrimming="CharacterEllipsis" />
       </Grid>
     </Border>
 

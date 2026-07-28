@@ -124,7 +124,7 @@ class _HelpSheetBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _HelpStepsCard(
-                    icon: Icons.search_outlined,
+                    icon: Icons.lock_open_outlined,
                     title: s.helpSectionExtractSteps,
                     steps: extractSteps,
                     highlighted: initialSection == HelpSection.extract,

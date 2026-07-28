@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'app_brand_colors.dart';
 import 'app_ui_tokens.dart';
 
-/// Material 3 themes — fixed soft-purple seed; light and dark brightness only.
+/// Material 3 themes — security-blue seed (Soft UI); light/dark brightness only.
 class AppTheme {
   static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppBrandColors.softPurple,
+      seedColor: AppBrandColors.primary,
       brightness: Brightness.light,
       dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
     );
@@ -16,7 +16,7 @@ class AppTheme {
 
   static ThemeData dark() {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppBrandColors.softPurple,
+      seedColor: AppBrandColors.primary,
       brightness: Brightness.dark,
       dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
     );
@@ -42,7 +42,8 @@ class AppTheme {
       visualDensity: VisualDensity.adaptivePlatformDensity,
       scaffoldBackgroundColor: scheme.surface,
       appBarTheme: AppBarTheme(
-        centerTitle: true,
+        // M3 Small Top App Bar: start-aligned destination title (RTL-aware).
+        centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: scheme.surface,

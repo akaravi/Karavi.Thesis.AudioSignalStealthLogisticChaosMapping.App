@@ -112,8 +112,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         AppIconAccent.embed,
       ),
       _Dest(
-        Icons.search_outlined,
-        Icons.search,
+        Icons.lock_open_outlined,
+        Icons.lock_open,
         s.extractTab,
         AppIconAccent.extract,
       ),
@@ -152,14 +152,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     );
     final scheme = Theme.of(context).colorScheme;
     final busyMessage = ref.watch(appBusyMessageProvider);
+    // Page titles live on each tab's own [PageAppBar] (M3 destination title).
+    // Window / PWA name stays [AppStrings.appTitle] via MaterialApp.title.
     final scaffold = Scaffold(
-      appBar: AppBar(
-        title: Text(s.appTitle),
-        centerTitle: true,
-        backgroundColor: scheme.surface,
-        foregroundColor: scheme.onSurface,
-        surfaceTintColor: Colors.transparent,
-      ),
       body: wide
           ? Row(
               children: [

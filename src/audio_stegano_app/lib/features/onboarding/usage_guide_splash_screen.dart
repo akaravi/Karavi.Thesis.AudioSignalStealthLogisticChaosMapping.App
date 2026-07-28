@@ -71,7 +71,7 @@ class UsageGuideSplashScreen extends ConsumerWidget {
                         text: s.usageGuideStepEmbed,
                       ),
                       _GuideStep(
-                        icon: Icons.search_outlined,
+                        icon: Icons.lock_open_outlined,
                         text: s.usageGuideStepExtract,
                       ),
                       _GuideStep(

@@ -1,77 +1,111 @@
 import 'package:flutter/material.dart';
 
-/// Semantic icon accents — meaning-driven hues (not rainbow decoration).
+/// Semantic icon accents — meaning-driven, **role-collapsed** (not rainbow).
 ///
-/// Light/dark pairs keep ≥3:1 vs typical surfaces for non-text UI (WCAG).
+/// ui-ux-pro-max: Soft UI Evolution + Inclusive Design —
+/// few hues, WCAG-friendly pairs, icons+color (never color alone).
+///
+/// Light/dark pairs target ≥4.5:1 vs app surfaces for icon glyphs.
 enum AppIconAccent {
-  /// Embed / stego layers — brand violet.
+  /// Embed / stego layers — brand.
   embed,
 
-  /// Extract / search — teal.
+  /// Extract / decrypt — trust teal.
   extract,
 
-  /// Settings / gear — amber.
+  /// Settings / gear — warning amber.
   settings,
 
-  /// About / person — rose.
+  /// About / person — brand (same family as embed; no pink nav).
   about,
 
-  /// Help — sky blue.
+  /// Help — info blue.
   help,
 
-  /// New / create — emerald.
+  /// New / create — success green.
   create,
 
-  /// Verify / success — green.
+  /// Verify / success — success green.
   verify,
 
-  /// Share — azure.
+  /// Share — info blue.
   share,
 
-  /// Save — deep violet (filled CTAs).
+  /// Save — brand.
   save,
 
-  /// Copy — indigo.
+  /// Copy — neutral slate.
   copy,
 
-  /// GitHub / code — slate.
+  /// GitHub / code — neutral slate.
   github,
 
-  /// Thesis / school — violet.
+  /// Thesis / school — brand.
   thesis,
 
-  /// Web / globe — blue.
+  /// Web / globe — info blue.
   web,
 
-  /// Company / building — teal.
+  /// Company / building — trust teal.
   company,
 
-  /// Phone — green.
+  /// Phone — success green.
   phone,
 
-  /// Email — coral.
+  /// Email — danger rose (action, not nav).
   email,
 
-  /// Audio file hero — brand soft-purple.
+  /// Audio file hero — brand.
   audio,
 
-  /// Folder / pick file — amber.
+  /// Folder / pick file — warning amber.
   folder,
 
-  /// Unlock / decrypt — orange.
+  /// Unlock / decrypt CTA — trust teal.
   unlock,
 
-  /// Numbered list / bit length — indigo.
+  /// Numbered list / bit length — info blue.
   list,
 
-  /// Play transport — emerald.
+  /// Play transport — success green.
   play,
 
-  /// Pause — amber.
+  /// Pause — neutral (transport chrome, not a second warning).
   pause,
 
-  /// Stop — rose.
+  /// Stop — danger.
   stop,
+}
+
+/// Shared Soft UI / security role hues (collapsed palette).
+abstract final class _IconRoles {
+  // Brand / security text blue
+  static const brandLight = Color(0xFF0C4A6E);
+  static const brandDark = Color(0xFF7DD3FC);
+
+  // Trust teal (extract / unlock)
+  static const trustLight = Color(0xFF0F766E);
+  static const trustDark = Color(0xFF5EEAD4);
+
+  // Warning amber (settings / folder)
+  static const warnLight = Color(0xFFB45309);
+  static const warnDark = Color(0xFFFBBF24);
+
+  // Danger (stop / email)
+  static const dangerLight = Color(0xFFB91C1C);
+  static const dangerDark = Color(0xFFFCA5A5);
+
+  // Success (create / verify / play)
+  static const successLight = Color(0xFF15803D);
+  static const successDark = Color(0xFF86EFAC);
+
+  // Info (help / share / web)
+  static const infoLight = Color(0xFF0369A1);
+  static const infoDark = Color(0xFF38BDF8);
+
+  // Neutral slate (copy / github / pause)
+  static const neutralLight = Color(0xFF334155);
+  static const neutralDark = Color(0xFFCBD5E1);
 }
 
 /// Resolves [AppIconAccent] to theme-aware foreground / soft container colors.
@@ -80,59 +114,43 @@ abstract final class AppIconAccents {
     final dark = brightness == Brightness.dark;
     switch (accent) {
       case AppIconAccent.embed:
-        return dark ? const Color(0xFFD4C2F0) : const Color(0xFF5B3F91);
-      case AppIconAccent.extract:
-        return dark ? const Color(0xFF5EEAD4) : const Color(0xFF0F766E);
-      case AppIconAccent.settings:
-        return dark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
       case AppIconAccent.about:
-        return dark ? const Color(0xFFF9A8D4) : const Color(0xFFBE185D);
-      case AppIconAccent.help:
-        return dark ? const Color(0xFF7DD3FC) : const Color(0xFF0369A1);
-      case AppIconAccent.create:
-        return dark ? const Color(0xFF6EE7B7) : const Color(0xFF047857);
-      case AppIconAccent.verify:
-        return dark ? const Color(0xFF86EFAC) : const Color(0xFF15803D);
-      case AppIconAccent.share:
-        return dark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8);
       case AppIconAccent.save:
-        return dark ? const Color(0xFFE9D5FF) : const Color(0xFF5B21B6);
-      case AppIconAccent.copy:
-        return dark ? const Color(0xFFA5B4FC) : const Color(0xFF4338CA);
-      case AppIconAccent.github:
-        return dark ? const Color(0xFFCBD5E1) : const Color(0xFF334155);
       case AppIconAccent.thesis:
-        return dark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9);
-      case AppIconAccent.web:
-        return dark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB);
-      case AppIconAccent.company:
-        return dark ? const Color(0xFF5EEAD4) : const Color(0xFF0F766E);
-      case AppIconAccent.phone:
-        return dark ? const Color(0xFF86EFAC) : const Color(0xFF16A34A);
-      case AppIconAccent.email:
-        return dark ? const Color(0xFFFDA4AF) : const Color(0xFFE11D48);
       case AppIconAccent.audio:
-        return dark ? const Color(0xFFD4C2F0) : const Color(0xFF7A68A8);
-      case AppIconAccent.folder:
-        return dark ? const Color(0xFFFCD34D) : const Color(0xFFD97706);
+        return dark ? _IconRoles.brandDark : _IconRoles.brandLight;
+      case AppIconAccent.extract:
+      case AppIconAccent.company:
       case AppIconAccent.unlock:
-        return dark ? const Color(0xFFFDBA74) : const Color(0xFFEA580C);
+        return dark ? _IconRoles.trustDark : _IconRoles.trustLight;
+      case AppIconAccent.settings:
+      case AppIconAccent.folder:
+        return dark ? _IconRoles.warnDark : _IconRoles.warnLight;
+      case AppIconAccent.help:
+      case AppIconAccent.share:
+      case AppIconAccent.web:
       case AppIconAccent.list:
-        return dark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+        return dark ? _IconRoles.infoDark : _IconRoles.infoLight;
+      case AppIconAccent.create:
+      case AppIconAccent.verify:
       case AppIconAccent.play:
-        return dark ? const Color(0xFF6EE7B7) : const Color(0xFF059669);
-      case AppIconAccent.pause:
-        return dark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+      case AppIconAccent.phone:
+        return dark ? _IconRoles.successDark : _IconRoles.successLight;
       case AppIconAccent.stop:
-        return dark ? const Color(0xFFFDA4AF) : const Color(0xFFDC2626);
+      case AppIconAccent.email:
+        return dark ? _IconRoles.dangerDark : _IconRoles.dangerLight;
+      case AppIconAccent.copy:
+      case AppIconAccent.github:
+      case AppIconAccent.pause:
+        return dark ? _IconRoles.neutralDark : _IconRoles.neutralLight;
     }
   }
 
-  /// Soft tint behind tonal / FAB surfaces.
+  /// Soft tint behind tonal / FAB surfaces (Soft UI — readable, not neon).
   static Color container(AppIconAccent accent, Brightness brightness) {
     final fg = foreground(accent, brightness);
     final dark = brightness == Brightness.dark;
-    return fg.withValues(alpha: dark ? 0.28 : 0.16);
+    return fg.withValues(alpha: dark ? 0.26 : 0.14);
   }
 
   /// Stronger fill for primary (filled) action buttons.
@@ -142,7 +160,7 @@ abstract final class AppIconAccents {
 
   static Color onFill(Brightness brightness) {
     return brightness == Brightness.dark
-        ? const Color(0xFF1A1524)
+        ? const Color(0xFF0B1220)
         : Colors.white;
   }
 }

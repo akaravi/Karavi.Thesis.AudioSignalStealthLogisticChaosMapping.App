@@ -26,6 +26,7 @@ import '../shared/app_section_card.dart';
 import '../shared/directional_selectable_text.dart';
 import '../shared/directional_text_field.dart';
 import '../shared/help_sheet.dart';
+import '../shared/page_app_bar.dart';
 import '../shared/page_toolbar_fab.dart';
 import '../shared/tab_scroll_body.dart';
 import '../../app/app_ui_tokens.dart';
@@ -566,28 +567,15 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
     final s = AppStrings.of(context);
     final scheme = Theme.of(context).colorScheme;
     final useFixedLen = ref.watch(settingsProvider).defaultFixedMessageBitLimit;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildNewExtractFab(s),
-                  const SizedBox(width: AppUiTokens.toolbarFabGap),
-                  _buildHelpFab(s),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: TabScrollBody(
+    return Scaffold(
+      appBar: PageAppBar(
+        title: s.extractTab,
+        actions: [
+          _buildNewExtractFab(s),
+          _buildHelpFab(s),
+        ],
+      ),
+      body: TabScrollBody(
             scrollController: _scrollCtrl,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
@@ -705,8 +693,6 @@ class _ExtractScreenState extends ConsumerState<ExtractScreen> {
               KeyedSubtree(key: _resultCardKey, child: _resultCard(s)),
             ],
           ),
-        ),
-      ],
     );
   }
 

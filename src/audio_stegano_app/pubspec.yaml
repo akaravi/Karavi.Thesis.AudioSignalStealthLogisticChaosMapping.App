@@ -7,7 +7,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # App version: MAJOR.MINOR.PATCH (three segments, no +BUILD suffix).
 # Android versionCode is derived from semver in android/app/build.gradle.kts.
 # Keep in sync with AudioStegano.Desktop.csproj InformationalVersion.
-version: 1.2.6
+version: 1.2.7
 
 environment:
   sdk: ^3.11.5
@@ -67,7 +67,7 @@ flutter_launcher_icons:
   web:
     generate: true
     background_color: "#121212"
-    theme_color: "#7A68A8"
+    theme_color: "#0369A1"
   windows:
     generate: true
     icon_size: 256

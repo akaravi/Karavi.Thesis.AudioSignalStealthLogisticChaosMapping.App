@@ -31,8 +31,8 @@ class PageToolbarFab extends StatelessWidget {
     final bg = AppIconAccents.container(resolved, brightness);
     final disabled = onPressed == null;
     return Material(
-      elevation: disabled ? 0 : 4,
-      shadowColor: fg.withValues(alpha: 0.45),
+      elevation: disabled ? 0 : 2,
+      shadowColor: fg.withValues(alpha: 0.28),
       color: disabled ? bg.withValues(alpha: 0.45) : bg,
       shape: const CircleBorder(),
       child: DecoratedBox(
@@ -42,9 +42,9 @@ class PageToolbarFab extends StatelessWidget {
               ? null
               : [
                   BoxShadow(
-                    color: fg.withValues(alpha: 0.32),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    color: fg.withValues(alpha: 0.16),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
         ),

@@ -11,6 +11,7 @@ import '../shared/accent_icon.dart';
 import '../shared/app_section_card.dart';
 import '../shared/logistic_map_preview_chart.dart';
 import '../shared/logistic_param_field.dart';
+import '../shared/page_app_bar.dart';
 import '../shared/tab_scroll_body.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -35,7 +36,9 @@ class SettingsScreen extends ConsumerWidget {
       _ => code,
     };
 
-    return TabScrollBody(
+    return Scaffold(
+      appBar: PageAppBar(title: s.settingsTab),
+      body: TabScrollBody(
       children: [
         _section(context, s.themeMode, compact: true, [
           SegmentedButton<ThemeMode>(
@@ -150,6 +153,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ],
+    ),
     );
   }
 

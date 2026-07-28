@@ -45,7 +45,7 @@ public partial class MainWindow : Window
         ThemeManager.Apply(Resources);
         var s = ThemeManager.Strings;
         Title = s.AppTitle;
-        TitleText.Text = s.AppTitle;
+        UpdatePageTitle();
 
         UpdateNavLabels();
         EmbedPage.ApplyStrings();
@@ -55,12 +55,20 @@ public partial class MainWindow : Window
         AboutPage.ApplyStrings();
     }
 
+    private void UpdatePageTitle()
+    {
+        var s = ThemeManager.Strings;
+        var labels = new[] { s.EmbedTab, s.ExtractTab, s.SettingsTab, s.AboutUsTab };
+        TitleText.Text = labels[_selectedIndex];
+    }
+
     private void BuildNavigation()
     {
         BottomNavGrid.Children.Clear();
         RailButtons.Children.Clear();
 
-        var icons = new[] { "\uE9D8", "\uE721", "\uE713", "\uE77B" };
+        // Layers · Unlock · Settings · Person (Segoe MDL2)
+        var icons = new[] { "\uE9D8", "\uE785", "\uE713", "\uE77B" };
         var brushKeys = new[]
         {
             "IconEmbedBrush",
@@ -140,6 +148,8 @@ public partial class MainWindow : Window
             if (child is RadioButton rb)
                 rb.IsChecked = railIndex++ == index;
         }
+
+        UpdatePageTitle();
     }
 
     public bool IsGlobalBusy => _globalBusy;

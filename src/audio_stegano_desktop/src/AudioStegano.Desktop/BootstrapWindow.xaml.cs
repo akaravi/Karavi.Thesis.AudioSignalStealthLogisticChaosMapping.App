@@ -226,7 +226,7 @@ public partial class BootstrapWindow : Window
         panel.Children.Add(purposeCard);
 
         AddGuideStep(panel, "\uE9D8", s.UsageGuideStepEmbed);
-        AddGuideStep(panel, "\uE721", s.UsageGuideStepExtract);
+        AddGuideStep(panel, "\uE785", s.UsageGuideStepExtract);
         AddGuideStep(panel, "\uE713", s.UsageGuideStepSettings);
         AddGuideStep(panel, "\uE77B", s.UsageGuideStepAbout);
 

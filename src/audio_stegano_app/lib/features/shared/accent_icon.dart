@@ -66,10 +66,11 @@ class AccentGlowIcon extends StatelessWidget {
             ],
           ),
           boxShadow: [
+            // Soft UI Evolution — clearer than flat, softer than neon glow.
             BoxShadow(
-              color: fg.withValues(alpha: 0.38),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+              color: fg.withValues(alpha: 0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -119,8 +120,8 @@ class AccentActionIconButton extends StatelessWidget {
                   ? fg.withValues(alpha: 0.28)
                   : fg,
               foregroundColor: AppIconAccents.onFill(brightness),
-              shadowColor: fg.withValues(alpha: 0.45),
-              elevation: disabled ? 0 : 3,
+              shadowColor: fg.withValues(alpha: 0.28),
+              elevation: disabled ? 0 : 2,
             ),
             icon: child,
           )
@@ -129,8 +130,8 @@ class AccentActionIconButton extends StatelessWidget {
             style: IconButton.styleFrom(
               backgroundColor: AppIconAccents.container(accent, brightness),
               foregroundColor: fg,
-              shadowColor: fg.withValues(alpha: 0.28),
-              elevation: disabled ? 0 : 1.5,
+              shadowColor: fg.withValues(alpha: 0.18),
+              elevation: disabled ? 0 : 1,
             ),
             icon: child,
           );

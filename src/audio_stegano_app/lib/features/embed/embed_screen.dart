@@ -42,6 +42,7 @@ import '../shared/help_sheet.dart';
 import '../shared/embed_warning_dialog.dart';
 import '../shared/metric_help_dialog.dart';
 import '../shared/message_bit_length_formatter.dart';
+import '../shared/page_app_bar.dart';
 import '../shared/page_toolbar_fab.dart';
 import '../shared/record_button.dart';
 import '../shared/stego_share.dart';
@@ -1566,28 +1567,15 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
     final isRecording = _recorder.isRecording;
     final eqActive = isRecording || _abPlaying || _abLoaded;
     final canPickFile = !isRecording && !_processing && !_busy;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildNewEmbedFab(s),
-                  const SizedBox(width: 8),
-                  _buildHelpFab(s),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: TabScrollBody(
+    return Scaffold(
+      appBar: PageAppBar(
+        title: s.embedTab,
+        actions: [
+          _buildNewEmbedFab(s),
+          _buildHelpFab(s),
+        ],
+      ),
+      body: TabScrollBody(
             scrollController: _scrollCtrl,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
@@ -1885,8 +1873,6 @@ class _EmbedScreenState extends ConsumerState<EmbedScreen> {
                 KeyedSubtree(key: _resultCardKey, child: _buildResultCard(s)),
             ],
           ),
-        ),
-      ],
     );
   }
 

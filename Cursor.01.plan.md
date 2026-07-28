@@ -1885,3 +1885,92 @@
   "remaining": "none"
 }
 ```
+
+## Part 108 - Page title in header (Material 3)
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 108,
+  "title": "Page destination title in top app bar",
+  "request": "در هدر صفحات عنوان آن صفحه قرار داشته باشد + استاندارد قالب/طراحی",
+  "standards": ["Material Design 3 Small Top App Bar", "WCAG header landmark / Semantics.header", "Apple HIG navigation title = current view"],
+  "touchedFiles": [
+    "src/audio_stegano_app/lib/features/shared/page_app_bar.dart",
+    "src/audio_stegano_app/lib/app/home_shell.dart",
+    "src/audio_stegano_app/lib/app/app_theme.dart",
+    "src/audio_stegano_app/lib/features/embed/embed_screen.dart",
+    "src/audio_stegano_app/lib/features/extract/extract_screen.dart",
+    "src/audio_stegano_app/lib/features/settings/settings_screen.dart",
+    "src/audio_stegano_app/lib/features/about/about_screen.dart",
+    "src/audio_stegano_desktop/src/AudioStegano.Desktop/MainWindow.xaml",
+    "src/audio_stegano_desktop/src/AudioStegano.Desktop/MainWindow.xaml.cs"
+  ]
+}
+```
+
+## Result 108
+
+```json
+{
+  "part": 108,
+  "status": "done",
+  "verification": "flutter analyze 7 files clean; WPF Debug 0 warn/err; AppBar title = tab label; actions in AppBar for embed/extract",
+  "remaining": "none"
+}
+```
+
+## Part 109 - ui-ux-pro-max colors and icons
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 109,
+  "title": "Soft UI security palette + icon role collapse",
+  "request": "ui-ux-pro-max review bad colors and icons",
+  "designSystem": {
+    "style": "Soft UI Evolution",
+    "primary": "#0369A1",
+    "ctaSuccess": "#15803D",
+    "antiPatternsAvoided": ["rainbow icon accents", "washed soft-purple seed", "search-as-decrypt glyph"]
+  },
+  "verification": "flutter analyze clean; WPF Debug 0 warn/err"
+}
+```
+
+## Result 109
+
+```json
+{
+  "part": 109,
+  "status": "done",
+  "verification": "Brand #0369A1; accents role-collapsed; extract=lock_open; glow softened; Flutter+WPF parity",
+  "remaining": "none"
+}
+```
+## Part 110 - update ver 1.2.7 + web upload ZIP
+
+```json
+{
+  "promptSpecVersion": "1.1.0",
+  "kind": "json-prompt",
+  "part": 110,
+  "title": "update ver 1.2.6 to 1.2.7 and Flutter web ZIP",
+  "request": "update ver; ZIP for server upload",
+  "version": { "old": "1.2.6", "new": "1.2.7" },
+  "zip": "publish/flutter/web/KaraviThesis_AudioStegano_FlutterWeb_20260728_144929.zip"
+}
+```
+
+## Result 110
+
+```json
+{
+  "part": 110,
+  "status": "done",
+  "verification": "_update-ver.ps1 Done; Flutter+WPF 1.2.7; web ZIP created no-cdn",
+  "remaining": "none"
+}
+```

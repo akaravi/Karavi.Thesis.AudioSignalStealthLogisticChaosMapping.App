@@ -9,6 +9,7 @@ import '../../app/app_version.dart';
 import '../shared/accent_icon.dart';
 import '../shared/app_section_card.dart';
 import '../shared/directional_latin_text.dart';
+import '../shared/page_app_bar.dart';
 import '../shared/tab_scroll_body.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -18,7 +19,9 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final scheme = Theme.of(context).colorScheme;
-    return TabScrollBody(
+    return Scaffold(
+      appBar: PageAppBar(title: s.aboutUsTab),
+      body: TabScrollBody(
       children: [
         AppSectionCard(
           padding: const EdgeInsets.all(20),
@@ -157,6 +160,7 @@ class AboutScreen extends StatelessWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }

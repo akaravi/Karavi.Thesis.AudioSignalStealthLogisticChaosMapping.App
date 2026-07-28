@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Fixed soft-purple brand — only light/dark brightness varies.
+/// Brand seed — ui-ux-pro-max Soft UI Evolution + security-utility palette.
+///
+/// Primary is professional security blue (not washed soft-purple).
+/// Only light/dark brightness varies via [ColorScheme.fromSeed].
 abstract final class AppBrandColors {
-  static const Color softPurple = Color(0xFF7A68A8);
+  /// Material 3 seed — security blue `#0369A1`.
+  static const Color primary = Color(0xFF0369A1);
+
+  /// Legacy alias kept so older call sites compile; prefer [primary].
+  static const Color softPurple = primary;
 }

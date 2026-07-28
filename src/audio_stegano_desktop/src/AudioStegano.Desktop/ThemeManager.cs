@@ -6,7 +6,10 @@ namespace AudioStegano.Desktop;
 
 public static class ThemeManager
 {
-    public const string SoftPurpleAccent = "#7A68A8";
+    public const string BrandAccent = "#0369A1";
+
+    /// <summary>Legacy name — same as <see cref="BrandAccent"/>.</summary>
+    public const string SoftPurpleAccent = BrandAccent;
 
     public static void Apply(ResourceDictionary resources)
     {
@@ -15,23 +18,23 @@ public static class ThemeManager
         {
             AppThemeMode.Dark => true,
             AppThemeMode.Light => false,
-            _ => false, // system retired → light purple
+            _ => false, // system retired → light
         };
 
         resources.MergedDictionaries.Clear();
         resources.MergedDictionaries.Add(LoadDict("Themes/SharedStyles.xaml"));
         resources.MergedDictionaries.Add(LoadDict(isDark ? "Themes/DarkTheme.xaml" : "Themes/LightTheme.xaml"));
 
-        // Fixed soft-purple accent — no user color picker.
-        s.AccentColor = SoftPurpleAccent;
-        var accent = (Color)ColorConverter.ConvertFromString(SoftPurpleAccent)!;
+        // Fixed security-blue accent — no user color picker.
+        s.AccentColor = BrandAccent;
+        var accent = (Color)ColorConverter.ConvertFromString(BrandAccent)!;
         var primary = isDark ? SoftenForDarkPrimary(accent) : accent;
         var primaryContainer = SoftPrimaryContainer(accent, isDark);
         var secondaryContainer = SoftSecondaryContainer(accent, isDark);
-        var onPrimary = isDark ? Color.FromRgb(0x2A, 0x1F, 0x40) : Colors.White;
+        var onPrimary = isDark ? Color.FromRgb(0x0B, 0x12, 0x20) : Colors.White;
         var onPrimaryContainer = isDark
-            ? Color.FromRgb(0xE9, 0xDE, 0xF8)
-            : Color.FromRgb(0x3D, 0x2F, 0x5C);
+            ? Color.FromRgb(0xE0, 0xF2, 0xFE)
+            : Color.FromRgb(0x0C, 0x4A, 0x6E);
         var chartStego = SoftChartStego(accent, isDark);
 
         resources["AccentBrush"] = new SolidColorBrush(primary);
@@ -62,22 +65,22 @@ public static class ThemeManager
     public static AppStrings Strings => new(AppState.Settings.Language);
 
     private static Color SoftenForDarkPrimary(Color accent) =>
-        Mix(accent, Color.FromRgb(0xE8, 0xE0, 0xF0), 0.42);
+        Mix(accent, Color.FromRgb(0xE2, 0xE8, 0xF0), 0.42);
 
     private static Color SoftPrimaryContainer(Color accent, bool dark) =>
         dark
-            ? Mix(accent, Color.FromRgb(0x16, 0x13, 0x1C), 0.58)
+            ? Mix(accent, Color.FromRgb(0x0B, 0x12, 0x20), 0.58)
             : Mix(accent, Colors.White, 0.78);
 
     private static Color SoftSecondaryContainer(Color accent, bool dark) =>
         dark
-            ? Mix(accent, Color.FromRgb(0x16, 0x13, 0x1C), 0.70)
+            ? Mix(accent, Color.FromRgb(0x0B, 0x12, 0x20), 0.70)
             : Mix(accent, Colors.White, 0.86);
 
     private static Color SoftChartStego(Color accent, bool dark) =>
         dark
-            ? Mix(accent, Color.FromRgb(0xE8, 0xE0, 0xF0), 0.35)
-            : Mix(accent, Color.FromRgb(0x3D, 0x2F, 0x5C), 0.25);
+            ? Mix(accent, Color.FromRgb(0xE2, 0xE8, 0xF0), 0.35)
+            : Mix(accent, Color.FromRgb(0x0C, 0x4A, 0x6E), 0.25);
 
     private static Color Mix(Color a, Color b, double t)
     {

@@ -1,5 +1,25 @@
 # Change History
 
+## 2026-07-28 — update ver 1.2.6 → 1.2.7 + Flutter web ZIP
+
+- Version bump patch: Flutter `pubspec.yaml` + WPF csproj → `1.2.7`.
+- Flutter web release ZIP for server upload: `publish/flutter/web/KaraviThesis_AudioStegano_FlutterWeb_20260728_144929.zip`.
+
+## 2026-07-28 — ui-ux-pro-max: colors + icons Soft UI / security
+
+- Brand seed `#7A68A8` → security blue `#0369A1` (Soft UI Evolution + security utility palette).
+- Icon accents role-collapsed (brand / trust / warn / success / info / neutral / danger) — no rainbow nav.
+- Extract nav glyph: search → lock_open (Flutter + WPF MDL2 `E785`).
+- Softer Soft UI glows/shadows; light/dark surfaces cool slate-blue; web/PWA/widget theme tokens synced.
+- Flutter + WPF parity verified (analyze clean, WPF Debug 0 warn/err).
+
+## 2026-07-28 — Page title in header (Material 3 destination AppBar)
+
+- Flutter: each tab owns `PageAppBar` with destination title (نهان‌نگاری / رمزگشایی / تنظیمات / درباره ما); help/new as AppBar actions.
+- HomeShell no longer shows app-wide title in chrome; `MaterialApp.title` / window title stay product name.
+- WPF: `TitleText` updates on tab switch to the same destination labels; start-aligned header.
+- Shared widget: `lib/features/shared/page_app_bar.dart` (Semantics header + M3 start-aligned title).
+
 ## 2026-07-28 — Extract audio result: carrier play + no duplicate label
 
 - Duplicate «صوت استخراج‌شده»: title + body both used same string — body replaced with A/B listen (حامل / استخراج‌شده).
